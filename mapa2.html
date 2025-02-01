@@ -15,6 +15,7 @@
             margin-top: 10px;
             font-size: 16px;
             font-weight: bold;
+            white-space: pre-line; /* Permite saltos de línea */
         }
     </style>
 </head>
@@ -71,9 +72,10 @@
                     .then(data => {
                         if (data.address) {
                             var calle = data.address.road || "Calle no encontrada";
+                            var barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
                             var localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
 
-                            document.getElementById("location-info").innerText = `📍 ${calle}, ${localidad}`;
+                            document.getElementById("location-info").innerText = `Calle: ${calle}\nBarrio: ${barrio}\nLocalidad: ${localidad}`;
                         } else {
                             document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
                         }
