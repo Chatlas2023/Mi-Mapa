@@ -28,37 +28,37 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var map = L.map('map').setView([0, 0], 2);
+            var marcador;
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            function localizarUsuario() {
+            function localizarUsuario(usarGeocodificacion) {
                 if ("geolocation" in navigator) {
-                    navigator.permissions.query({ name: 'geolocation' }).then(function (result) {
-                        if (result.state === "granted" || result.state === "prompt") {
-                            navigator.geolocation.getCurrentPosition(
-                                function (position) {
-                                    var lat = position.coords.latitude;
-                                    var lon = position.coords.longitude;
+                    navigator.geolocation.getCurrentPosition(
+                        function (position) {
+                            var lat = position.coords.latitude;
+                            var lon = position.coords.longitude;
 
-                                    map.setView([lat, lon], 15);
+                            map.setView([lat, lon], 15);
 
-                                    // Agregar un marcador sin popup
-                                    L.marker([lat, lon]).addTo(map);
+                            // Elimina el marcador anterior si existe
+                            if (marcador) {
+                                map.removeLayer(marcador);
+                            }
+                            marcador = L.marker([lat, lon]).addTo(map);
 
-                                    // Llamar a la función de Reverse Geocode
-                                    obtenerDireccion(lat, lon);
-                                },
-                                function (error) {
-                                    alert("Error obteniendo la ubicación: " + error.message);
-                                }
-                            );
-                        } else {
-                            alert("Permiso de geolocalización denegado. Habilítalo en la configuración del navegador.");
+                            // Solo hacer geocodificación inversa en la carga inicial
+                            if (usarGeocodificacion) {
+                                obtenerDireccion(lat, lon);
+                            }
+                        },
+                        function (error) {
+                            alert("Error obteniendo la ubicación: " + error.message);
                         }
-                    });
+                    );
                 } else {
                     alert("Tu navegador no soporta geolocalización.");
                 }
@@ -86,7 +86,13 @@
                     });
             }
 
-            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
+            // Obtener la ubicación al cargar la página, con geocodificación inversa
+            localizarUsuario(true);
+
+            // Obtener ubicación solo cuando el usuario presiona el botón, sin geocodificación inversa
+            document.getElementById("getLocation").addEventListener("click", function () {
+                localizarUsuario(false);
+            });
         });
     </script>
 </body>
