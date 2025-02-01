@@ -38,9 +38,8 @@
 
                                     map.setView([lat, lon], 15);
 
-                                    L.marker([lat, lon]).addTo(map)
-                                        .bindPopup('Tu ubicación actual')
-                                        .openPopup();
+                                    // Agrega un marcador en la ubicación sin popup
+                                    L.marker([lat, lon]).addTo(map);
                                 },
                                 function (error) {
                                     alert("Error obteniendo la ubicación: " + error.message);
