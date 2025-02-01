@@ -11,11 +11,17 @@
             width: 100%;
             border: 2px solid red; /* Temporalmente para verificar el contenedor */
         }
+        #location-info {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <button id="getLocation">Obtener Ubicación</button>
+    <div id="location-info">Esperando ubicación...</div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -38,8 +44,11 @@
 
                                     map.setView([lat, lon], 15);
 
-                                    // Agrega un marcador en la ubicación sin popup
+                                    // Agregar un marcador sin popup
                                     L.marker([lat, lon]).addTo(map);
+
+                                    // Llamar a la función de Reverse Geocode
+                                    obtenerDireccion(lat, lon);
                                 },
                                 function (error) {
                                     alert("Error obteniendo la ubicación: " + error.message);
@@ -52,6 +61,27 @@
                 } else {
                     alert("Tu navegador no soporta geolocalización.");
                 }
+            }
+
+            function obtenerDireccion(lat, lon) {
+                var url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.address) {
+                            var calle = data.address.road || "Calle no encontrada";
+                            var localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
+
+                            document.getElementById("location-info").innerText = `📍 ${calle}, ${localidad}`;
+                        } else {
+                            document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
+                        console.error("Error en reverse geocode:", error);
+                    });
             }
 
             document.getElementById("getLocation").addEventListener("click", localizarUsuario);
