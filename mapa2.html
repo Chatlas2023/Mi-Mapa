@@ -35,7 +35,7 @@
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            function localizarUsuario(usarGeocodificacion) {
+            function localizarUsuario() {
                 if ("geolocation" in navigator) {
                     navigator.geolocation.getCurrentPosition(
                         function (position) {
@@ -50,10 +50,8 @@
                             }
                             marcador = L.marker([lat, lon]).addTo(map);
 
-                            // Solo hacer geocodificación inversa en la carga inicial
-                            if (usarGeocodificacion) {
-                                obtenerDireccion(lat, lon);
-                            }
+                            // Llamar a la función de Reverse Geocode
+                            obtenerDireccion(lat, lon);
                         },
                         function (error) {
                             alert("Error obteniendo la ubicación: " + error.message);
@@ -86,13 +84,11 @@
                     });
             }
 
-            // Obtener la ubicación al cargar la página, con geocodificación inversa
-            localizarUsuario(true);
+            // Obtener la ubicación al cargar la página
+            localizarUsuario();
 
-            // Obtener ubicación solo cuando el usuario presiona el botón, sin geocodificación inversa
-            document.getElementById("getLocation").addEventListener("click", function () {
-                localizarUsuario(false);
-            });
+            // Botón para actualizar la ubicación y hacer geocodificación inversa
+            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
         });
     </script>
 </body>
