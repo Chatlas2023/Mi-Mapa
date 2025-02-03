@@ -17,11 +17,23 @@
             font-weight: bold;
             white-space: pre-line; /* Permite saltos de línea */
         }
+        .button-container {
+            margin-top: 10px;
+        }
+        .button-container button {
+            margin-right: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <button id="getLocation">Obtener Ubicación</button>
+    <div class="button-container">
+        <button id="getLocation">Obtener Ubicación</button>
+        <button id="centerMap">Centrar en mi ubicación</button>
+    </div>
     <div id="location-info">Esperando ubicación...</div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -89,6 +101,21 @@
 
             // Botón para actualizar la ubicación y hacer geocodificación inversa
             document.getElementById("getLocation").addEventListener("click", localizarUsuario);
+
+            // Botón para centrar el mapa en la ubicación del usuario
+            document.getElementById("centerMap").addEventListener("click", localizarUsuario);
+
+            // Permitir al usuario hacer clic en el mapa para obtener la dirección
+            map.on('click', function(e) {
+                var lat = e.latlng.lat;
+                var lon = e.latlng.lon;
+
+                if (marcador) {
+                    map.removeLayer(marcador);
+                }
+                marcador = L.marker([lat, lon]).addTo(map);
+                obtenerDireccion(lat, lon);
+            });
         });
     </script>
 </body>
