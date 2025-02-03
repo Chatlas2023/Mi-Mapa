@@ -123,8 +123,17 @@
             // Cambiar capa del mapa según la selección
             document.getElementById("mapLayers").addEventListener("change", function () {
                 let selectedLayer = this.value;
+
+                // Primero eliminar todas las capas
                 map.eachLayer(layer => map.removeLayer(layer));
+
+                // Luego agregar la capa seleccionada
                 layers[selectedLayer].addTo(map);
+
+                // Asegurar que el marcador se mantenga en el mapa después de cambiar la capa
+                if (userMarker) {
+                    userMarker.addTo(map);
+                }
             });
 
             // Centrar mapa en la ubicación del usuario
