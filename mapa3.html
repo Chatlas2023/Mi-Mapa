@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa con OpenStreetMap</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+            border: 2px solid red; /* Temporalmente para verificar el contenedor */
+        }
+        #location-info {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            white-space: pre-line; /* Permite saltos de línea */
+        }
+        .button-container {
+            margin-top: 10px;
+        }
+        .button-container button {
+            margin-right: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="button-container">
+        <button id="getLocation">Obtener Ubicación</button>
+        <button id="centerMap">Centrar en mi ubicación</button>
+    </div>
+    <div id="location-info">Esperando ubicación...</div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var map = L.map('map').setView([0, 0], 2);
+            var marcador;
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            function localizarUsuario() {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        function (position) {
+                            var lat = position.coords.latitude;
+                            var lon = position.coords.longitude;
+
+                            map.setView([lat, lon], 15);
+
+                            // Elimina el marcador anterior si existe
+                            if (marcador) {
+                                map.removeLayer(marcador);
+                            }
+                            marcador = L.marker([lat, lon]).addTo(map);
+
+                            // Llamar a la función de Reverse Geocode
+                            obtenerDireccion(lat, lon);
+                        },
+                        function (error) {
+                            alert("Error obteniendo la ubicación: " + error.message);
+                        }
+                    );
+                } else {
+                    alert("Tu navegador no soporta geolocalización.");
+                }
+            }
+
+            function obtenerDireccion(lat, lon) {
+                var url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.address) {
+                            var calle = data.address.road || "Calle no encontrada";
+                            var barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
+                            var localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
+
+                            document.getElementById("location-info").innerText = `Calle: ${calle}\nBarrio: ${barrio}\nLocalidad: ${localidad}`;
+                        } else {
+                            document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
+                        console.error("Error en reverse geocode:", error);
+                    });
+            }
+
+            // Obtener la ubicación al cargar la página
+            localizarUsuario();
+
+            // Botón para actualizar la ubicación y hacer geocodificación inversa
+            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
+
+            // Botón para centrar el mapa en la ubicación del usuario
+            document.getElementById("centerMap").addEventListener("click", localizarUsuario);
+
+            // Permitir al usuario hacer clic en el mapa para obtener la dirección
+            map.on('click', function(e) {
+                var lat = e.latlng.lat;
+                var lon = e.latlng.lon;
+
+                if (marcador) {
+                    map.removeLayer(marcador);
+                }
+                marcador = L.marker([lat, lon]).addTo(map);
+                obtenerDireccion(lat, lon);
+            });
+        });
+    </script>
+</body>
+</html>
