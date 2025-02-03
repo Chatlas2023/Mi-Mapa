@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa con OpenStreetMap</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 470px; /* Reducido para dejar espacio a los textos */
+            width: 100%;
+            border: 2px solid red;
+        }
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        #location-info {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="controls">
+        <button id="getLocation">Obtener Ubicación</button>
+        <select id="mapLayers">
+            <option value="osm">Mapa Estándar</option>
+            <option value="satellite">Satélite</option>
+        </select>
+        <button id="centerMap">Centrar en Ubicación</button>
+    </div>
+    <div id="location-info">Esperando ubicación...</div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let map = L.map('map').setView([0, 0], 2);
+            let userMarker = null;
+            let currentLat = null;
+            let currentLon = null;
+
+            // Capas de mapa disponibles con maxZoom aumentado
+            let layers = {
+                osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 22,  // Aumentamos el zoom máximo
+                    attribution: '&copy; OpenStreetMap contributors'
+                }),
+                satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 22,  // Aumentamos el zoom máximo
+                    attribution: '&copy; Esri'
+                })
+            };
+
+            // Agregar capa base inicial (OpenStreetMap)
+            layers.osm.addTo(map);
+
+            function localizarUsuario() {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        function (position) {
+                            currentLat = position.coords.latitude;
+                            currentLon = position.coords.longitude;
+
+                            map.setView([currentLat, currentLon], 15);
+
+                            if (userMarker) {
+                                userMarker.setLatLng([currentLat, currentLon]);
+                            } else {
+                                userMarker = L.marker([currentLat, currentLon]).addTo(map);
+                            }
+
+                            obtenerDireccion(currentLat, currentLon);
+                        },
+                        function (error) {
+                            alert("Error obteniendo la ubicación: " + error.message);
+                        }
+                    );
+                } else {
+                    alert("Tu navegador no soporta geolocalización.");
+                }
+            }
+
+            function obtenerDireccion(lat, lon) {
+                let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.address) {
+                            let calle = data.address.road || "Calle no encontrada";
+                            let barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
+                            let localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
+
+                            document.getElementById("location-info").innerText = `Calle: ${calle}\nBarrio: ${barrio}\nLocalidad: ${localidad}`;
+                        } else {
+                            document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
+                        console.error("Error en reverse geocode:", error);
+                    });
+            }
+
+            // Permitir clic en el mapa para obtener dirección
+            map.on('click', function (e) {
+                let lat = e.latlng.lat;
+                let lon = e.latlng.lng;
+
+                if (userMarker) {
+                    userMarker.setLatLng([lat, lon]);
+                } else {
+                    userMarker = L.marker([lat, lon]).addTo(map);
+                }
+
+                obtenerDireccion(lat, lon);
+            });
+
+            // Cambiar capa del mapa según la selección
+            document.getElementById("mapLayers").addEventListener("change", function () {
+                let selectedLayer = this.value;
+
+                // Primero eliminar todas las capas
+                map.eachLayer(layer => map.removeLayer(layer));
+
+                // Luego agregar la capa seleccionada
+                layers[selectedLayer].addTo(map);
+
+                // Asegurar que el marcador se mantenga en el mapa después de cambiar la capa
+                if (userMarker) {
+                    userMarker.addTo(map);
+                }
+            });
+
+            // Centrar mapa en la ubicación del usuario
+            document.getElementById("centerMap").addEventListener("click", function () {
+                if (currentLat && currentLon) {
+                    map.setView([currentLat, currentLon], 15);
+                } else {
+                    alert("Aún no se ha obtenido la ubicación.");
+                }
+            });
+
+            // Obtener ubicación al cargar la página (solo la primera vez)
+            localizarUsuario();
+
+            // Evento del botón "Obtener Ubicación"
+            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
+        });
+    </script>
+</body>
+</html>
