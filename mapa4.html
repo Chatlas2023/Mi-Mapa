@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa con OpenStreetMap y Rutas</title>
+    <title>Mapa con OpenStreetMap</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         #map {
-            height: 490px; /* Reducido en 1 cm (aprox 10px) */
+            height: 480px; /* Reducido para dejar espacio a los textos */
             width: 100%;
             border: 2px solid red;
+        }
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
         }
         #location-info {
             margin-top: 10px;
@@ -17,131 +22,134 @@
             font-weight: bold;
             white-space: pre-line;
         }
-        #centerMap {
-            margin-left: 10px;
-        }
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <button id="getLocation">Obtener Ubicación</button>
-    <button id="centerMap">Centrar en mi Ubicación</button>
+    <div id="controls">
+        <button id="getLocation">Obtener Ubicación</button>
+        <select id="mapLayers">
+            <option value="osm">Mapa Estándar</option>
+            <option value="satellite">Satélite</option>
+            <option value="terrain">Terreno</option>
+            <option value="dark">Mapa Oscuro</option>
+        </select>
+        <button id="centerMap">Centrar en Ubicación</button>
+    </div>
     <div id="location-info">Esperando ubicación...</div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        let map, userMarker, destinationMarker, routeLayer;
-        let userCoords = null; // Guarda la ubicación del usuario
-
         document.addEventListener('DOMContentLoaded', function () {
-            map = L.map('map').setView([0, 0], 2);
+            let map = L.map('map').setView([0, 0], 2);
+            let userMarker = null;
+            let currentLat = null;
+            let currentLon = null;
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
+            // Capas de mapa disponibles
+            let layers = {
+                osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap contributors'
+                }),
+                satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: '&copy; Esri'
+                }),
+                terrain: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: '&copy; Esri'
+                }),
+                dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; Carto'
+                })
+            };
 
-            localizarUsuario(); // Detecta la ubicación al cargar la página
+            // Agregar capa base inicial (OpenStreetMap)
+            layers.osm.addTo(map);
 
-            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
-            document.getElementById("centerMap").addEventListener("click", centrarEnUbicacion);
+            function localizarUsuario() {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        function (position) {
+                            currentLat = position.coords.latitude;
+                            currentLon = position.coords.longitude;
 
-            map.on("click", function (e) {
-                marcarDestino(e.latlng.lat, e.latlng.lng);
-            });
-        });
+                            map.setView([currentLat, currentLon], 15);
 
-        function localizarUsuario() {
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(
-                    function (position) {
-                        userCoords = [position.coords.latitude, position.coords.longitude];
+                            if (userMarker) {
+                                userMarker.setLatLng([currentLat, currentLon]);
+                            } else {
+                                userMarker = L.marker([currentLat, currentLon]).addTo(map);
+                            }
 
-                        if (!userMarker) {
-                            userMarker = L.marker(userCoords).addTo(map);
-                        } else {
-                            userMarker.setLatLng(userCoords);
+                            obtenerDireccion(currentLat, currentLon);
+                        },
+                        function (error) {
+                            alert("Error obteniendo la ubicación: " + error.message);
                         }
-
-                        map.setView(userCoords, 15);
-                        obtenerDireccion(userCoords[0], userCoords[1]);
-                    },
-                    function (error) {
-                        alert("Error obteniendo la ubicación: " + error.message);
-                    }
-                );
-            } else {
-                alert("Tu navegador no soporta geolocalización.");
-            }
-        }
-
-        function centrarEnUbicacion() {
-            if (userCoords) {
-                map.setView(userCoords, 15);
-            } else {
-                alert("No se ha detectado la ubicación.");
-            }
-        }
-
-        function marcarDestino(lat, lon) {
-            if (destinationMarker) {
-                destinationMarker.setLatLng([lat, lon]);
-            } else {
-                destinationMarker = L.marker([lat, lon]).addTo(map);
+                    );
+                } else {
+                    alert("Tu navegador no soporta geolocalización.");
+                }
             }
 
-            obtenerDireccion(lat, lon);
-            trazarRuta(userCoords, [lat, lon]);
-        }
+            function obtenerDireccion(lat, lon) {
+                let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
 
-        function obtenerDireccion(lat, lon) {
-            var url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.address) {
+                            let calle = data.address.road || "Calle no encontrada";
+                            let barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
+                            let localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.address) {
-                        var calle = data.address.road || "Calle no encontrada";
-                        var barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
-                        var localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
-
-                        document.getElementById("location-info").innerText = `Calle: ${calle}\nBarrio: ${barrio}\nLocalidad: ${localidad}`;
-                    } else {
-                        document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
-                    }
-                })
-                .catch(error => {
-                    document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
-                    console.error("Error en reverse geocode:", error);
-                });
-        }
-
-        function trazarRuta(origen, destino) {
-            if (!origen || !destino) {
-                alert("Ubicación de origen o destino no disponible.");
-                return;
+                            document.getElementById("location-info").innerText = `Calle: ${calle}\nBarrio: ${barrio}\nLocalidad: ${localidad}`;
+                        } else {
+                            document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
+                        console.error("Error en reverse geocode:", error);
+                    });
             }
 
-            const apiKey = "TU_API_KEY_DE_OPENROUTESERVICE"; // Reemplaza con tu clave API
-            const url = `https://api.openrouteservice.org/v2/directions/foot-walking?api_key=${apiKey}&start=${origen[1]},${origen[0]}&end=${destino[1]},${destino[0]}`;
+            // Permitir clic en el mapa para obtener dirección
+            map.on('click', function (e) {
+                let lat = e.latlng.lat;
+                let lon = e.latlng.lng;
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (routeLayer) {
-                        map.removeLayer(routeLayer);
-                    }
+                if (userMarker) {
+                    userMarker.setLatLng([lat, lon]);
+                } else {
+                    userMarker = L.marker([lat, lon]).addTo(map);
+                }
 
-                    const coordinates = data.routes[0].geometry.coordinates;
-                    const route = coordinates.map(coord => [coord[1], coord[0]]);
+                obtenerDireccion(lat, lon);
+            });
 
-                    routeLayer = L.polyline(route, { color: "blue", weight: 4 }).addTo(map);
-                })
-                .catch(error => {
-                    alert("Error al obtener la ruta.");
-                    console.error("Error en OpenRouteService:", error);
-                });
-        }
+            // Cambiar capa del mapa según la selección
+            document.getElementById("mapLayers").addEventListener("change", function () {
+                let selectedLayer = this.value;
+                map.eachLayer(layer => map.removeLayer(layer));
+                layers[selectedLayer].addTo(map);
+            });
+
+            // Centrar mapa en la ubicación del usuario
+            document.getElementById("centerMap").addEventListener("click", function () {
+                if (currentLat && currentLon) {
+                    map.setView([currentLat, currentLon], 15);
+                } else {
+                    alert("Aún no se ha obtenido la ubicación.");
+                }
+            });
+
+            // Obtener ubicación al cargar la página (solo la primera vez)
+            localizarUsuario();
+
+            // Evento del botón "Obtener Ubicación"
+            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
+        });
     </script>
 </body>
 </html>
