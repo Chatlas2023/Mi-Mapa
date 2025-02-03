@@ -11,28 +11,53 @@
             width: 100%;
             border: 2px solid red; /* Temporalmente para verificar el contenedor */
         }
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        #getLocation, #centerMap {
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        #getLocation:hover, #centerMap:hover {
+            background-color: #0056b3;
+        }
         #location-info {
             margin-top: 10px;
             font-size: 16px;
             font-weight: bold;
             white-space: pre-line; /* Permite saltos de línea */
         }
-        .button-container {
-            margin-top: 10px;
-        }
-        .button-container button {
-            margin-right: 10px;
-            padding: 10px;
-            font-size: 16px;
+        .map-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            padding: 8px;
+            background: white;
+            border: 2px solid #007bff;
+            border-radius: 5px;
             cursor: pointer;
+            font-weight: bold;
+        }
+        .map-button:hover {
+            background: #007bff;
+            color: white;
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <div class="button-container">
+    <div id="controls">
         <button id="getLocation">Obtener Ubicación</button>
-        <button id="centerMap">Centrar en mi ubicación</button>
+        <button id="centerMap">Centrar en mi Ubicación</button>
     </div>
     <div id="location-info">Esperando ubicación...</div>
 
@@ -41,29 +66,34 @@
         document.addEventListener('DOMContentLoaded', function () {
             var map = L.map('map').setView([0, 0], 2);
             var marcador;
+            var userLat, userLon; // Almacena la ubicación del usuario
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
+            function actualizarUbicacion(lat, lon) {
+                map.setView([lat, lon], 15);
+
+                // Eliminar marcador anterior si existe
+                if (marcador) {
+                    map.removeLayer(marcador);
+                }
+
+                marcador = L.marker([lat, lon]).addTo(map);
+
+                // Obtener dirección
+                obtenerDireccion(lat, lon);
+            }
+
             function localizarUsuario() {
                 if ("geolocation" in navigator) {
                     navigator.geolocation.getCurrentPosition(
                         function (position) {
-                            var lat = position.coords.latitude;
-                            var lon = position.coords.longitude;
-
-                            map.setView([lat, lon], 15);
-
-                            // Elimina el marcador anterior si existe
-                            if (marcador) {
-                                map.removeLayer(marcador);
-                            }
-                            marcador = L.marker([lat, lon]).addTo(map);
-
-                            // Llamar a la función de Reverse Geocode
-                            obtenerDireccion(lat, lon);
+                            userLat = position.coords.latitude;
+                            userLon = position.coords.longitude;
+                            actualizarUbicacion(userLat, userLon);
                         },
                         function (error) {
                             alert("Error obteniendo la ubicación: " + error.message);
@@ -96,26 +126,27 @@
                     });
             }
 
+            // Evento para obtener la ubicación cuando se hace clic en el mapa
+            map.on('click', function (e) {
+                var lat = e.latlng.lat;
+                var lon = e.latlng.lng;
+                actualizarUbicacion(lat, lon);
+            });
+
+            // Botón para centrar el mapa en la ubicación del usuario
+            document.getElementById("centerMap").addEventListener("click", function () {
+                if (userLat !== undefined && userLon !== undefined) {
+                    map.setView([userLat, userLon], 15);
+                } else {
+                    alert("Ubicación del usuario no disponible. Presiona 'Obtener Ubicación' primero.");
+                }
+            });
+
             // Obtener la ubicación al cargar la página
             localizarUsuario();
 
             // Botón para actualizar la ubicación y hacer geocodificación inversa
             document.getElementById("getLocation").addEventListener("click", localizarUsuario);
-
-            // Botón para centrar el mapa en la ubicación del usuario
-            document.getElementById("centerMap").addEventListener("click", localizarUsuario);
-
-            // Permitir al usuario hacer clic en el mapa para obtener la dirección
-            map.on('click', function(e) {
-                var lat = e.latlng.lat;
-                var lon = e.latlng.lon;
-
-                if (marcador) {
-                    map.removeLayer(marcador);
-                }
-                marcador = L.marker([lat, lon]).addTo(map);
-                obtenerDireccion(lat, lon);
-            });
         });
     </script>
 </body>
