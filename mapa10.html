@@ -76,9 +76,9 @@
             const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // Reemplaza con tu clave de OpenWeatherMap
             let map = L.map('map').setView([0, 0], 15); 
             let userMarker = null;
-            let userCircle = null; // Círculo de precisión
             let currentLat = null;
             let currentLon = null;
+            let precisionCircle = null; // Para el círculo de precisión
 
             let layers = {
                 osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -113,14 +113,16 @@
                                 userMarker = L.marker([currentLat, currentLon]).addTo(map);
                             }
 
-                            if (userCircle) {
-                                userCircle.setLatLng([currentLat, currentLon]);
+                            if (precisionCircle) {
+                                precisionCircle.setLatLng([currentLat, currentLon]);
                             } else {
-                                userCircle = L.circle([currentLat, currentLon], {
-                                    color: 'blue',
-                                    fillColor: '#30f',
-                                    fillOpacity: 0.3,
-                                    radius: position.coords.accuracy
+                                precisionCircle = L.circle([currentLat, currentLon], {
+                                    color: 'cyan', // Borde celeste
+                                    weight: 2, // Borde más fino
+                                    opacity: 1,
+                                    fillColor: 'cyan', // Relleno celeste
+                                    fillOpacity: 0.1, // Relleno más transparente
+                                    radius: 100 // Radio de precisión
                                 }).addTo(map);
                             }
 
@@ -173,7 +175,6 @@
                             let viento = (data.wind.speed * 3.6).toFixed(1);
                             document.getElementById("weather-info").innerText = 
                             `🌡️ Temperatura: ${temperatura}°C\n🌦️ Condiciones: ${condiciones}\n💧 Humedad: ${humedad}%\n🌬️ Viento: ${viento} km/h`;
-
                         } else {
                             document.getElementById("weather-info").innerText = "No se pudo obtener el clima.";
                         }
@@ -194,13 +195,15 @@
                     userMarker = L.marker([lat, lon]).addTo(map);
                 }
 
-                if (userCircle) {
-                    userCircle.setLatLng([lat, lon]);
+                if (precisionCircle) {
+                    precisionCircle.setLatLng([lat, lon]);
                 } else {
-                    userCircle = L.circle([lat, lon], {
-                        color: 'blue',
-                        fillColor: '#30f',
-                        fillOpacity: 0.3,
+                    precisionCircle = L.circle([lat, lon], {
+                        color: 'cyan',
+                        weight: 2,
+                        opacity: 1,
+                        fillColor: 'cyan',
+                        fillOpacity: 0.1,
                         radius: 100
                     }).addTo(map);
                 }
@@ -217,8 +220,8 @@
                 if (userMarker) {
                     userMarker.addTo(map);
                 }
-                if (userCircle) {
-                    userCircle.addTo(map);
+                if (precisionCircle) {
+                    precisionCircle.addTo(map);
                 }
             });
 
