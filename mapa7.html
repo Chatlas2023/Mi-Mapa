@@ -22,17 +22,48 @@
             font-weight: bold;
             white-space: pre-line;
         }
+        /* Estilos para los botones */
+        .btn {
+            padding: 8px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .btn-update {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-update:hover {
+            background-color: #0056b3;
+        }
+        .btn-center {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-center:hover {
+            background-color: #1e7e34;
+        }
+        /* Estilos para el selector */
+        #mapLayers {
+            padding: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <div id="controls">
-        <button id="getLocation">Actualizar Datos</button>
+        <button id="getLocation" class="btn btn-update">Actualizar Datos</button>
         <select id="mapLayers">
             <option value="osm">Mapa Estándar</option>
             <option value="satellite">Satélite</option>
         </select>
-        <button id="centerMap">Centrar en Ubicación</button>
+        <button id="centerMap" class="btn btn-center">Centrar en Ubicación</button>
     </div>
     <div id="location-info">Esperando ubicación...</div>
     <div id="weather-info">Cargando clima...</div>
@@ -41,7 +72,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // Reemplaza con tu clave de OpenWeatherMap
-            let map = L.map('map').setView([0, 0], 15); // Cambiado a zoom 15 para ver ~500 metros
+            let map = L.map('map').setView([0, 0], 15); 
             let userMarker = null;
             let currentLat = null;
             let currentLon = null;
@@ -66,7 +97,7 @@
                             currentLat = position.coords.latitude;
                             currentLon = position.coords.longitude;
 
-                            map.setView([currentLat, currentLon], 15); // Cambiado a zoom 15 para ver ~500 metros
+                            map.setView([currentLat, currentLon], 15);
 
                             if (userMarker) {
                                 userMarker.setLatLng([currentLat, currentLon]);
@@ -160,7 +191,7 @@
 
             document.getElementById("centerMap").addEventListener("click", function () {
                 if (currentLat && currentLon) {
-                    map.setView([currentLat, currentLon], 15); // Cambiado a zoom 15 para ver ~500 metros
+                    map.setView([currentLat, currentLon], 15);
                 } else {
                     alert("Aún no se ha obtenido la ubicación.");
                 }
