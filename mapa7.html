@@ -4,4 +4,172 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa con OpenStreetMap y Clima</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/di
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 380px;
+            width: 100%;
+            border: 2px solid red;
+        }
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        #location-info, #weather-info {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="controls">
+        <button id="getLocation">Actualizar Datos</button>
+        <select id="mapLayers">
+            <option value="osm">Mapa Estándar</option>
+            <option value="satellite">Satélite</option>
+        </select>
+        <button id="centerMap">Centrar en Ubicación</button>
+    </div>
+    <div id="location-info">Esperando ubicación...</div>
+    <div id="weather-info">Cargando clima...</div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // Reemplaza con tu clave de OpenWeatherMap
+            let map = L.map('map').setView([0, 0], 15); // Cambiado a zoom 15 para ver ~500 metros
+            let userMarker = null;
+            let currentLat = null;
+            let currentLon = null;
+
+            let layers = {
+                osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 22,
+                    attribution: '&copy; OpenStreetMap contributors'
+                }),
+                satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 20,
+                    attribution: '&copy; Esri'
+                })
+            };
+
+            layers.osm.addTo(map);
+
+            function localizarUsuario() {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        function (position) {
+                            currentLat = position.coords.latitude;
+                            currentLon = position.coords.longitude;
+
+                            map.setView([currentLat, currentLon], 15); // Cambiado a zoom 15 para ver ~500 metros
+
+                            if (userMarker) {
+                                userMarker.setLatLng([currentLat, currentLon]);
+                            } else {
+                                userMarker = L.marker([currentLat, currentLon]).addTo(map);
+                            }
+
+                            obtenerDireccion(currentLat, currentLon);
+                            obtenerClima(currentLat, currentLon);
+                        },
+                        function (error) {
+                            alert("Error obteniendo la ubicación: " + error.message);
+                        }
+                    );
+                } else {
+                    alert("Tu navegador no soporta geolocalización.");
+                }
+            }
+
+            function obtenerDireccion(lat, lon) {
+                let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.address) {
+                            let calle = data.address.road || "Calle no encontrada";
+                            let altura = data.address.house_number ? `, ${data.address.house_number}` : "";
+                            let barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
+                            let localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
+
+                            document.getElementById("location-info").innerText = 
+                                `📍 Calle: ${calle}${altura}\n🏠 Barrio: ${barrio}\n🏙️ Localidad: ${localidad}`;
+                        } else {
+                            document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
+                        console.error("Error en reverse geocode:", error);
+                    });
+            }
+
+            function obtenerClima(lat, lon) {
+                let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${API_KEY}`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.main) {
+                            let temperatura = data.main.temp;
+                            let condiciones = data.weather[0].description;
+                            let humedad = data.main.humidity;
+                            let viento = data.wind.speed;
+
+                            document.getElementById("weather-info").innerText = 
+                                `🌡️ Temperatura: ${temperatura}°C\n🌦️ Condiciones: ${condiciones}\n💧 Humedad: ${humedad}%\n🌬️ Viento: ${viento} m/s`;
+                        } else {
+                            document.getElementById("weather-info").innerText = "No se pudo obtener el clima.";
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById("weather-info").innerText = "Error obteniendo el clima.";
+                        console.error("Error obteniendo clima:", error);
+                    });
+            }
+
+            map.on('click', function (e) {
+                let lat = e.latlng.lat;
+                let lon = e.latlng.lng;
+
+                if (userMarker) {
+                    userMarker.setLatLng([lat, lon]);
+                } else {
+                    userMarker = L.marker([lat, lon]).addTo(map);
+                }
+
+                obtenerDireccion(lat, lon);
+                obtenerClima(lat, lon);
+            });
+
+            document.getElementById("mapLayers").addEventListener("change", function () {
+                let selectedLayer = this.value;
+                map.eachLayer(layer => map.removeLayer(layer));
+                layers[selectedLayer].addTo(map);
+
+                if (userMarker) {
+                    userMarker.addTo(map);
+                }
+            });
+
+            document.getElementById("centerMap").addEventListener("click", function () {
+                if (currentLat && currentLon) {
+                    map.setView([currentLat, currentLon], 15); // Cambiado a zoom 15 para ver ~500 metros
+                } else {
+                    alert("Aún no se ha obtenido la ubicación.");
+                }
+            });
+
+            localizarUsuario();
+
+            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
+        });
+    </script>
+</body>
+</html>
