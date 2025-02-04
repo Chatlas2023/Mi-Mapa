@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         #map {
-            height: 470px; /* Reducido para dejar espacio a los textos */
+            height: 470px;
             width: 100%;
             border: 2px solid red;
         }
@@ -44,19 +44,17 @@
             let currentLat = null;
             let currentLon = null;
 
-            // Capas de mapa disponibles con maxZoom aumentado
             let layers = {
                 osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 22,  // Aumentamos el zoom máximo
+                    maxZoom: 22,
                     attribution: '&copy; OpenStreetMap contributors'
                 }),
                 satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 21,  // Aumentamos el zoom máximo
+                    maxZoom: 22,
                     attribution: '&copy; Esri'
                 })
             };
 
-            // Agregar capa base inicial (OpenStreetMap)
             layers.osm.addTo(map);
 
             function localizarUsuario() {
@@ -66,7 +64,7 @@
                             currentLat = position.coords.latitude;
                             currentLon = position.coords.longitude;
 
-                            map.setView([currentLat, currentLon], 15);
+                            map.setView([currentLat, currentLon], 18);
 
                             if (userMarker) {
                                 userMarker.setLatLng([currentLat, currentLon]);
@@ -93,10 +91,12 @@
                     .then(data => {
                         if (data.address) {
                             let calle = data.address.road || "Calle no encontrada";
+                            let altura = data.address.house_number ? `, ${data.address.house_number}` : "";
                             let barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
                             let localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
 
-                            document.getElementById("location-info").innerText = `Calle: ${calle}\nBarrio: ${barrio}\nLocalidad: ${localidad}`;
+                            document.getElementById("location-info").innerText = 
+                                `Calle: ${calle}${altura}\nBarrio: ${barrio}\nLocalidad: ${localidad}`;
                         } else {
                             document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
                         }
@@ -107,7 +107,6 @@
                     });
             }
 
-            // Permitir clic en el mapa para obtener dirección
             map.on('click', function (e) {
                 let lat = e.latlng.lat;
                 let lon = e.latlng.lng;
@@ -121,35 +120,26 @@
                 obtenerDireccion(lat, lon);
             });
 
-            // Cambiar capa del mapa según la selección
             document.getElementById("mapLayers").addEventListener("change", function () {
                 let selectedLayer = this.value;
-
-                // Primero eliminar todas las capas
                 map.eachLayer(layer => map.removeLayer(layer));
-
-                // Luego agregar la capa seleccionada
                 layers[selectedLayer].addTo(map);
 
-                // Asegurar que el marcador se mantenga en el mapa después de cambiar la capa
                 if (userMarker) {
                     userMarker.addTo(map);
                 }
             });
 
-            // Centrar mapa en la ubicación del usuario
             document.getElementById("centerMap").addEventListener("click", function () {
                 if (currentLat && currentLon) {
-                    map.setView([currentLat, currentLon], 15);
+                    map.setView([currentLat, currentLon], 18);
                 } else {
                     alert("Aún no se ha obtenido la ubicación.");
                 }
             });
 
-            // Obtener ubicación al cargar la página (solo la primera vez)
             localizarUsuario();
 
-            // Evento del botón "Obtener Ubicación"
             document.getElementById("getLocation").addEventListener("click", localizarUsuario);
         });
     </script>
