@@ -89,6 +89,11 @@
             };
 
             layers.osm.addTo(map);
+               map.on('zoomend', function () {
+        if (map.getZoom() > 20) {
+            map.setZoom(20);  // Limitar el zoom a 20
+        }
+    });
 
             function localizarUsuario() {
                 if ("geolocation" in navigator) {
