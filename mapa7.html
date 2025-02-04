@@ -83,15 +83,15 @@
                     attribution: '&copy; OpenStreetMap contributors'
                 }),
                 satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 20,
+                    maxZoom: 19,
                     attribution: '&copy; Esri'
                 })
             };
 
             layers.osm.addTo(map);
                map.on('zoomend', function () {
-        if (map.getZoom() > 20) {
-            map.setZoom(20);  // Limitar el zoom a 20
+        if (map.getZoom() > 19) {
+            map.setZoom(19);  // Limitar el zoom a 20
         }
     });
 
