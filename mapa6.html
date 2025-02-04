@@ -16,13 +16,12 @@
             justify-content: space-between;
             margin-top: 10px;
         }
-        #location-info {
+        #location-info, #weather-info {
             margin-top: 10px;
             font-size: 16px;
             font-weight: bold;
             white-space: pre-line;
         }
-        <div id="weather-info">Cargando clima...</div>
     </style>
 </head>
 <body>
@@ -36,6 +35,7 @@
         <button id="centerMap">Centrar en Ubicación</button>
     </div>
     <div id="location-info">Esperando ubicación...</div>
+    <div id="weather-info">Cargando clima...</div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -99,7 +99,7 @@
                             let localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
 
                             document.getElementById("location-info").innerText = 
-                                `Calle: ${calle}${altura}\nBarrio: ${barrio}\nLocalidad: ${localidad}`;
+                                `📍 Calle: ${calle}${altura}\n🏠 Barrio: ${barrio}\n🏙️ Localidad: ${localidad}`;
                         } else {
                             document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
                         }
@@ -122,15 +122,14 @@
                             let humedad = data.main.humidity;
                             let viento = data.wind.speed;
 
-                            let climaInfo = `\n🌡️ Temperatura: ${temperatura}°C\n🌦️ Condiciones: ${condiciones}\n💧 Humedad: ${humedad}%\n🌬️ Viento: ${viento} m/s`;
-                            
-                            document.getElementById("location-info").innerText += climaInfo;
+                            document.getElementById("weather-info").innerText = 
+                                `🌡️ Temperatura: ${temperatura}°C\n🌦️ Condiciones: ${condiciones}\n💧 Humedad: ${humedad}%\n🌬️ Viento: ${viento} m/s`;
                         } else {
-                            document.getElementById("location-info").innerText += "\nNo se pudo obtener el clima.";
+                            document.getElementById("weather-info").innerText = "No se pudo obtener el clima.";
                         }
                     })
                     .catch(error => {
-                        document.getElementById("location-info").innerText += "\nError obteniendo el clima.";
+                        document.getElementById("weather-info").innerText = "Error obteniendo el clima.";
                         console.error("Error obteniendo clima:", error);
                     });
             }
