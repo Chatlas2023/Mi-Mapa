@@ -201,7 +201,28 @@
                     alert("Aún no se ha obtenido la ubicación.");
                 }
             });
+L.control.version = function(opts) {
+    return new L.Control.Version(opts);
+};
 
+L.Control.Version = L.Control.extend({
+    options: {
+        position: 'bottomright'
+    },
+
+    onAdd: function(map) {
+        let div = L.DomUtil.create('div', 'leaflet-control-version');
+        div.innerHTML = "Versión: 1.2.3"; // Cambia esto por tu versión
+        div.style.padding = "5px";
+        div.style.background = "rgba(255, 255, 255, 0.8)";
+        div.style.fontSize = "14px";
+        div.style.borderRadius = "5px";
+        div.style.border = "1px solid #ccc";
+        return div;
+    }
+});
+
+map.addControl(new L.Control.Version());
             localizarUsuario();
 
             document.getElementById("getLocation").addEventListener("click", localizarUsuario);
