@@ -174,7 +174,7 @@
                             let humedad = data.main.humidity;
                             let viento = (data.wind.speed * 3.6).toFixed(1);
                             document.getElementById("weather-info").innerText = 
-                            `🌡️ Temperatura: ${temperatura}°C\n🌦️ Condiciones: ${condiciones}\n💧 Humedad: ${humedad}%\n🌬️ Viento: ${viento} km/h`;
+                            `🌡️ Temperatura: ${temperatura.toFixed(1)}°C\n🌦️ Condiciones: ${condiciones}\n💧 Humedad: ${humedad}%\n🌬️ Viento: ${viento} km/h`;
                         } else {
                             document.getElementById("weather-info").innerText = "No se pudo obtener el clima.";
                         }
@@ -244,7 +244,7 @@
 
                 onAdd: function(map) {
                     let div = L.DomUtil.create('div', 'leaflet-control-version');
-                    div.innerHTML = "Versión: 1.3.3"; // Cambia esto por tu versión
+                    div.innerHTML = "Versión: 1.3.4"; // Cambia esto por tu versión
                     div.style.padding = "5px";
                     div.style.background = "rgba(255, 255, 255, 0.8)";
                     div.style.fontSize = "14px";
