@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa con OpenStreetMap, Clima y Windy</title>
+    <title>Mapa con OpenStreetMap, Satélite y Pronóstico</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         #map {
@@ -23,6 +23,7 @@
             font-weight: normal;
             white-space: pre-line;
         }
+        /* Estilos para los botones */
         .btn {
             padding: 7px 15px;
             font-size: 14px;
@@ -31,7 +32,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.3s ease;
-            width: 180px;
+            width: 180px; /* Añadir un ancho fijo */
         }
         .btn-update {
             background-color: #007bff;
@@ -47,6 +48,7 @@
         .btn-center:hover {
             background-color: #007bff;
         }
+        /* Estilos para el selector */
         #mapLayers {
             padding: 8px;
             font-size: 14px;
@@ -62,7 +64,7 @@
         <select id="mapLayers">
             <option value="osm">Mapa Estándar</option>
             <option value="satellite">Satélite</option>
-            <option value="windy">Windy</option>
+            <option value="forecast">Pronóstico</option>
         </select>
         <button id="centerMap" class="btn btn-center">Centrar en Ubicación</button>
     </div>
@@ -70,10 +72,10 @@
     <div id="weather-info">Cargando clima...</div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-windy@0.1.3/leaflet-windy.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // Reemplaza con tu clave de OpenWeatherMap
+            const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // Clave de OpenWeatherMap
+            const MAP_FORECAST_API_KEY = "dxDS5A0vfB7PTIRIhqPQ0COHnn9BWNms"; // Clave de Map Forecast API
             let map = L.map('map').setView([0, 0], 15); 
             let userMarker = null;
             let currentLat = null;
@@ -89,29 +91,27 @@
                     maxZoom: 19,
                     attribution: '&copy; Esri'
                 }),
-                windy: L.windy({ key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms', lat: 0, lon: 0, zoom: 2 }) // Windy API
+                forecast: L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${MAP_FORECAST_API_KEY}`, {
+                    maxZoom: 19,
+                    attribution: '&copy; Map Forecast'
+                })
             };
 
             layers.osm.addTo(map);
-
             map.on('zoomend', function () {
                 if (map.getZoom() > 19) {
-                    map.setZoom(19);  // Limitar el zoom a 20
+                    map.setZoom(19);  // Limitar el zoom a 19
                 }
             });
 
             function localizarUsuario() {
-                console.log("Intentando obtener ubicación...");
-
                 if ("geolocation" in navigator) {
                     navigator.geolocation.getCurrentPosition(
                         function (position) {
-                            console.log("Ubicación obtenida correctamente:");
                             currentLat = position.coords.latitude;
                             currentLon = position.coords.longitude;
 
                             map.setView([currentLat, currentLon], 15);
-                            console.log(`Lat: ${currentLat}, Lon: ${currentLon}`);
 
                             if (userMarker) {
                                 userMarker.setLatLng([currentLat, currentLon]);
@@ -123,12 +123,12 @@
                                 precisionCircle.setLatLng([currentLat, currentLon]);
                             } else {
                                 precisionCircle = L.circle([currentLat, currentLon], {
-                                    color: 'cyan', 
-                                    weight: 2, 
+                                    color: 'cyan', // Borde celeste
+                                    weight: 2, // Borde más fino
                                     opacity: 1,
-                                    fillColor: 'cyan', 
-                                    fillOpacity: 0.1, 
-                                    radius: 100 
+                                    fillColor: 'cyan', // Relleno celeste
+                                    fillOpacity: 0.1, // Relleno más transparente
+                                    radius: 100 // Radio de precisión
                                 }).addTo(map);
                             }
 
@@ -136,12 +136,10 @@
                             obtenerClima(currentLat, currentLon);
                         },
                         function (error) {
-                            console.error("Error obteniendo la ubicación:", error);
                             alert("Error obteniendo la ubicación: " + error.message);
                         }
                     );
                 } else {
-                    console.log("Geolocalización no disponible.");
                     alert("Tu navegador no soporta geolocalización.");
                 }
             }
@@ -234,16 +232,38 @@
             });
 
             document.getElementById("centerMap").addEventListener("click", function () {
-                if (currentLat !== null && currentLon !== null) {
+                if (currentLat && currentLon) {
                     map.setView([currentLat, currentLon], 15);
                 } else {
-                    alert("Primero debes obtener tu ubicación.");
+                    alert("Aún no se ha obtenido la ubicación.");
                 }
             });
 
-            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
+            L.control.version = function(opts) {
+                return new L.Control.Version(opts);
+            };
 
-            localizarUsuario(); // Iniciar la geolocalización automáticamente
+            L.Control.Version = L.Control.extend({
+                options: {
+                    position: 'topright'
+                },
+
+                onAdd: function(map) {
+                    let div = L.DomUtil.create('div', 'leaflet-control-version');
+                    div.innerHTML = "Versión: 1.3.6"; // Cambia esto por tu versión
+                    div.style.padding = "5px";
+                    div.style.background = "rgba(255, 255, 255, 0.8)";
+                    div.style.fontSize = "14px";
+                    div.style.borderRadius = "5px";
+                    div.style.border = "1px solid #ccc";
+                    return div;
+                }
+            });
+
+            map.addControl(new L.Control.Version());
+            localizarUsuario();
+
+            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
         });
     </script>
 </body>
