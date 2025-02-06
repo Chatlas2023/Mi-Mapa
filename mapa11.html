@@ -93,6 +93,7 @@
             };
 
             layers.osm.addTo(map);
+
             map.on('zoomend', function () {
                 if (map.getZoom() > 19) {
                     map.setZoom(19);  // Limitar el zoom a 20
@@ -100,13 +101,17 @@
             });
 
             function localizarUsuario() {
+                console.log("Intentando obtener ubicación...");
+
                 if ("geolocation" in navigator) {
                     navigator.geolocation.getCurrentPosition(
                         function (position) {
+                            console.log("Ubicación obtenida correctamente:");
                             currentLat = position.coords.latitude;
                             currentLon = position.coords.longitude;
 
                             map.setView([currentLat, currentLon], 15);
+                            console.log(`Lat: ${currentLat}, Lon: ${currentLon}`);
 
                             if (userMarker) {
                                 userMarker.setLatLng([currentLat, currentLon]);
@@ -131,10 +136,12 @@
                             obtenerClima(currentLat, currentLon);
                         },
                         function (error) {
+                            console.error("Error obteniendo la ubicación:", error);
                             alert("Error obteniendo la ubicación: " + error.message);
                         }
                     );
                 } else {
+                    console.log("Geolocalización no disponible.");
                     alert("Tu navegador no soporta geolocalización.");
                 }
             }
@@ -227,38 +234,16 @@
             });
 
             document.getElementById("centerMap").addEventListener("click", function () {
-                if (currentLat && currentLon) {
+                if (currentLat !== null && currentLon !== null) {
                     map.setView([currentLat, currentLon], 15);
                 } else {
-                    alert("Aún no se ha obtenido la ubicación.");
+                    alert("Primero debes obtener tu ubicación.");
                 }
             });
-
-            L.control.version = function(opts) {
-                return new L.Control.Version(opts);
-            };
-
-            L.Control.Version = L.Control.extend({
-                options: {
-                    position: 'topright'
-                },
-
-                onAdd: function(map) {
-                    let div = L.DomUtil.create('div', 'leaflet-control-version');
-                    div.innerHTML = "Versión: 1.3.6"; 
-                    div.style.padding = "5px";
-                    div.style.background = "rgba(255, 255, 255, 0.8)";
-                    div.style.fontSize = "14px";
-                    div.style.borderRadius = "5px";
-                    div.style.border = "1px solid #ccc";
-                    return div;
-                }
-            });
-
-            map.addControl(new L.Control.Version());
-            localizarUsuario();
 
             document.getElementById("getLocation").addEventListener("click", localizarUsuario);
+
+            localizarUsuario(); // Iniciar la geolocalización automáticamente
         });
     </script>
 </body>
