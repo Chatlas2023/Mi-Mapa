@@ -23,7 +23,6 @@
             font-weight: normal;
             white-space: pre-line;
         }
-        /* Estilos para los botones */
         .btn {
             padding: 7px 15px;
             font-size: 14px;
@@ -32,7 +31,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.3s ease;
-            width: 180px; /* Añadir un ancho fijo */
+            width: 180px;
         }
         .btn-update {
             background-color: #007bff;
@@ -48,7 +47,6 @@
         .btn-center:hover {
             background-color: #007bff;
         }
-        /* Estilos para el selector */
         #mapLayers {
             padding: 8px;
             font-size: 14px;
@@ -64,7 +62,7 @@
         <select id="mapLayers">
             <option value="osm">Mapa Estándar</option>
             <option value="satellite">Satélite</option>
-            <option value="windy">Windy</option> <!-- Nueva capa Windy -->
+            <option value="windy">Windy</option>
         </select>
         <button id="centerMap" class="btn btn-center">Centrar en Ubicación</button>
     </div>
@@ -72,11 +70,10 @@
     <div id="weather-info">Cargando clima...</div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-windy@0.1.3/leaflet-windy.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // Reemplaza con tu clave de OpenWeatherMap
-            const WINDY_API_KEY = "dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms"; // Nueva API Key para Windy
-
             let map = L.map('map').setView([0, 0], 15); 
             let userMarker = null;
             let currentLat = null;
@@ -92,17 +89,13 @@
                     maxZoom: 19,
                     attribution: '&copy; Esri'
                 }),
-                windy: L.tileLayer(`https://tile.openweathermap.org/map/{layer}/{z}/{x}/{y}.png?appid=${WINDY_API_KEY}`, {
-                    layer: 'wind',  // Capa de viento (puedes cambiarla a 'precipitation', 'pressure', etc.)
-                    maxZoom: 18,
-                    attribution: '&copy; Windy'
-                })
+                windy: L.windy({ key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms', lat: 0, lon: 0, zoom: 2 }) // Windy API
             };
 
             layers.osm.addTo(map);
             map.on('zoomend', function () {
                 if (map.getZoom() > 19) {
-                    map.setZoom(19);  // Limitar el zoom a 19
+                    map.setZoom(19);  // Limitar el zoom a 20
                 }
             });
 
@@ -125,12 +118,12 @@
                                 precisionCircle.setLatLng([currentLat, currentLon]);
                             } else {
                                 precisionCircle = L.circle([currentLat, currentLon], {
-                                    color: 'cyan', // Borde celeste
-                                    weight: 2, // Borde más fino
+                                    color: 'cyan', 
+                                    weight: 2, 
                                     opacity: 1,
-                                    fillColor: 'cyan', // Relleno celeste
-                                    fillOpacity: 0.1, // Relleno más transparente
-                                    radius: 100 // Radio de precisión
+                                    fillColor: 'cyan', 
+                                    fillOpacity: 0.1, 
+                                    radius: 100 
                                 }).addTo(map);
                             }
 
@@ -252,7 +245,7 @@
 
                 onAdd: function(map) {
                     let div = L.DomUtil.create('div', 'leaflet-control-version');
-                    div.innerHTML = "Versión: 1.3.5"; // Cambia esto por tu versión
+                    div.innerHTML = "Versión: 1.3.4"; 
                     div.style.padding = "5px";
                     div.style.background = "rgba(255, 255, 255, 0.8)";
                     div.style.fontSize = "14px";
