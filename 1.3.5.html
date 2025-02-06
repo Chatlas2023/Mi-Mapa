@@ -2,128 +2,105 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa con OpenStreetMap y Clima</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
         #map {
-            height: 70vh; /* 70% of viewport height */
-            width: 100%; 
+            height: 350px;
+            width: 100%;
             border: 2px solid red;
         }
-        /* ... rest of your styles ... */
+        #controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        #location-info, #weather-info {
+            font-family: 'Arial', sans-serif;
+            font-size: 16px;
+            white-space: pre-line;
+            margin-top: 10px;
+        }
+        .btn {
+            padding: 7px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            width: 180px;
+        }
+        .btn-update, .btn-center {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-update:hover, .btn-center:hover {
+            background-color: #0056b3;
+        }
+        #mapLayers {
+            padding: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        @media (orientation: landscape) {
+            body {
+                flex-direction: row;
+            }
+            #map {
+                height: 100vh;
+                width: 60%;
+            }
+            #info-panel {
+                width: 40%;
+                padding: 10px;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <div id="controls">
-        <button id="getLocation" class="btn btn-update">Actualizar Datos</button>
-        <select id="mapLayers">
-            <option value="osm">Mapa Estándar</option>
-            <option value="satellite">Satélite</option>
-        </select>
-        <button id="centerMap" class="btn btn-center">Centrar en Ubicación</button>
+    <div id="info-panel">
+        <div id="controls">
+            <button id="getLocation" class="btn btn-update">Actualizar Datos</button>
+            <select id="mapLayers">
+                <option value="osm">Mapa Estándar</option>
+                <option value="satellite">Satélite</option>
+            </select>
+            <button id="centerMap" class="btn btn-center">Centrar en Ubicación</button>
+        </div>
+        <div id="location-info">Esperando ubicación...</div>
+        <div id="weather-info">Cargando clima...</div>
     </div>
-    <div id="location-info">Esperando ubicación...</div>
-    <div id="weather-info">Cargando clima...</div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb";
-            let initialZoom = window.innerWidth > window.innerHeight ? 12 : 15; // Higher zoom for landscape
-            let map = L.map('map').setView([0, 0], initialZoom); 
-            let userMarker = null;
-            let currentLat = null;
-            let currentLon = null;
-            let precisionCircle = null; // Para el círculo de precisión
-
-            let layers = {
-                osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 22,
-                    attribution: '&copy; OpenStreetMap contributors'
-                }),
-                satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 19,
-                    attribution: '&copy; Esri'
-                })
-            };
-
-            layers.osm.addTo(map);
-            map.on('zoomend', function () {
-                if (map.getZoom() > 19) {
-                    map.setZoom(19);  // Limitar el zoom a 20
-                }
-            });
-
-            function localizarUsuario() {
-                if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(
-                        function (position) {
-                            currentLat = position.coords.latitude;
-                            currentLon = position.coords.longitude;
-
-                            map.setView([currentLat, currentLon], initialZoom); // Use initialZoom here
-
-                            if (userMarker) {
-                                userMarker.setLatLng([currentLat, currentLon]);
-                            } else {
-                                userMarker = L.marker([currentLat, currentLon]).addTo(map);
-                            }
-
-                            if (precisionCircle) {
-                                precisionCircle.setLatLng([currentLat, currentLon]);
-                            } else {
-                                precisionCircle = L.circle([currentLat, currentLon], {
-                                    color: 'cyan', // Borde celeste
-                                    weight: 2, // Borde más fino
-                                    opacity: 1,
-                                    fillColor: 'cyan', // Relleno celeste
-                                    fillOpacity: 0.1, // Relleno más transparente
-                                    radius: 100 // Radio de precisión
-                                }).addTo(map);
-                            }
-
-                            obtenerDireccion(currentLat, currentLon);
-                            obtenerClima(currentLat, currentLon);
-                        },
-                        function (error) {
-                            alert("Error obteniendo la ubicación: " + error.message);
-                        }
-                    );
+            function adjustLayout() {
+                if (window.innerWidth > window.innerHeight) {
+                    document.body.style.flexDirection = 'row';
+                    document.getElementById('map').style.width = '60%';
+                    document.getElementById('map').style.height = '100vh';
+                    document.getElementById('info-panel').style.width = '40%';
                 } else {
-                    alert("Tu navegador no soporta geolocalización.");
+                    document.body.style.flexDirection = 'column';
+                    document.getElementById('map').style.width = '100%';
+                    document.getElementById('map').style.height = '350px';
+                    document.getElementById('info-panel').style.width = '100%';
                 }
             }
-
-            // ... rest of your functions ...
-
-            document.getElementById("mapLayers").addEventListener("change", function () {
-                let selectedLayer = this.value;
-                map.eachLayer(layer => map.removeLayer(layer));
-                layers[selectedLayer].addTo(map);
-
-                if (userMarker) {
-                    userMarker.addTo(map);
-                }
-                if (precisionCircle) {
-                    precisionCircle.addTo(map);
-                }
-            });
-
-            document.getElementById("centerMap").addEventListener("click", function () {
-                if (currentLat && currentLon) {
-                    map.setView([currentLat, currentLon], initialZoom); // Use initialZoom here
-                } else {
-                    alert("Aún no se ha obtenido la ubicación.");
-                }
-            });
-
-            // ... rest of your code ...
-
-            localizarUsuario();
-
-            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
+            window.addEventListener('resize', adjustLayout);
+            adjustLayout();
         });
     </script>
 </body>
