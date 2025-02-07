@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Windy Forecast Map</title>
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+    <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
+    <style>
+        #windy { width: 100%; height: 500px; }
+    </style>
+</head>
+<body>
+    <div id="windy"></div>
+    <script>
+        const options = {
+            key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms', // Tu API key
+            lat: -34.61, // Latitud de ejemplo (Buenos Aires)
+            lon: -58.38, // Longitud de ejemplo (Buenos Aires)
+            zoom: 5, // Nivel de zoom inicial
+            overlay: 'temp', // Muestra la temperatura en lugar del viento
+        };
+
+        windyInit(options, function(windyAPI) {
+            const { map, overlays } = windyAPI;
+            console.log('Windy API inicializada:', windyAPI);
+        });
+    </script>
+    <button onclick="window.location.href='mapa11.html';" class="btn btn-center">Volver a Mapa Principal</button>
+</body>
+</html>
