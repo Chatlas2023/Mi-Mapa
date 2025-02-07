@@ -1,0 +1,23 @@
+    !DOCTYPE html><html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Prueba Windy Forecast Map</title>
+        <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+        <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
+        <style>
+            #windy { width: 100%; height: 500px; }
+        </style>
+    </head>
+    <body>
+        <div id="windy"></div>
+        <script>
+            const options = {
+                key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms', // Tu API key
+            };
+            windyInit(options, function(windyAPI) {
+                console.log('Windy API inicializada:', windyAPI);
+            });
+        </script>
+    </body>
+    </html>
