@@ -1,23 +1,48 @@
-    !DOCTYPE html><html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Prueba Windy Forecast Map</title>
-        <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
-        <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
-        <style>
-            #windy { width: 100%; height: 500px; }
-        </style>
-    </head>
-    <body>
-        <div id="windy"></div>
-        <script>
-            const options = {
-                key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms', // Tu API key
-            };
-            windyInit(options, function(windyAPI) {
-                console.log('Windy API inicializada:', windyAPI);
-            });
-        </script>
-    </body>
-    </html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Windy Forecast Map</title>
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+    <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
+    <style>
+        #windy { width: 100%; height: 500px; }
+        #backButton { /* Estilos para el botón de regreso */
+            position: absolute; /* Posición absoluta para colocarlo sobre el mapa */
+            top: 10px; /* Margen superior */
+            left: 10px; /* Margen izquierdo */
+            padding: 7px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff; /* Color de fondo */
+            color: white; /* Color de texto */
+            z-index: 1000; /* Asegura que esté por encima del mapa */
+        }
+    </style>
+</head>
+<body>
+    <div id="windy"></div>
+    <button id="backButton">Volver al Mapa Principal</button> <script>
+        const options = {
+            key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms',
+            lat: -34.61,
+            lon: -58.38,
+            zoom: 5,
+            overlay: 'temp',
+        };
+
+        windyInit(options, function(windyAPI) {
+            const { map, overlays } = windyAPI;
+            console.log('Windy API inicializada:', windyAPI);
+        });
+
+        document.getElementById("backButton").addEventListener("click", function() {
+            window.location.href = "mapa11.html"; // Redirige de vuelta a mapa11.html
+        });
+    </script>
+</body>
+</html>
