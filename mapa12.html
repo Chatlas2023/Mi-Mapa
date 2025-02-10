@@ -118,7 +118,6 @@
                     // Guardar en localStorage
                     localStorage.setItem('savedLocation', JSON.stringify({ lat: currentLat, lon: currentLon }));
                     mostrarMarcadorGuardado(currentLat, currentLon);
-                   // alert("Ubicación guardada correctamente.");
                 } else {
                     alert("No se ha obtenido la ubicación actual.");
                 }
@@ -127,13 +126,18 @@
             // Función para mostrar el marcador del lugar guardado
             function mostrarMarcadorGuardado(lat, lon) {
                 if (savedMarker) {
+                    // Cerrar el popup existente
+                    savedMarker.closePopup();
+                    // Mover el marcador a la nueva ubicación
                     savedMarker.setLatLng([lat, lon]);
                 } else {
+                    // Crear un nuevo marcador si no existe
                     savedMarker = L.marker([lat, lon], {
                         title: "Lugar guardado"
                     }).addTo(map);
-                    savedMarker.bindPopup("Lugar guardado").openPopup();
                 }
+                // Abrir un nuevo popup con el mensaje "Lugar guardado"
+                savedMarker.bindPopup("Lugar guardado").openPopup();
             }
 
             // Recuperar la ubicación guardada al cargar la página
@@ -301,7 +305,7 @@
                 },
                 onAdd: function(map) {
                     let div = L.DomUtil.create('div', 'leaflet-control-version');
-                    div.innerHTML = "Versión: 1.3.7"; // Cambia esto por tu versión
+                    div.innerHTML = "Versión: 1.3.8"; // Cambia esto por tu versión
                     div.style.padding = "5px";
                     div.style.background = "rgba(255, 255, 255, 0.8)";
                     div.style.fontSize = "14px";
