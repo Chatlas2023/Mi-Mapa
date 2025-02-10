@@ -96,6 +96,16 @@
             let precisionCircle = null; // círculo de precisión
             let savedMarker = null; // marcador del lugar guardado
 
+            // Definir un ícono rojo para el marcador de "Lugar Guardado"
+            const redIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', // URL del ícono rojo
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png', // Sombra del ícono
+                iconSize: [25, 41], // Tamaño del ícono
+                iconAnchor: [12, 41], // Punto de anclaje del ícono
+                popupAnchor: [1, -34], // Punto de anclaje del popup
+                shadowSize: [41, 41] // Tamaño de la sombra
+            });
+
             let layers = {
                 osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 22,
@@ -133,9 +143,10 @@
                     // Mover el marcador a la nueva ubicación
                     savedMarker.setLatLng([lat, lon]);
                 } else {
-                    // Crear un nuevo marcador si no existe
+                    // Crear un nuevo marcador si no existe, usando el ícono rojo
                     savedMarker = L.marker([lat, lon], {
-                        title: "Lugar guardado"
+                        title: "Lugar guardado",
+                        icon: redIcon // Asignar el ícono rojo
                     }).addTo(map);
                 }
                 // Abrir un nuevo popup con el mensaje "Lugar guardado"
@@ -307,7 +318,7 @@
                 },
                 onAdd: function(map) {
                     let div = L.DomUtil.create('div', 'leaflet-control-version');
-                    div.innerHTML = "Versión: 1.3.12"; // Cambia esto por tu versión
+                    div.innerHTML = "Versión: 1.3.14"; // Cambia esto por tu versión
                     div.style.padding = "5px";
                     div.style.background = "rgba(255, 255, 255, 0.8)";
                     div.style.fontSize = "14px";
