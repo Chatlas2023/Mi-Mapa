@@ -118,7 +118,7 @@
                     // Guardar en localStorage
                     localStorage.setItem('savedLocation', JSON.stringify({ lat: currentLat, lon: currentLon }));
                     mostrarMarcadorGuardado(currentLat, currentLon);
-                    alert("Ubicación guardada correctamente.");
+                   // alert("Ubicación guardada correctamente.");
                 } else {
                     alert("No se ha obtenido la ubicación actual.");
                 }
@@ -301,7 +301,7 @@
                 },
                 onAdd: function(map) {
                     let div = L.DomUtil.create('div', 'leaflet-control-version');
-                    div.innerHTML = "Versión: 1.3.6"; // Cambia esto por tu versión
+                    div.innerHTML = "Versión: 1.3.7"; // Cambia esto por tu versión
                     div.style.padding = "5px";
                     div.style.background = "rgba(255, 255, 255, 0.8)";
                     div.style.fontSize = "14px";
