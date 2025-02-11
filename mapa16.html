@@ -95,6 +95,7 @@
             let currentLon = null;
             let precisionCircle = null; // círculo de precisión
             let savedMarker = null; // marcador del lugar guardado
+            let cameraLayer = null; // Capa de cámaras
 
             // Definir un ícono personalizado para el marcador de "Lugar Guardado"
             const customIcon = L.icon({
@@ -123,22 +124,27 @@
             });
 
             // Cargar las cámaras desde el archivo GeoJSON
-            fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Camaras.geojson')
-                .then(response => response.json())
-                .then(data => {
-                    L.geoJSON(data, {
-                        pointToLayer: function (feature, latlng) {
-                            return L.marker(latlng, {
-                                icon: L.icon({
-                                    iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Camera.png',
-                                    iconSize: [25, 25],
-                                    iconAnchor: [12, 25]
-                                })
-                            }).bindPopup(`<div style="white-space: normal;"><b>${feature.properties.name || 'Cámara sin nombre'}</b><br>${feature.properties.description || 'Sin descripción'}</div>`);
-                        }
-                    }).addTo(map);
-                })
-                .catch(error => console.error('Error cargando las cámaras:', error));
+            function loadCameras() {
+                fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Camaras.geojson')
+                    .then(response => response.json())
+                    .then(data => {
+                        cameraLayer = L.geoJSON(data, {
+                            pointToLayer: function (feature, latlng) {
+                                return L.marker(latlng, {
+                                    icon: L.icon({
+                                        iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Camera.png',
+                                        iconSize: [25, 25],
+                                        iconAnchor: [12, 25]
+                                    })
+                                }).bindPopup(`<div style="white-space: normal;"><b>${feature.properties.name || 'Cámara sin nombre'}</b><br>${feature.properties.description || 'Sin descripción'}</div>`);
+                            }
+                        }).addTo(map);
+                    })
+                    .catch(error => console.error('Error cargando las cámaras:', error));
+            }
+
+            // Cargar las cámaras al inicio
+            loadCameras();
 
             // Función para guardar la ubicación actual
             function guardarUbicacion() {
@@ -302,7 +308,12 @@
                 if (selectedLayer === "temperatura") {
                     window.location.href = "mapaWindy.html"; // Redirige a mapaWindy.html
                 } else {
-                    map.eachLayer(layer => map.removeLayer(layer));
+                    // Eliminar solo las capas base, no la capa de cámaras
+                    map.eachLayer(layer => {
+                        if (layer === layers.osm || layer === layers.satellite) {
+                            map.removeLayer(layer);
+                        }
+                    });
                     layers[selectedLayer].addTo(map);
                     if (userMarker) {
                         userMarker.addTo(map);
@@ -312,6 +323,9 @@
                     }
                     if (savedMarker) {
                         savedMarker.addTo(map);
+                    }
+                    if (cameraLayer) {
+                        cameraLayer.addTo(map); // Asegurar que la capa de cámaras permanezca
                     }
                 }
             });
@@ -334,7 +348,7 @@
                 },
                 onAdd: function(map) {
                     let div = L.DomUtil.create('div', 'leaflet-control-version');
-                    div.innerHTML = "Versión: 1.3.20"; // Cambia esto por tu versión
+                    div.innerHTML = "Versión: 1.3.17"; // Cambia esto por tu versión
                     div.style.padding = "5px";
                     div.style.background = "rgba(255, 255, 255, 0.8)";
                     div.style.fontSize = "14px";
