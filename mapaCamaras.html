@@ -36,8 +36,12 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Inicializar el mapa
-            let map = L.map('map').setView([-34.6037, -58.3816], 13); // Coordenadas de Buenos Aires
+            // Coordenadas por defecto (Buenos Aires)
+            let defaultCoords = [-34.6037, -58.3816];
+            let defaultZoom = 13;
+
+            // Inicializar el mapa sin centrado
+            let map = L.map('map');
 
             // Capa de OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -45,31 +49,44 @@
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
+            // Intentar obtener la ubicación del usuario
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        let userCoords = [position.coords.latitude, position.coords.longitude];
+                        map.setView(userCoords, defaultZoom);
+                    },
+                    function (error) {
+                        console.warn('Geolocalización denegada o no disponible. Usando coordenadas por defecto.');
+                        map.setView(defaultCoords, defaultZoom);
+                    }
+                );
+            } else {
+                console.warn('Geolocalización no soportada. Usando coordenadas por defecto.');
+                map.setView(defaultCoords, defaultZoom);
+            }
+
             // Cargar las cámaras desde el archivo GeoJSON
             fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Camaras.geojson')
                 .then(response => response.json())
                 .then(data => {
                     L.geoJSON(data, {
                         pointToLayer: function (feature, latlng) {
-                            // Crear un marcador personalizado para cada cámara
                             return L.marker(latlng, {
                                 icon: L.icon({
-                                    iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Camera.png', // URL del ícono de la cámara
-                                    iconSize: [25, 25], // Tamaño del ícono
-                                    iconAnchor: [12, 25] // Punto de anclaje del ícono
+                                    iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Camera.png',
+                                    iconSize: [25, 25],
+                                    iconAnchor: [12, 25]
                                 })
                             }).bindPopup(`<div style="white-space: normal;"><b>${feature.properties.name || 'Cámara sin nombre'}</b><br>${feature.properties.description || 'Sin descripción'}</div>`);
-
                         }
                     }).addTo(map);
                 })
-                .catch(error => {
-                    console.error('Error cargando las cámaras:', error);
-                });
+                .catch(error => console.error('Error cargando las cámaras:', error));
 
             // Botón para volver al mapa original
             document.getElementById('backButton').addEventListener('click', function () {
-                window.location.href = 'index.html'; // Cambia 'index.html' por el nombre de tu archivo principal
+                window.location.href = 'index.html'; // Cambia esto según el nombre de tu archivo principal
             });
         });
     </script>
