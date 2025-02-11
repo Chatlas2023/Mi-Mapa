@@ -58,7 +58,8 @@
                                     iconSize: [25, 25], // Tamaño del ícono
                                     iconAnchor: [12, 25] // Punto de anclaje del ícono
                                 })
-                            }).bindPopup(`<b>${feature.properties.name}</b><br>${feature.properties.description}`);
+                            }).bindPopup(`<div style="white-space: normal;"><b>${feature.properties.name || 'Cámara sin nombre'}</b><br>${feature.properties.description || 'Sin descripción'}</div>`);
+
                         }
                     }).addTo(map);
                 })
