@@ -125,7 +125,7 @@
 
             // Cargar las cámaras desde el archivo GeoJSON
             function loadCameras() {
-                fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/camaras2.geojson') // Cambiar a camaras2.geojson
+                fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Camaras2.geojson') // Cambiar a camaras2.geojson
                     .then(response => response.json())
                     .then(data => {
                         cameraLayer = L.geoJSON(data, {
