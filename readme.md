@@ -2,4 +2,4 @@ El mapa8 incluye versionado visible en el mapa y corrige el error al querer hace
 1.3.4 trunca en un lugar decimal la temperatura
 1.3.6 tercer capa de mapa con wheater
 1.3.17 incluye capa de cámaras Cecaitra proveniente de equipos_main. Solo se muestran las que contienen info en lat/long y están activas
-1.3.18 prueba para multiples puntos guardados
+1.3.23 prueba para multiples puntos guardados
