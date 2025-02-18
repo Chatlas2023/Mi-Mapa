@@ -15,5 +15,12 @@
 <body>
     <h1>Mapa con cámaras y clima</h1> 
     <iframe src="mapa31.html" width="100%" height="600px"></iframe> <!-- Muestra mapa4.html dentro de index.html -->
+    <script>
+    // Verifica si la página debe recargarse
+    if (performance.navigation.type === 2) {
+        // performance.navigation.type === 2 indica que la página se cargó desde el caché (navegación hacia atrás)
+        location.reload(true); // Recarga la página, ignorando la caché
+    }
+</script>
 </body>
 </html>
