@@ -67,32 +67,6 @@
         #saveLocation:hover {
             background-color: #218838;
         }
-        /* Estilos para la lista de puntos guardados */
-        #saved-points {
-            margin-top: 20px;
-        }
-        #points-list {
-            list-style-type: none;
-            padding: 0;
-        }
-        #points-list li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #ccc;
-        }
-        #points-list li button {
-            margin-left: 10px;
-        }
-        #point-form {
-            margin-top: 20px;
-        }
-        #point-form input {
-            padding: 8px;
-            font-size: 14px;
-            margin-right: 10px;
-        }
     </style>
 </head>
 <body>
@@ -111,19 +85,6 @@
     <!-- Botón para guardar la ubicación actual -->
     <button id="saveLocation" class="btn">Guardar ubicación actual</button>
 
-    <!-- Lista de puntos guardados -->
-    <div id="saved-points">
-        <h3>Puntos Guardados</h3>
-        <ul id="points-list"></ul>
-    </div>
-
-    <!-- Formulario para añadir nuevo punto -->
-    <div id="point-form">
-        <h3>Añadir Nuevo Punto</h3>
-        <input type="text" id="point-name" placeholder="Nombre del punto">
-        <button id="add-point" class="btn">Añadir Punto</button>
-    </div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -133,7 +94,7 @@
             let currentLat = null;
             let currentLon = null;
             let precisionCircle = null; // círculo de precisión
-            let savedPoints = []; // Array para almacenar puntos guardados
+            let savedMarkers = []; // Array para almacenar los marcadores guardados
             let cameraLayer = null; // Capa de cámaras
 
             // Definir un ícono personalizado para el marcador de "Lugar Guardado"
@@ -193,123 +154,107 @@
             // Función para guardar la ubicación actual
             function guardarUbicacion() {
                 if (currentLat && currentLon) {
-                    const pointName = prompt("Ingresa un nombre para este punto:");
-                    if (pointName) {
-                        const newPoint = {
-                            name: pointName,
-                            lat: currentLat,
-                            lon: currentLon
-                        };
-                        savedPoints.push(newPoint);
-                        savePoints();
-                        renderPointsList();
-                        addMarkersToMap();
-                    }
+                    // Crear un nuevo marcador
+                    const newMarker = L.marker([currentLat, currentLon], {
+                        title: "Punto",
+                        icon: customIcon
+                    }).addTo(map);
+
+                    // Agregar el marcador al array de marcadores guardados
+                    savedMarkers.push(newMarker);
+
+                    // Crear un popup con opciones para cambiar el nombre y eliminar el punto
+                    const popupContent = `
+                        <div>
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="Punto">
+                            <button onclick="cambiarNombre(this)">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)">Quitar</button>
+                        </div>
+                    `;
+
+                    newMarker.bindPopup(popupContent).openPopup();
+
+                    // Guardar en localStorage
+                    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                    savedLocations.push({ lat: currentLat, lon: currentLon, nombre: "Punto" });
+                    localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
                 } else {
                     alert("No se ha obtenido la ubicación actual.");
                 }
             }
 
-            // Función para cargar puntos guardados desde localStorage
-            function loadSavedPoints() {
-                const savedPointsData = localStorage.getItem('savedPoints');
-                if (savedPointsData) {
-                    savedPoints = JSON.parse(savedPointsData);
-                    renderPointsList();
-                    addMarkersToMap();
-                }
-            }
+            // Función para cambiar el nombre de un punto
+            window.cambiarNombre = function(button) {
+                const input = button.parentElement.querySelector('#nombrePunto');
+                const newName = input.value;
+                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
+                if (marker) {
+                    marker.setPopupContent(`
+                        <div>
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="${newName}">
+                            <button onclick="cambiarNombre(this)">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)">Quitar</button>
+                        </div>
+                    `);
+                    marker.openPopup();
 
-            // Función para guardar puntos en localStorage
-            function savePoints() {
-                localStorage.setItem('savedPoints', JSON.stringify(savedPoints));
-            }
-
-            // Función para renderizar la lista de puntos guardados
-            function renderPointsList() {
-                const pointsList = document.getElementById('points-list');
-                pointsList.innerHTML = '';
-                savedPoints.forEach((point, index) => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <span>${point.name}</span>
-                        <button onclick="centerMapOnPoint(${index})">Centrar</button>
-                        <button onclick="editPoint(${index})">Editar</button>
-                        <button onclick="deletePoint(${index})">Eliminar</button>
-                    `;
-                    pointsList.appendChild(li);
-                });
-            }
-
-            // Función para añadir marcadores al mapa
-            function addMarkersToMap() {
-                savedPoints.forEach((point, index) => {
-                    if (!point.marker) {
-                        point.marker = L.marker([point.lat, point.lon], {
-                            icon: customIcon
-                        }).addTo(map).bindPopup(`
-                            <b>${point.name}</b><br>
-                            <button onclick="centerMapOnPoint(${index})">Centrar</button>
-                            <button onclick="editPoint(${index})">Editar</button>
-                            <button onclick="deletePoint(${index})">Eliminar</button>
-                        `);
+                    // Actualizar el nombre en localStorage
+                    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                    const index = savedLocations.findIndex(loc => loc.lat === marker.getLatLng().lat && loc.lon === marker.getLatLng().lng);
+                    if (index !== -1) {
+                        savedLocations[index].nombre = newName;
+                        localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
                     }
-                });
-            }
-
-            // Función para centrar el mapa en un punto
-            function centerMapOnPoint(index) {
-                const point = savedPoints[index];
-                map.setView([point.lat, point.lon], 15);
-            }
-
-            // Función para editar un punto
-            function editPoint(index) {
-                const point = savedPoints[index];
-                const newName = prompt("Editar nombre del punto:", point.name);
-                if (newName) {
-                    point.name = newName;
-                    savePoints();
-                    renderPointsList();
-                    addMarkersToMap();
                 }
-            }
+            };
 
             // Función para eliminar un punto
-            function deletePoint(index) {
-                if (confirm("¿Estás seguro de que quieres eliminar este punto?")) {
-                    const point = savedPoints[index];
-                    map.removeLayer(point.marker);
-                    savedPoints.splice(index, 1);
-                    savePoints();
-                    renderPointsList();
+            window.eliminarPunto = function(button) {
+                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
+                if (marker) {
+                    map.removeLayer(marker);
+                    savedMarkers = savedMarkers.filter(m => m !== marker);
+
+                    // Eliminar el punto de localStorage
+                    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                    const index = savedLocations.findIndex(loc => loc.lat === marker.getLatLng().lat && loc.lon === marker.getLatLng().lng);
+                    if (index !== -1) {
+                        savedLocations.splice(index, 1);
+                        localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+                    }
                 }
+            };
+
+            // Recuperar las ubicaciones guardadas al cargar la página
+            function cargarUbicacionesGuardadas() {
+                const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                savedLocations.forEach(loc => {
+                    const marker = L.marker([loc.lat, loc.lon], {
+                        title: loc.nombre,
+                        icon: customIcon
+                    }).addTo(map);
+
+                    const popupContent = `
+                        <div>
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="${loc.nombre}">
+                            <button onclick="cambiarNombre(this)">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)">Quitar</button>
+                        </div>
+                    `;
+
+                    marker.bindPopup(popupContent);
+                    savedMarkers.push(marker);
+                });
             }
 
-            // Cargar puntos guardados al iniciar
-            loadSavedPoints();
+            // Cargar las ubicaciones guardadas al iniciar
+            cargarUbicacionesGuardadas();
 
             // Evento para el botón de guardar ubicación
             document.getElementById("saveLocation").addEventListener("click", guardarUbicacion);
-
-            // Evento para el botón de añadir punto
-            document.getElementById("add-point").addEventListener("click", function () {
-                const pointName = document.getElementById("point-name").value;
-                if (pointName && currentLat && currentLon) {
-                    const newPoint = {
-                        name: pointName,
-                        lat: currentLat,
-                        lon: currentLon
-                    };
-                    savedPoints.push(newPoint);
-                    savePoints();
-                    renderPointsList();
-                    addMarkersToMap();
-                    document.getElementById("point-name").value = '';
-                } else {
-                    alert("Por favor, ingresa un nombre para el punto y asegúrate de tener una ubicación válida.");
-                }
-            });
 
             // Resto del código (localizarUsuario, obtenerDireccion, obtenerClima, etc.)
             function localizarUsuario() {
@@ -442,6 +387,9 @@
                     if (precisionCircle) {
                         precisionCircle.addTo(map);
                     }
+                    if (savedMarkers.length > 0) {
+                        savedMarkers.forEach(marker => marker.addTo(map));
+                    }
                     if (cameraLayer) {
                         cameraLayer.addTo(map); // Asegurar que la capa de cámaras permanezca
                     }
@@ -466,7 +414,7 @@
                 },
                 onAdd: function(map) {
                     let div = L.DomUtil.create('div', 'leaflet-control-version');
-                    div.innerHTML = "Versión: 1.3.23"; // Cambia esto por tu versión
+                    div.innerHTML = "Versión: 1.3.22"; // Cambia esto por tu versión
                     div.style.padding = "5px";
                     div.style.background = "rgba(255, 255, 255, 0.8)";
                     div.style.fontSize = "14px";
