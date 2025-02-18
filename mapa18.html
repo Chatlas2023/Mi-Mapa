@@ -194,7 +194,7 @@ function guardarUbicacion() {
                     marker.setPopupContent(`
                         <div>
                             <label for="nombrePunto">Nombre:</label>
-                            <input type="text" id="nombrePunto" value="${newName}">
+                            <input type="text" id="nombrePunto" value="${newName}"><br>
                             <button onclick="cambiarNombre(this)">Cambiar Nombre</button>
                             <button onclick="eliminarPunto(this)">Quitar</button>
                         </div>
@@ -240,7 +240,7 @@ function guardarUbicacion() {
                     const popupContent = `
                         <div>
                             <label for="nombrePunto">Nombre:</label>
-                            <input type="text" id="nombrePunto" value="${loc.nombre}">
+                            <input type="text" id="nombrePunto" value="${loc.nombre}"><br>
                             <button onclick="cambiarNombre(this)">Cambiar Nombre</button>
                             <button onclick="eliminarPunto(this)">Quitar</button>
                         </div>
