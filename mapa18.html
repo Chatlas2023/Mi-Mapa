@@ -153,37 +153,37 @@
             loadCameras();
 
             // Función para guardar la ubicación actual
-            function guardarUbicacion() {
-                if (currentLat && currentLon) {
-                    // Crear un nuevo marcador
-                    const newMarker = L.marker([currentLat, currentLon], {
-                        title: "Punto",
-                        icon: customIcon
-                    }).addTo(map);
+function guardarUbicacion() {
+    if (currentLat && currentLon) {
+        // Crear un nuevo marcador
+        const newMarker = L.marker([currentLat, currentLon], {
+            title: "Punto",
+            icon: customIcon
+        }).addTo(map);
 
-                    // Agregar el marcador al array de marcadores guardados
-                    savedMarkers.push(newMarker);
+        // Agregar el marcador al array de marcadores guardados
+        savedMarkers.push(newMarker);
 
-                    // Crear un popup con opciones para cambiar el nombre y eliminar el punto
-                    const popupContent = `
-                        <div>
-                            <label for="nombrePunto">Nombre:</label>
-                            <input type="text" id="nombrePunto" value="Punto">
-                            <button onclick="cambiarNombre(this)">Cambiar Nombre</button>
-                            <button onclick="eliminarPunto(this)">Quitar</button>
-                        </div>
-                    `;
+        // Crear un popup con opciones para cambiar el nombre y eliminar el punto
+        const popupContent = `
+            <div style="white-space: nowrap;">
+                <label for="nombrePunto">Nombre:</label>
+                <input type="text" id="nombrePunto" value="Punto" style="width: 80px;">
+                <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+            </div>
+        `;
 
-                    newMarker.bindPopup(popupContent).openPopup();
+        newMarker.bindPopup(popupContent).openPopup();
 
-                    // Guardar en localStorage
-                    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
-                    savedLocations.push({ lat: currentLat, lon: currentLon, nombre: "Punto" });
-                    localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
-                } else {
-                    alert("No se ha obtenido la ubicación actual.");
-                }
-            }
+        // Guardar en localStorage
+        const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+        savedLocations.push({ lat: currentLat, lon: currentLon, nombre: "Punto" });
+        localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+    } else {
+        alert("No se ha obtenido la ubicación actual.");
+    }
+}
 
             // Función para cambiar el nombre de un punto
             window.cambiarNombre = function(button) {
