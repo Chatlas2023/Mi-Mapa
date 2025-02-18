@@ -13,12 +13,30 @@
     </style>
 </head>
 <body>
-    <script>
-        // Limpia el contenido del body antes de agregar nuevos elementos
-        document.body.innerHTML = '';
-    </script>
+    <div id="contenido">
+        <h1>Mapa con cámaras y clima</h1>
+        <iframe id="miIframe" src="mapa31.html" width="100%" height="600px"></iframe>
+    </div>
 
-    <h1>Mapa con cámaras y clima</h1> 
-    <iframe src="mapa31.html" width="100%" height="600px"></iframe> <!-- Muestra mapa4.html dentro de index.html -->
+    <script>
+        // Función para recargar el iframe sin duplicar el título
+        function recargarIframe(nuevoSrc) {
+            // Obtén el iframe y el contenedor
+            const iframe = document.getElementById("miIframe");
+            const contenedor = document.getElementById("contenido");
+
+            // Cambia la fuente del iframe
+            iframe.src = nuevoSrc;
+
+            // Limpia el contenido del contenedor (excepto el título)
+            contenedor.innerHTML = `
+                <h1>Mapa con cámaras y clima</h1>
+                <iframe id="miIframe" src="${nuevoSrc}" width="100%" height="600px"></iframe>
+            `;
+        }
+
+        // Ejemplo de cómo usar la función para recargar el iframe
+        // recargarIframe("mapa31.html"); // Cambia "mapa31.html" por la nueva fuente
+    </script>
 </body>
 </html>
