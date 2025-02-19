@@ -2,10 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">   
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-         
         #map {
             height: 350px;
             width: 100%;
@@ -23,7 +22,6 @@
             font-weight: normal;
             white-space: pre-line;
         }
-        /* Estilos para los botones */
         .btn {
             padding: 7px 15px;
             font-size: 14px;
@@ -32,7 +30,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.3s ease;
-            width: 180px; /* Añadir un ancho fijo */
+            width: 180px;
         }
         .btn-update {
             background-color: #007bff;
@@ -54,15 +52,14 @@
             font-weight: bold;
             border-radius: 5px;
         }
-        /* Estilos para el botón de guardar ubicación */
         #saveLocation {
             position: fixed;
             bottom: 20px;
             right: 10px;
             background-color: #28a745;
             color: white;
-            width: 100px; /* Hacer el botón más angosto */
-            height: 85px; /* Hacer el botón más alto */
+            width: 100px;
+            height: 85px;
         }
         #saveLocation:hover {
             background-color: #218838;
@@ -70,11 +67,28 @@
     </style>
 </head>
 <body>
+    <div id="map"></div>
+    <div id="controls">
+        <button id="getLocation" class="btn btn-update">Actualizar Posición</button>
+        <select id="mapLayers">
+            <option value="osm">Mapa Estándar</option>
+            <option value="satellite">Satélite</option>
+            <option value="temperatura">Mapa del Clima</option>
+        </select>
+        <button id="centerMap" class="btn btn-center">Centrar en Ubicación</button>
+    </div>
+    <div id="location-info">Esperando ubicación...</div>
+    <div id="weather-info">Cargando clima...</div>
+    <button id="saveLocation" class="btn">Guardar ubicación actual</button>
+
+    <!-- Incluir Leaflet y localForage desde CDN -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb";
-            let map; // Declara 'map' aquí, sin inicializar
+        document.addEventListener('DOMContentLoaded', async function () {
+            const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // clave de OpenWeatherMap
+            let map = L.map('map').setView([0, 0], 15);
             let userMarker = null;
             let currentLat = null;
             let currentLon = null;
@@ -82,14 +96,15 @@
             let savedMarkers = [];
             let cameraLayer = null;
 
-            // Definir un ícono personalizado para el marcador de "Lugar Guardado"
+            // Ícono personalizado para los puntos guardados
             const customIcon = L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png', // URL de la imagen personalizada
-                iconSize: [50, 50], // Tamaño del ícono
-                iconAnchor: [25, 50], // Punto de anclaje del ícono
-                popupAnchor: [0, -50] // Punto de anclaje del popup
+                iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
+                iconSize: [50, 50],
+                iconAnchor: [25, 50],
+                popupAnchor: [0, -50]
             });
 
+            // Capas del mapa
             let layers = {
                 osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 22,
@@ -100,192 +115,108 @@
                     attribution: '&copy; Esri'
                 })
             };
-
             layers.osm.addTo(map);
-            map.on('zoomend', function () {
-                if (map.getZoom() > 19) {
-                    map.setZoom(19); // Limitar el zoom a 20
-                }
-            });
 
-            // Cargar las cámaras desde el archivo GeoJSON
-            function loadCameras() {
-                fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Camaras2.geojson') // Cambiar a camaras2.geojson
-                    .then(response => response.json())
-                    .then(data => {
-                        cameraLayer = L.geoJSON(data, {
-                            pointToLayer: function (feature, latlng) {
-                                return L.marker(latlng, {
-                                    icon: L.icon({
-                                        iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Camera.png',
-                                        iconSize: [25, 25],
-                                        iconAnchor: [12, 25]
-                                    })
-                                }).bindPopup(`<div style="white-space: normal;min-width: 200px;">
-                                    <b>Serie:</b> ${feature.properties.serie || 'N/A'}<br>
-                                    <b>Calle:</b> ${feature.properties.calle || 'N/A'}<br>
-                                    <b>Altura:</b> ${feature.properties.altura || 'N/A'}<br>
-                                    <b>Localidad:</b> ${feature.properties.localidad || 'N/A'}
-                                </div>`);
-                            }
-                        }).addTo(map);
-                    })
-                    .catch(error => console.error('Error cargando las cámaras:', error));
-            }
-   // Inicializa el mapa *después* de que el DOM esté listo
-   map = L.map('map').setView([0, 0], 15);
-            layers.osm.addTo(map);  // Añade la capa base *antes* de cargar marcadores
-
+            // Limitar el zoom
             map.on('zoomend', function () {
                 if (map.getZoom() > 19) {
                     map.setZoom(19);
                 }
             });
-            // Cargar las cámaras al inicio
+
+            // Cargar cámaras desde GeoJSON
+            async function loadCameras() {
+                try {
+                    const response = await fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Camaras2.geojson');
+                    const data = await response.json();
+                    cameraLayer = L.geoJSON(data, {
+                        pointToLayer: function (feature, latlng) {
+                            return L.marker(latlng, {
+                                icon: L.icon({
+                                    iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Camera.png',
+                                    iconSize: [25, 25],
+                                    iconAnchor: [12, 25]
+                                })
+                            }).bindPopup(`<div style="white-space: normal;min-width: 200px;">
+                                <b>Serie:</b> ${feature.properties.serie || 'N/A'}<br>
+                                <b>Calle:</b> ${feature.properties.calle || 'N/A'}<br>
+                                <b>Altura:</b> ${feature.properties.altura || 'N/A'}<br>
+                                <b>Localidad:</b> ${feature.properties.localidad || 'N/A'}
+                            </div>`);
+                        }
+                    }).addTo(map);
+                } catch (error) {
+                    console.error('Error cargando las cámaras:', error);
+                }
+            }
             loadCameras();
-            function guardarUbicacion() {
+
+            // Función para guardar la ubicación actual
+            async function guardarUbicacion() {
                 if (currentLat && currentLon) {
                     const puntoNumero = savedMarkers.length + 1;
-                    const customIcon = L.divIcon({
-                        className: 'custom-icon',
-                        html: `
-                            <div style="position: relative;">
-                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-                                <div style="position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-                                    ${puntoNumero}
-                                </div>
-                            </div>
-                        `,
-                        iconSize: [50, 50],
-                        iconAnchor: [25, 50],
-                        popupAnchor: [0, -50]
-                    });
+                    const punto = { lat: currentLat, lon: currentLon, nombre: `Punto ${puntoNumero}` };
 
-                    const newMarker = L.marker([currentLat, currentLon], {
-                        title: "Punto",
-                        icon: customIcon
-                    }).addTo(map);
+                    // Guardar en localForage
+                    const savedLocations = (await localforage.getItem('savedLocations')) || [];
+                    savedLocations.push(punto);
+                    await localforage.setItem('savedLocations', savedLocations);
 
-                    savedMarkers.push(newMarker);
-
-                    const popupContent = `
-                        <div style="white-space: nowrap;">
-                            <label for="nombrePunto">Nombre:</label>
-                            <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
-                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Asignar Nombre</button>
-                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
-                        </div>
-                    `;
-
-                    newMarker.bindPopup(popupContent).openPopup();
-
-                    guardarMarcadoresEnLocalStorage();
+                    // Agregar el punto al mapa
+                    agregarPuntoAlMapa(punto);
                 } else {
                     alert("No se ha obtenido la ubicación actual.");
                 }
             }
 
-            function guardarMarcadoresEnLocalStorage() {
-                const savedLocations = savedMarkers.map(marker => {
-                    return {
-                        lat: marker.getLatLng().lat,
-                        lng: marker.getLatLng().lng,
-                        nombre: marker.getPopup()._content.match(/value="([^"]*)"/)[1]
-                    };
-                });
-                localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
-            }
-
-            window.cambiarNombre = function(button) {
-                const input = button.parentElement.querySelector('#nombrePunto');
-                const newName = input.value;
-                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
-                if (marker) {
-                    marker.setPopupContent(`
-                        <div style="white-space: nowrap;">
-                            <label for="nombrePunto">Nombre:</label>
-                            <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br>
-                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
-                        </div>
-                    `);
-                    guardarMarcadoresEnLocalStorage();
-                }
-            };
-
-            window.eliminarPunto = function(button) {
-                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
-                if (marker) {
-                    map.removeLayer(marker);
-                    savedMarkers = savedMarkers.filter(m => m !== marker);
-                    guardarMarcadoresEnLocalStorage();
-                    actualizarNumerosPuntos();
-                }
-            };
-
-            function actualizarNumerosPuntos() {
-                savedMarkers.forEach((m, i) => {
-                    const puntoNumero = i + 1;
-                    m.setIcon(L.divIcon({
-                        className: 'custom-icon',
-                        html: `
-                            <div style="position: relative;">
-                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-                                <div style="position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-                                    ${puntoNumero}
-                                </div>
+            // Función para agregar un punto al mapa
+            function agregarPuntoAlMapa(punto) {
+                const customIcon = L.divIcon({
+                    className: 'custom-icon',
+                    html: `
+                        <div style="position: relative;">
+                            <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+                            <div style="position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+                                ${savedMarkers.length + 1}
                             </div>
-                        `,
-                        iconSize: [50, 50],
-                        iconAnchor: [25, 50],
-                        popupAnchor: [0, -50]
-                    }));
-                });
-            }
-
-            function cargarUbicacionesGuardadas() {
-                const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
-                savedLocations.forEach((loc) => {
-                    const customIcon = L.divIcon({
-                        className: 'custom-icon',
-                        html: `
-                            <div style="position: relative;">
-                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-                                <div style="position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-                                    ${savedMarkers.length + 1}
-                                </div>
-                            </div>
-                        `,
-                        iconSize: [50, 50],
-                        iconAnchor: [25, 50],
-                        popupAnchor: [0, -50]
-                    });
-
-                    const marker = L.marker([loc.lat, loc.lng], {
-                        title: loc.nombre,
-                        icon: customIcon
-                    }).addTo(map);
-
-                    const popupContent = `
-                        <div style="white-space: nowrap;">
-                            <label for="nombrePunto">Nombre:</label>
-                            <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br>
-                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
                         </div>
-                    `;
-
-                    marker.bindPopup(popupContent);
-                    savedMarkers.push(marker);
+                    `,
+                    iconSize: [50, 50],
+                    iconAnchor: [25, 50],
+                    popupAnchor: [0, -50]
                 });
+
+                const newMarker = L.marker([punto.lat, punto.lon], {
+                    title: punto.nombre,
+                    icon: customIcon
+                }).addTo(map);
+
+                const popupContent = `
+                    <div style="white-space: nowrap;">
+                        <label for="nombrePunto">Nombre:</label>
+                        <input type="text" id="nombrePunto" value="${punto.nombre}" style="width: 120px;"><br>
+                        <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                        <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                    </div>
+                `;
+
+                newMarker.bindPopup(popupContent);
+                savedMarkers.push(newMarker);
             }
 
-            cargarUbicacionesGuardadas();  // <--- ¡Este es el cambio importante!
+            // Cargar puntos guardados al iniciar
+            async function cargarUbicacionesGuardadas() {
+                const savedLocations = (await localforage.getItem('savedLocations')) || [];
+                savedLocations.forEach((loc, index) => {
+                    agregarPuntoAlMapa({ ...loc, nombre: `Punto ${index + 1}` });
+                });
+            }
+            cargarUbicacionesGuardadas();
 
+            // Evento para el botón de guardar ubicación
             document.getElementById("saveLocation").addEventListener("click", guardarUbicacion);
 
-// Resto del código (localizarUsuario, obtenerDireccion, obtenerClima, etc.)
-function localizarUsuario() {
+           function localizarUsuario() {
                 if ("geolocation" in navigator) {
                     navigator.geolocation.getCurrentPosition(
                         function (position) {
