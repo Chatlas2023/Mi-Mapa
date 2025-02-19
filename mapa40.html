@@ -70,31 +70,17 @@
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div id="controls">
-        <button id="getLocation" class="btn btn-update">Actualizar Posición</button>
-        <select id="mapLayers">
-            <option value="osm">Mapa Estándar</option>
-            <option value="satellite">Satélite</option>
-            <option value="temperatura">Mapa del Clima</option>
-        </select>
-        <button id="centerMap" class="btn btn-center">Centrar en Ubicación</button>
-    </div>
-    <div id="location-info">Esperando ubicación...</div>
-    <div id="weather-info">Cargando clima...</div>
-    <button id="saveLocation" class="btn">Guardar ubicación actual</button>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-         document.addEventListener('DOMContentLoaded', function () {
-            const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // clave de OpenWeatherMap
-            let map = L.map('map').setView([0, 0], 15);
+        document.addEventListener('DOMContentLoaded', function () {
+            const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb";
+            let map; // Declara 'map' aquí, sin inicializar
             let userMarker = null;
             let currentLat = null;
             let currentLon = null;
-            let precisionCircle = null; // círculo de precisión
-            let savedMarkers = []; // Array para almacenar los marcadores guardados
-            let cameraLayer = null; // Capa de cámaras
+            let precisionCircle = null;
+            let savedMarkers = [];
+            let cameraLayer = null;
 
             // Definir un ícono personalizado para el marcador de "Lugar Guardado"
             const customIcon = L.icon({
@@ -146,7 +132,15 @@
                     })
                     .catch(error => console.error('Error cargando las cámaras:', error));
             }
+   // Inicializa el mapa *después* de que el DOM esté listo
+   map = L.map('map').setView([0, 0], 15);
+            layers.osm.addTo(map);  // Añade la capa base *antes* de cargar marcadores
 
+            map.on('zoomend', function () {
+                if (map.getZoom() > 19) {
+                    map.setZoom(19);
+                }
+            });
             // Cargar las cámaras al inicio
             loadCameras();
             function guardarUbicacion() {
@@ -286,8 +280,10 @@
                 });
             }
 
-            cargarUbicacionesGuardadas();
+            cargarUbicacionesGuardadas();  // <--- ¡Este es el cambio importante!
+
             document.getElementById("saveLocation").addEventListener("click", guardarUbicacion);
+
 // Resto del código (localizarUsuario, obtenerDireccion, obtenerClima, etc.)
 function localizarUsuario() {
                 if ("geolocation" in navigator) {
@@ -449,7 +445,7 @@ function localizarUsuario() {
                     div.style.position = "absolute"; // Posicionamiento absoluto
                     div.style.top = "0"; // Pegado al borde superior
                     div.style.right = "0"; // Pegado al borde derecho
-                    div.innerHTML = "Ver: 1.4.1"; // Cambia esto por tu versión
+                    div.innerHTML = "Ver: 1.3.31"; // Cambia esto por tu versión
                     div.style.padding = "5px";
                     div.style.background = "rgba(255, 255, 255, 0.8)";
                     div.style.fontSize = "14px";
