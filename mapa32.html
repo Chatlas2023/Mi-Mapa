@@ -521,17 +521,17 @@
                 options: {
                     position: 'bottomleft'
                 },
-                onAdd: function(map) {
+              onAdd: function(map) {
                     let div = L.DomUtil.create('div', 'leaflet-control-version');
                     div.style.position = "absolute"; // Posicionamiento absoluto
-                    div.style.left = "0"; // Pegado al borde izq
-                    div.style.bottom = "0"; // Pegado al borde inf.
-                    div.innerHTML = "Ver: 1.3.32"; // Cambia esto por tu versión
+                    div.style.top = "0"; // Pegado al borde superior
+                    div.style.right = "0"; // Pegado al borde derecho
+                    div.innerHTML = "Ver: 1.3.31"; // Cambia esto por tu versión
                     div.style.padding = "5px";
                     div.style.background = "rgba(255, 255, 255, 0.8)";
-                    div.style.fontSize = "12px";
-                    div.style.borderRadius = "0px";
-                    div.style.border = "none";
+                    div.style.fontSize = "14px";
+                    div.style.borderRadius = "5px";
+                    div.style.border = "1px solid #ccc";
                     return div;
                 }
             });
