@@ -518,23 +518,23 @@
             };
 
             L.Control.Version = L.Control.extend({
-                options: {
-                    position: 'topright'
-                },
-              onAdd: function(map) {
-                    let div = L.DomUtil.create('div', 'leaflet-control-version');
-                    div.style.position = "absolute"; // Posicionamiento absoluto
-                    div.style.top = "0"; // Pegado al borde superior
-                    div.style.right = "0"; // Pegado al borde derecho
-                    div.innerHTML = "Ver: 1.3.31"; // Cambia esto por tu versión
-                    div.style.padding = "5px";
-                    div.style.background = "rgba(255, 255, 255, 0.8)";
-                    div.style.fontSize = "14px";
-                    div.style.borderRadius = "5px";
-                    div.style.border = "1px solid #ccc";
-                    return div;
-                }
-            });
+    options: {
+        position: 'bottomleft' // Cambiar a esquina inferior izquierda
+    },
+    onAdd: function(map) {
+        let div = L.DomUtil.create('div', 'leaflet-control-version');
+        div.style.position = "absolute";
+        div.style.left = "0"; // Pegado al borde izquierdo
+        div.style.bottom = "0"; // Pegado al borde inferior
+        div.innerHTML = "Ver: 1.3.32";
+        div.style.padding = "5px";
+        div.style.background = "rgba(255, 255, 255, 0.8)";
+        div.style.fontSize = "12px"; // Tamaño de fuente más pequeño
+        div.style.borderRadius = "0px"; // Eliminar bordes redondeados
+        div.style.border = "none"; // Eliminar borde
+        return div;
+    }
+});
 
             map.addControl(new L.Control.Version());
             localizarUsuario();
