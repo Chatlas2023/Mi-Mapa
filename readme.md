@@ -5,3 +5,4 @@ El mapa8 incluye versionado visible en el mapa y corrige el error al querer hace
 1.3.26 prueba para guardar multiples puntos 
 1.3.31 guarda multiples puntos numerados 
 1.3.32 comparte la ubicación
+1.3.33 acerca el numero del punto al ícono y corrige numeración al eliminar puntos
