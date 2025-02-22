@@ -419,7 +419,7 @@
             }
 
             function obtenerDireccion(lat, lon) {
-                let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+                let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=es`;
                 fetch(url)
                 .then(response => response.json())
                 .then(data => {
