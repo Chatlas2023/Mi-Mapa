@@ -2,27 +2,39 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">   
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        #map {
-            height: 350px;
-            width: 100%;
-            border: 2px solid red;
+        /* Asegurar que el body y html no tengan márgenes ni padding */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Evitar scroll innecesario */
         }
+
+        /* Contenedor del mapa */
+        #map {
+            height: 100vh; /* Ocupar toda la altura de la pantalla */
+            width: 100%; /* Ocupar todo el ancho disponible */
+            border: 2px solid red; /* Borde opcional */
+        }
+
+        /* Controles */
         #controls {
+            position: fixed; /* Fijar los controles en la pantalla */
+            bottom: 20px; /* Posición desde la parte inferior */
+            left: 50%; /* Centrar horizontalmente */
+            transform: translateX(-50%); /* Ajustar el centrado */
             display: flex;
             justify-content: space-between;
-            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.8); /* Fondo semitransparente */
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000; /* Asegurar que esté por encima del mapa */
         }
-        #location-info, #weather-info {
-            font-family: 'Arial', sans-serif;
-            margin-top: 10px;
-            font-size: 16px;
-            font-weight: normal;
-            white-space: pre-line;
-        }
-        /* Estilos para los botones */
+
+        /* Botones */
         .btn {
             padding: 7px 15px;
             font-size: 14px;
@@ -31,45 +43,71 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.3s ease;
-            width: 180px; /* Añadir un ancho fijo */
+            width: 180px; /* Ancho fijo */
         }
+
         .btn-update {
             background-color: #007bff;
             color: white;
         }
+
         .btn-update:hover {
             background-color: #0056b3;
         }
+
         .btn-center {
             background-color: #007bff;
             color: white;
         }
+
         .btn-center:hover {
             background-color: #0056b3;
         }
+
         .btn-share {
             background-color: #28a745;
             color: white;
         }
+
         .btn-share:hover {
             background-color: #218838;
         }
+
+        /* Selector de capas */
         #mapLayers {
             padding: 8px;
             font-size: 14px;
             font-weight: bold;
             border-radius: 5px;
         }
-        /* Estilos para el botón de guardar ubicación */
+
+        /* Información de ubicación y clima */
+        #location-info, #weather-info {
+            position: fixed; /* Fijar en la pantalla */
+            top: 20px; /* Posición desde la parte superior */
+            left: 20px; /* Posición desde la izquierda */
+            background: rgba(255, 255, 255, 0.8); /* Fondo semitransparente */
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Arial', sans-serif;
+            font-size: 16px;
+            font-weight: normal;
+            white-space: pre-line;
+            z-index: 1000; /* Asegurar que esté por encima del mapa */
+        }
+
+        /* Botón de guardar ubicación */
         #saveLocation {
             position: fixed;
-            bottom: 34px;
-            right: 10px;
+            bottom: 20px; /* Posición desde la parte inferior */
+            right: 20px; /* Posición desde la derecha */
             background-color: #28a745;
             color: white;
-            width: 100px; /* Hacer el botón más angosto */
-            height: 74px; /* Hacer el botón más alto */
+            width: 100px; /* Ancho fijo */
+            height: 74px; /* Altura fija */
+            z-index: 1000; /* Asegurar que esté por encima del mapa */
         }
+
         #saveLocation:hover {
             background-color: #218838;
         }
@@ -211,31 +249,31 @@
             }
 
             // Función para cambiar el nombre de un punto
-window.cambiarNombre = function(button) {
-    const input = button.parentElement.querySelector('#nombrePunto');
-    const newName = input.value;
-    const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
-    if (marker) {
-        // Actualizar el contenido del popup
-        const popupContent = `
-            <div style="white-space: nowrap;">
-                <label for="nombrePunto">Nombre:</label>
-                <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
-                <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
-            </div>
-        `;
-        marker.setPopupContent(popupContent);
+            window.cambiarNombre = function(button) {
+                const input = button.parentElement.querySelector('#nombrePunto');
+                const newName = input.value;
+                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
+                if (marker) {
+                    // Actualizar el contenido del popup
+                    const popupContent = `
+                        <div style="white-space: nowrap;">
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
+                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                        </div>
+                    `;
+                    marker.setPopupContent(popupContent);
 
-        // Actualizar el nombre en localStorage
-        const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
-        const index = savedLocations.findIndex(loc => loc.lat === marker.getLatLng().lat && loc.lon === marker.getLatLng().lng);
-        if (index !== -1) {
-            savedLocations[index].nombre = newName; // Actualizar el nombre
-            localStorage.setItem('savedLocations', JSON.stringify(savedLocations)); // Guardar en localStorage
-        }
-    }
-};
+                    // Actualizar el nombre en localStorage
+                    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                    const index = savedLocations.findIndex(loc => loc.lat === marker.getLatLng().lat && loc.lon === marker.getLatLng().lng);
+                    if (index !== -1) {
+                        savedLocations[index].nombre = newName; // Actualizar el nombre
+                        localStorage.setItem('savedLocations', JSON.stringify(savedLocations)); // Guardar en localStorage
+                    }
+                }
+            };
 
             // Función para eliminar un punto
             window.eliminarPunto = function(button) {
@@ -295,46 +333,46 @@ window.cambiarNombre = function(button) {
             }
 
             // Recuperar las ubicaciones guardadas al cargar la página
-function cargarUbicacionesGuardadas() {
-    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
-    savedLocations.forEach((loc, index) => {
-        const puntoNumero = index + 1;
+            function cargarUbicacionesGuardadas() {
+                const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                savedLocations.forEach((loc, index) => {
+                    const puntoNumero = index + 1;
 
-        // Crear un ícono personalizado con el número del punto
-        const customIcon = L.divIcon({
-            className: 'custom-icon',
-            html: `
-                <div style="position: relative;">
-                    <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-                    <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-                        ${puntoNumero}
-                    </div>
-                </div>
-            `,
-            iconSize: [50, 50],
-            iconAnchor: [25, 50],
-            popupAnchor: [0, -50]
-        });
+                    // Crear un ícono personalizado con el número del punto
+                    const customIcon = L.divIcon({
+                        className: 'custom-icon',
+                        html: `
+                            <div style="position: relative;">
+                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+                                <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+                                    ${puntoNumero}
+                                </div>
+                            </div>
+                        `,
+                        iconSize: [50, 50],
+                        iconAnchor: [25, 50],
+                        popupAnchor: [0, -50]
+                    });
 
-        const marker = L.marker([loc.lat, loc.lon], {
-            title: loc.nombre, // Usar el nombre guardado
-            icon: customIcon
-        }).addTo(map);
+                    const marker = L.marker([loc.lat, loc.lon], {
+                        title: loc.nombre, // Usar el nombre guardado
+                        icon: customIcon
+                    }).addTo(map);
 
-        // Crear el contenido del popup con el nombre guardado
-        const popupContent = `
-            <div style="white-space: nowrap;">
-                <label for="nombrePunto">Nombre:</label>
-                <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
-                <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
-            </div>
-        `;
+                    // Crear el contenido del popup con el nombre guardado
+                    const popupContent = `
+                        <div style="white-space: nowrap;">
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
+                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                        </div>
+                    `;
 
-        marker.bindPopup(popupContent);
-        savedMarkers.push(marker);
-    });
-}
+                    marker.bindPopup(popupContent);
+                    savedMarkers.push(marker);
+                });
+            }
 
             // Cargar las ubicaciones guardadas al iniciar
             cargarUbicacionesGuardadas();
