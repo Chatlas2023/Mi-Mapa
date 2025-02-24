@@ -95,7 +95,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // clave de OpenWeatherMap
-            let map = L.map('map').setView([0, 0], 15);
+            let map = L.map('map').setView([0, 0], 16);
             let userMarker = null;
             let currentLat = null;
             let currentLon = null;
@@ -125,7 +125,7 @@
             layers.osm.addTo(map);
             map.on('zoomend', function () {
                 if (map.getZoom() > 19) {
-                    map.setZoom(19); // Limitar el zoom a 20
+                    map.setZoom(19); // Limitar el zoom a 19
                 }
             });
 
