@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">   
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-                #map {
+        #map {
             height: 480px;
             width: 100%;
         }
@@ -21,7 +21,6 @@
             font-weight: normal;
             white-space: pre-line;
         }
-        /* Estilos para los botones */
         .btn {
             padding: 7px 15px;
             font-size: 14px;
@@ -30,7 +29,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.3s ease;
-            width: 180px; /* Añadir un ancho fijo */
+            width: 180px;
         }
         .btn-update {
             background-color: #007bff;
@@ -59,15 +58,14 @@
             font-weight: bold;
             border-radius: 5px;
         }
-        /* Estilos para el botón de guardar ubicación */
         #saveLocation {
             position: fixed;
             bottom: 34px;
             right: 10px;
             background-color: #28a745;
             color: white;
-            width: 100px; /* Hacer el botón más angosto */
-            height: 74px; /* Hacer el botón más alto */
+            width: 100px;
+            height: 74px;
         }
         #saveLocation:hover {
             background-color: #218838;
@@ -77,7 +75,14 @@
 <body>
     <div id="map"></div>
     <div id="controls">
-        <!-- Tus controles aquí -->
+        <button id="getLocation" class="btn btn-update">Actualizar</button>
+        <select id="mapLayers">
+            <option value="osm">Estándar</option>
+            <option value="satellite">Satélite</option>
+            <option value="temperatura">Clima</option>
+        </select>
+        <button id="centerMap" class="btn btn-center">Centrar</button>
+        <button id="shareLocation" class="btn btn-share">Compartir Ubicación</button>
     </div>
     <div id="location-info">Esperando ubicación...</div>
     <div id="weather-info">Cargando clima...</div>
@@ -104,7 +109,59 @@
                 })
                 .catch(error => console.error('Error cargando el archivo JSON:', error));
 
-            // Resto de tu código...
+            // Definir un ícono personalizado para el marcador de "Lugar Guardado"
+            const customIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
+                iconSize: [50, 50],
+                iconAnchor: [25, 50],
+                popupAnchor: [0, -50]
+            });
+
+            let layers = {
+                osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 22,
+                    attribution: '&copy; OpenStreetMap contributors'
+                }),
+                satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: '&copy; Esri'
+                })
+            };
+
+            layers.osm.addTo(map);
+            map.on('zoomend', function () {
+                if (map.getZoom() > 19) {
+                    map.setZoom(19); // Limitar el zoom a 19
+                }
+            });
+
+            // Cargar las cámaras desde el archivo GeoJSON
+            function loadCameras() {
+                fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Camaras2.geojson')
+                    .then(response => response.json())
+                    .then(data => {
+                        cameraLayer = L.geoJSON(data, {
+                            pointToLayer: function (feature, latlng) {
+                                return L.marker(latlng, {
+                                    icon: L.icon({
+                                        iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Camera.png',
+                                        iconSize: [25, 25],
+                                        iconAnchor: [12, 25]
+                                    })
+                                }).bindPopup(`<div style="white-space: normal;min-width: 200px;">
+                                    <b>Serie:</b> ${feature.properties.serie || 'N/A'}<br>
+                                    <b>Calle:</b> ${feature.properties.calle || 'N/A'}<br>
+                                    <b>Altura:</b> ${feature.properties.altura || 'N/A'}<br>
+                                    <b>Localidad:</b> ${feature.properties.localidad || 'N/A'}
+                                </div>`);
+                            }
+                        }).addTo(map);
+                    })
+                    .catch(error => console.error('Error cargando las cámaras:', error));
+            }
+
+            // Cargar las cámaras al inicio
+            loadCameras();
 
             // Función para obtener la dirección y mostrar la etimología
             function obtenerDireccion(lat, lon) {
@@ -155,7 +212,7 @@
                 });
             });
 
-            // Resto del código (localizarUsuario, obtenerClima, etc.)
+            // Función para localizar al usuario
             function localizarUsuario() {
                 if ("geolocation" in navigator) {
                     navigator.geolocation.getCurrentPosition(
@@ -196,6 +253,7 @@
                 }
             }
 
+            // Función para obtener el clima
             function obtenerClima(lat, lon) {
                 let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${API_KEY}`;
                 fetch(url)
@@ -217,32 +275,76 @@
                         console.error("Error obteniendo clima:", error);
                     });
             }
-            document.getElementById("mapLayers").addEventListener("change", function () {
-                let selectedLayer = this.value;
-                if (selectedLayer === "temperatura") {
-                    window.location.href = "mapaWindy.html";
-                } else {
-                    map.eachLayer(layer => {
-                        if (layer === layers.osm || layer === layers.satellite) {
-                            map.removeLayer(layer);
-                        }
+
+            // Evento para el botón de guardar ubicación
+            document.getElementById("saveLocation").addEventListener("click", function () {
+                if (currentLat && currentLon) {
+                    const puntoNumero = savedMarkers.length + 1;
+                    const customIcon = L.divIcon({
+                        className: 'custom-icon',
+                        html: `
+                            <div style="position: relative;">
+                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+                                <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+                                    ${puntoNumero}
+                                </div>
+                            </div>
+                        `,
+                        iconSize: [50, 50],
+                        iconAnchor: [25, 50],
+                        popupAnchor: [0, -50]
                     });
-                    layers[selectedLayer].addTo(map);
-                    if (userMarker) {
-                        userMarker.addTo(map);
-                    }
-                    if (precisionCircle) {
-                        precisionCircle.addTo(map);
-                    }
-                    if (savedMarkers.length > 0) {
-                        savedMarkers.forEach(marker => marker.addTo(map));
-                    }
-                    if (cameraLayer) {
-                        cameraLayer.addTo(map);
-                    }
+
+                    const newMarker = L.marker([currentLat, currentLon], {
+                        title: "Punto",
+                        icon: customIcon
+                    }).addTo(map);
+
+                    savedMarkers.push(newMarker);
+
+                    const popupContent = `
+                        <div style="white-space: nowrap;">
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
+                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Asignar Nombre</button>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                        </div>
+                    `;
+
+                    newMarker.bindPopup(popupContent).openPopup();
+
+                    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                    savedLocations.push({ lat: currentLat, lon: currentLon, nombre: `Punto ${puntoNumero}` });
+                    localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+                } else {
+                    alert("No se ha obtenido la ubicación actual.");
                 }
             });
 
+            // Evento para el botón de compartir ubicación
+            document.getElementById("shareLocation").addEventListener("click", function () {
+                if (currentLat && currentLon) {
+                    const link = `https://www.google.com/maps?q=${currentLat},${currentLon}`;
+                    const linkInput = document.createElement("input");
+                    linkInput.type = "text";
+                    linkInput.value = link;
+                    linkInput.style.position = "fixed";
+                    linkInput.style.top = "50%";
+                    linkInput.style.left = "50%";
+                    linkInput.style.transform = "translate(-50%, -50%)";
+                    linkInput.style.zIndex = 1000;
+                    document.body.appendChild(linkInput);
+                    linkInput.select();
+                    linkInput.setSelectionRange(0, 99999);
+                    document.execCommand("copy");
+                    document.body.removeChild(linkInput);
+                    alert("Enlace copiado al portapapeles: " + link);
+                } else {
+                    alert("No se ha obtenido la ubicación actual.");
+                }
+            });
+
+            // Evento para el botón de centrar el mapa
             document.getElementById("centerMap").addEventListener("click", function () {
                 if (currentLat && currentLon) {
                     map.setView([currentLat, currentLon], 15);
@@ -251,35 +353,11 @@
                 }
             });
 
-            L.control.version = function(opts) {
-                return new L.Control.Version(opts);
-            };
-
-            L.Control.Version = L.Control.extend({
-                options: {
-                    position: 'bottomleft'
-                },
-                onAdd: function(map) {
-                    let div = L.DomUtil.create('div', 'leaflet-control-version');
-                    div.style.position = "absolute";
-                    div.style.left = "0";
-                    div.style.bottom = "0";
-                    div.innerHTML = " Ver: 1.3.35 ";
-                    div.style.padding = "0px";
-                    div.style.margin = "0";
-                    div.style.background = "rgba(255, 255, 255, 0.8)";
-                    div.style.fontSize = "12px";
-                    div.style.borderRadius = "0px";
-                    div.style.border = "none";
-                    div.style.whiteSpace = "nowrap";
-                    div.style.lineHeight = "normal";
-                    return div;
-                }
-            });
-
-            map.addControl(new L.Control.Version());
-            localizarUsuario();
+            // Evento para el botón de actualizar ubicación
             document.getElementById("getLocation").addEventListener("click", localizarUsuario);
+
+            // Iniciar la localización del usuario al cargar la página
+            localizarUsuario();
         });
     </script>
 </body>
