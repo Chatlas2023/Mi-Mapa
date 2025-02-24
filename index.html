@@ -109,14 +109,7 @@
                 })
                 .catch(error => console.error('Error cargando el archivo JSON:', error));
 
-            // Definir un ícono personalizado para el marcador de "Lugar Guardado"
-            const customIcon = L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
-                iconSize: [50, 50],
-                iconAnchor: [25, 50],
-                popupAnchor: [0, -50]
-            });
-
+            // Definir las capas del mapa
             let layers = {
                 osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 22,
@@ -128,10 +121,13 @@
                 })
             };
 
+            // Añadir la capa estándar al mapa por defecto
             layers.osm.addTo(map);
+
+            // Limitar el zoom máximo
             map.on('zoomend', function () {
                 if (map.getZoom() > 19) {
-                    map.setZoom(19); // Limitar el zoom a 19
+                    map.setZoom(19);
                 }
             });
 
@@ -275,6 +271,34 @@
                         console.error("Error obteniendo clima:", error);
                     });
             }
+
+            // Evento para cambiar entre capas (estándar, satélite, clima)
+            document.getElementById("mapLayers").addEventListener("change", function () {
+                let selectedLayer = this.value;
+                if (selectedLayer === "temperatura") {
+                    window.location.href = "mapaWindy.html"; // Redirigir a la página de clima
+                } else {
+                    // Eliminar solo las capas base, no la capa de cámaras
+                    map.eachLayer(layer => {
+                        if (layer === layers.osm || layer === layers.satellite) {
+                            map.removeLayer(layer);
+                        }
+                    });
+                    layers[selectedLayer].addTo(map); // Añadir la capa seleccionada
+                    if (userMarker) {
+                        userMarker.addTo(map);
+                    }
+                    if (precisionCircle) {
+                        precisionCircle.addTo(map);
+                    }
+                    if (savedMarkers.length > 0) {
+                        savedMarkers.forEach(marker => marker.addTo(map));
+                    }
+                    if (cameraLayer) {
+                        cameraLayer.addTo(map); // Asegurar que la capa de cámaras permanezca
+                    }
+                }
+            });
 
             // Evento para el botón de guardar ubicación
             document.getElementById("saveLocation").addEventListener("click", function () {
