@@ -272,6 +272,24 @@
                     });
             }
 
+            // Evento para cambiar entre capas (estándar, satélite, clima)
+            document.getElementById("mapLayers").addEventListener("change", function () {
+                let selectedLayer = this.value;
+                if (selectedLayer === "temperatura") {
+                    // Redirigir a la página de clima (mapaWindy.html)
+                    window.location.href = "mapaWindy.html";
+                } else {
+                    // Eliminar solo las capas base, no la capa de cámaras
+                    map.eachLayer(layer => {
+                        if (layer === layers.osm || layer === layers.satellite) {
+                            map.removeLayer(layer);
+                        }
+                    });
+                    // Añadir la capa seleccionada
+                    layers[selectedLayer].addTo(map);
+                }
+            });
+
             // Función para cambiar el nombre de un punto
             window.cambiarNombre = function (button) {
                 const input = button.parentElement.querySelector('#nombrePunto');
