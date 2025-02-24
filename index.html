@@ -185,7 +185,7 @@ L.Control.Version = L.Control.extend({
             loadCameras();
 
             // Función para obtener la dirección y mostrar la etimología
-            function obtenerDireccion(lat, lon) {
+function obtenerDireccion(lat, lon) {
     return new Promise((resolve, reject) => {
         let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=es`;
         fetch(url)
@@ -235,17 +235,25 @@ L.Control.Version = L.Control.extend({
                 let lon = e.latlng.lng;
 
                 obtenerDireccion(lat, lon).then(nombreCalle => {
-                    if (nombreCalle) {
-                        const etimologia = callesEtim[nombreCalle] || "Etimología no disponible.";
-                        L.popup()
-                            .setLatLng([lat, lon])
-                            .setContent(`<b>${nombreCalle}</b><br>${etimologia}`)
-                            .openOn(map);
-                    } else {
-                        alert("No se pudo obtener el nombre de la calle.");
-                    }
-                });
-            });
+                if (nombreCalle) {
+            // Buscar la etimología de la calle en el array de objetos
+                const calleEncontrada = callesEtim.find(item => item.Name === nombreCalle);
+                if (calleEncontrada) {
+                L.popup()
+                    .setLatLng([lat, lon])
+                    .setContent(`<b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}`)
+                    .openOn(map);
+                } else {
+                L.popup()
+                    .setLatLng([lat, lon])
+                    .setContent(`<b>${nombreCalle}</b><br>Etimología no disponible.`)
+                    .openOn(map);
+            }
+                } else {
+            alert("No se pudo obtener el nombre de la calle.");
+        }
+    });
+});
 
             // Función para localizar al usuario
             function localizarUsuario() {
