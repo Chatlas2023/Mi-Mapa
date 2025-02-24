@@ -127,11 +127,12 @@ L.Control.Version = L.Control.extend({
 
             // Cargar el archivo JSON con las etimologías de las calles
             fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
-                .then(response => response.json())
-                .then(data => {
-                    callesEtim = data; // Almacenar los datos en la variable global
-                })
-                .catch(error => console.error('Error cargando el archivo JSON:', error));
+            .then(response => response.json())
+            .then(data => {
+              callesEtim = data; // Almacenar los datos como un array de objetos
+              console.log("Datos cargados:", callesEtim); // Depuración: verificar los datos cargados
+            })
+            .catch(error => console.error('Error cargando el archivo JSON:', error));  
 
             // Definir las capas del mapa
             let layers = {
@@ -184,35 +185,49 @@ L.Control.Version = L.Control.extend({
             loadCameras();
 
             // Función para obtener la dirección y mostrar la etimología
-            function obtenerDireccion(lat, lon) {
-                return new Promise((resolve, reject) => {
-                    let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=es`;
-                    fetch(url)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.address) {
-                                let calle = data.address.road || "Calle no encontrada";
-                                let altura = data.address.house_number ? `, ${data.address.house_number}` : "";
-                                let barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
-                                let localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
+function obtenerDireccion(lat, lon) {
+    return new Promise((resolve, reject) => {
+        let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=es`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.address) {
+                    let calle = data.address.road || "Calle no encontrada";
+                    let altura = data.address.house_number ? `, ${data.address.house_number}` : "";
+                    let barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
+                    let localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
 
-                                // Actualizar el contenido del elemento #location-info
-                                document.getElementById("location-info").innerText =
-                                    `📍 Calle: ${calle}${altura}\n🏠 Barrio: ${barrio}\n🏙️ Localidad: ${localidad}`;
+                    // Actualizar el contenido del elemento #location-info
+                    document.getElementById("location-info").innerText =
+                        `📍 Calle: ${calle}${altura}\n🏠 Barrio: ${barrio}\n🏙️ Localidad: ${localidad}`;
 
-                                resolve(calle); // Resolver la promesa con el nombre de la calle
-                            } else {
-                                document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
-                                resolve(null); // Resolver con null si no se encuentra la calle
-                            }
-                        })
-                        .catch(error => {
-                            console.error("Error en reverse geocode:", error);
-                            document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
-                            reject(error); // Rechazar la promesa en caso de error
-                        });
-                });
-            }
+                    // Buscar la etimología de la calle en el array de objetos
+                    const calleEncontrada = callesEtim.find(item => item.Name === calle);
+                    if (calleEncontrada) {
+                        L.popup()
+                            .setLatLng([lat, lon])
+                            .setContent(`<b>${calle}</b><br>${calleEncontrada.Etimologia}`)
+                            .openOn(map);
+                    } else {
+                        L.popup()
+                            .setLatLng([lat, lon])
+                            .setContent(`<b>${calle}</b><br>Etimología no disponible.`)
+                            .openOn(map);
+                    }
+
+                    resolve(calle); // Resolver la promesa con el nombre de la calle
+                } else {
+                    document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
+                    resolve(null); // Resolver con null si no se encuentra la calle
+                }
+            })
+            .catch(error => {
+                console.error("Error en reverse geocode:", error);
+                document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
+                reject(error); // Rechazar la promesa en caso de error
+            });
+    });
+}
 
             // Evento de clic en el mapa para mostrar la etimología
             map.on('click', function (e) {
@@ -220,17 +235,25 @@ L.Control.Version = L.Control.extend({
                 let lon = e.latlng.lng;
 
                 obtenerDireccion(lat, lon).then(nombreCalle => {
-                    if (nombreCalle) {
-                        const etimologia = callesEtim[nombreCalle] || "Etimología no disponible.";
-                        L.popup()
-                            .setLatLng([lat, lon])
-                            .setContent(`<b>${nombreCalle}</b><br>${etimologia}`)
-                            .openOn(map);
-                    } else {
-                        alert("No se pudo obtener el nombre de la calle.");
-                    }
-                });
-            });
+                if (nombreCalle) {
+            // Buscar la etimología de la calle en el array de objetos
+                const calleEncontrada = callesEtim.find(item => item.Name === nombreCalle);
+                if (calleEncontrada) {
+                L.popup()
+                    .setLatLng([lat, lon])
+                    .setContent(`<b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}`)
+                    .openOn(map);
+                } else {
+                L.popup()
+                    .setLatLng([lat, lon])
+                    .setContent(`<b>${nombreCalle}</b><br>Etimología no disponible.`)
+                    .openOn(map);
+            }
+                } else {
+            alert("No se pudo obtener el nombre de la calle.");
+        }
+    });
+});
 
             // Función para localizar al usuario
             function localizarUsuario() {
