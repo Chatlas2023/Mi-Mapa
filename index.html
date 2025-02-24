@@ -5,84 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">   
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        #map {
-            height: 480px;
-            width: 100%;
-        }
-        #controls {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-        #location-info, #weather-info {
-            font-family: 'Arial', sans-serif;
-            margin-top: 10px;
-            font-size: 16px;
-            font-weight: normal;
-            white-space: pre-line;
-        }
-        .btn {
-            padding: 7px 15px;
-            font-size: 14px;
-            font-weight: bold;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            width: 180px;
-        }
-        .btn-update {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-update:hover {
-            background-color: #0056b3;
-        }
-        .btn-center {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-center:hover {
-            background-color: #0056b3;
-        }
-        .btn-share {
-            background-color: #28a745;
-            color: white;
-        }
-        .btn-share:hover {
-            background-color: #218838;
-        }
-        #mapLayers {
-            padding: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 5px;
-        }
-        #saveLocation {
-            position: fixed;
-            bottom: 34px;
-            right: 10px;
-            background-color: #28a745;
-            color: white;
-            width: 100px;
-            height: 74px;
-        }
-        #saveLocation:hover {
-            background-color: #218838;
-        }
+        /* Tus estilos CSS aquí */
     </style>
 </head>
 <body>
     <div id="map"></div>
     <div id="controls">
-        <button id="getLocation" class="btn btn-update">Actualizar</button>
-        <select id="mapLayers">
-            <option value="osm">Estándar</option>
-            <option value="satellite">Satélite</option>
-            <option value="temperatura">Clima</option>
-        </select>
-        <button id="centerMap" class="btn btn-center">Centrar</button>
-        <button id="shareLocation" class="btn btn-share">Compartir Ubicación</button>
+        <!-- Tus controles aquí -->
     </div>
     <div id="location-info">Esperando ubicación...</div>
     <div id="weather-info">Cargando clima...</div>
@@ -272,33 +201,89 @@
                     });
             }
 
-            // Evento para cambiar entre capas (estándar, satélite, clima)
-            document.getElementById("mapLayers").addEventListener("change", function () {
-                let selectedLayer = this.value;
-                if (selectedLayer === "temperatura") {
-                    window.location.href = "mapaWindy.html"; // Redirigir a la página de clima
-                } else {
-                    // Eliminar solo las capas base, no la capa de cámaras
-                    map.eachLayer(layer => {
-                        if (layer === layers.osm || layer === layers.satellite) {
-                            map.removeLayer(layer);
-                        }
-                    });
-                    layers[selectedLayer].addTo(map); // Añadir la capa seleccionada
-                    if (userMarker) {
-                        userMarker.addTo(map);
-                    }
-                    if (precisionCircle) {
-                        precisionCircle.addTo(map);
-                    }
-                    if (savedMarkers.length > 0) {
-                        savedMarkers.forEach(marker => marker.addTo(map));
-                    }
-                    if (cameraLayer) {
-                        cameraLayer.addTo(map); // Asegurar que la capa de cámaras permanezca
+            // Función para cambiar el nombre de un punto
+            window.cambiarNombre = function (button) {
+                const input = button.parentElement.querySelector('#nombrePunto');
+                const newName = input.value;
+                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
+                if (marker) {
+                    // Actualizar el contenido del popup
+                    const popupContent = `
+                        <div style="white-space: nowrap;">
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
+                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                        </div>
+                    `;
+                    marker.setPopupContent(popupContent);
+
+                    // Actualizar el nombre en localStorage
+                    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                    const index = savedLocations.findIndex(loc => loc.lat === marker.getLatLng().lat && loc.lon === marker.getLatLng().lng);
+                    if (index !== -1) {
+                        savedLocations[index].nombre = newName; // Actualizar el nombre
+                        localStorage.setItem('savedLocations', JSON.stringify(savedLocations)); // Guardar en localStorage
                     }
                 }
-            });
+            };
+
+            // Función para eliminar un punto
+            window.eliminarPunto = function (button) {
+                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
+                if (marker) {
+                    map.removeLayer(marker);
+                    savedMarkers = savedMarkers.filter(m => m !== marker);
+
+                    // Eliminar el punto de localStorage
+                    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                    const index = savedLocations.findIndex(loc => loc.lat === marker.getLatLng().lat && loc.lon === marker.getLatLng().lng);
+                    if (index !== -1) {
+                        savedLocations.splice(index, 1);
+                        localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+                    }
+
+                    // Actualizar los números de los puntos restantes
+                    actualizarNumerosPuntos();
+                }
+            };
+
+            // Función para actualizar los números de los puntos
+            function actualizarNumerosPuntos() {
+                savedMarkers.forEach((m, i) => {
+                    const puntoNumero = i + 1;
+
+                    // Actualizar el ícono con el nuevo número
+                    const customIcon = L.divIcon({
+                        className: 'custom-icon',
+                        html: `
+                            <div style="position: relative;">
+                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+                                <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+                                    ${puntoNumero}
+                                </div>
+                            </div>
+                        `,
+                        iconSize: [50, 50],
+                        iconAnchor: [25, 50],
+                        popupAnchor: [0, -50]
+                    });
+
+                    m.setIcon(customIcon);
+
+                    // Actualizar el contenido del popup con el nuevo número
+                    const popupContent = `
+                        <div style="white-space: nowrap;">
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
+                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                        </div>
+                    `;
+
+                    m.setPopupContent(popupContent);
+                });
+            }
 
             // Evento para el botón de guardar ubicación
             document.getElementById("saveLocation").addEventListener("click", function () {
@@ -345,43 +330,7 @@
                 }
             });
 
-            // Evento para el botón de compartir ubicación
-            document.getElementById("shareLocation").addEventListener("click", function () {
-                if (currentLat && currentLon) {
-                    const link = `https://www.google.com/maps?q=${currentLat},${currentLon}`;
-                    const linkInput = document.createElement("input");
-                    linkInput.type = "text";
-                    linkInput.value = link;
-                    linkInput.style.position = "fixed";
-                    linkInput.style.top = "50%";
-                    linkInput.style.left = "50%";
-                    linkInput.style.transform = "translate(-50%, -50%)";
-                    linkInput.style.zIndex = 1000;
-                    document.body.appendChild(linkInput);
-                    linkInput.select();
-                    linkInput.setSelectionRange(0, 99999);
-                    document.execCommand("copy");
-                    document.body.removeChild(linkInput);
-                    alert("Enlace copiado al portapapeles: " + link);
-                } else {
-                    alert("No se ha obtenido la ubicación actual.");
-                }
-            });
-
-            // Evento para el botón de centrar el mapa
-            document.getElementById("centerMap").addEventListener("click", function () {
-                if (currentLat && currentLon) {
-                    map.setView([currentLat, currentLon], 15);
-                } else {
-                    alert("Aún no se ha obtenido la ubicación.");
-                }
-            });
-
-            // Evento para el botón de actualizar ubicación
-            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
-
-            // Iniciar la localización del usuario al cargar la página
-            localizarUsuario();
+            // Resto del código...
         });
     </script>
 </body>
