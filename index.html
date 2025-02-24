@@ -21,7 +21,6 @@
             font-weight: normal;
             white-space: pre-line;
         }
-        /* Estilos para los botones */
         .btn {
             padding: 7px 15px;
             font-size: 14px;
@@ -30,7 +29,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.3s ease;
-            width: 180px; /* Añadir un ancho fijo */
+            width: 180px;
         }
         .btn-update {
             background-color: #007bff;
@@ -59,15 +58,14 @@
             font-weight: bold;
             border-radius: 5px;
         }
-        /* Estilos para el botón de guardar ubicación */
         #saveLocation {
             position: fixed;
             bottom: 34px;
             right: 10px;
             background-color: #28a745;
             color: white;
-            width: 100px; /* Hacer el botón más angosto */
-            height: 74px; /* Hacer el botón más alto */
+            width: 100px;
+            height: 74px;
         }
         #saveLocation:hover {
             background-color: #218838;
@@ -88,7 +86,6 @@
     </div>
     <div id="location-info">Esperando ubicación...</div>
     <div id="weather-info">Cargando clima...</div>
-    <!-- Botón para guardar la ubicación actual -->
     <button id="saveLocation" class="btn">Guardar ubicación actual</button>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -99,16 +96,25 @@
             let userMarker = null;
             let currentLat = null;
             let currentLon = null;
-            let precisionCircle = null; // círculo de precisión
-            let savedMarkers = []; // Array para almacenar los marcadores guardados
-            let cameraLayer = null; // Capa de cámaras
+            let precisionCircle = null;
+            let savedMarkers = [];
+            let cameraLayer = null;
+            let callesEtim = {}; // Variable global para almacenar las etimologías
+
+            // Cargar el archivo JSON con las etimologías de las calles
+            fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
+                .then(response => response.json())
+                .then(data => {
+                    callesEtim = data; // Almacenar los datos en la variable global
+                })
+                .catch(error => console.error('Error cargando el archivo JSON:', error));
 
             // Definir un ícono personalizado para el marcador de "Lugar Guardado"
             const customIcon = L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png', // URL de la imagen personalizada
-                iconSize: [50, 50], // Tamaño del ícono
-                iconAnchor: [25, 50], // Punto de anclaje del ícono
-                popupAnchor: [0, -50] // Punto de anclaje del popup
+                iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
+                iconSize: [50, 50],
+                iconAnchor: [25, 50],
+                popupAnchor: [0, -50]
             });
 
             let layers = {
@@ -131,7 +137,7 @@
 
             // Cargar las cámaras desde el archivo GeoJSON
             function loadCameras() {
-                fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Camaras2.geojson') // Cambiar a camaras2.geojson
+                fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Camaras2.geojson')
                     .then(response => response.json())
                     .then(data => {
                         cameraLayer = L.geoJSON(data, {
@@ -160,10 +166,7 @@
             // Función para guardar la ubicación actual
             function guardarUbicacion() {
                 if (currentLat && currentLon) {
-                    // Asignar un número único al punto
                     const puntoNumero = savedMarkers.length + 1;
-
-                    // Crear un ícono personalizado con el número del punto
                     const customIcon = L.divIcon({
                         className: 'custom-icon',
                         html: `
@@ -174,21 +177,18 @@
                                 </div>
                             </div>
                         `,
-                        iconSize: [50, 50], // Tamaño del ícono
-                        iconAnchor: [25, 50], // Punto de anclaje del ícono
-                        popupAnchor: [0, -50] // Punto de anclaje del popup
+                        iconSize: [50, 50],
+                        iconAnchor: [25, 50],
+                        popupAnchor: [0, -50]
                     });
 
-                    // Crear un nuevo marcador con el ícono personalizado
                     const newMarker = L.marker([currentLat, currentLon], {
                         title: "Punto",
                         icon: customIcon
                     }).addTo(map);
 
-                    // Agregar el marcador al array de marcadores guardados
                     savedMarkers.push(newMarker);
 
-                    // Crear un popup con opciones para cambiar el nombre y eliminar el punto
                     const popupContent = `
                         <div style="white-space: nowrap;">
                             <label for="nombrePunto">Nombre:</label>
@@ -200,7 +200,6 @@
 
                     newMarker.bindPopup(popupContent).openPopup();
 
-                    // Guardar en localStorage
                     const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
                     savedLocations.push({ lat: currentLat, lon: currentLon, nombre: `Punto ${puntoNumero}` });
                     localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
@@ -210,31 +209,29 @@
             }
 
             // Función para cambiar el nombre de un punto
-window.cambiarNombre = function(button) {
-    const input = button.parentElement.querySelector('#nombrePunto');
-    const newName = input.value;
-    const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
-    if (marker) {
-        // Actualizar el contenido del popup
-        const popupContent = `
-            <div style="white-space: nowrap;">
-                <label for="nombrePunto">Nombre:</label>
-                <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
-                <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
-            </div>
-        `;
-        marker.setPopupContent(popupContent);
+            window.cambiarNombre = function(button) {
+                const input = button.parentElement.querySelector('#nombrePunto');
+                const newName = input.value;
+                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
+                if (marker) {
+                    const popupContent = `
+                        <div style="white-space: nowrap;">
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
+                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                        </div>
+                    `;
+                    marker.setPopupContent(popupContent);
 
-        // Actualizar el nombre en localStorage
-        const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
-        const index = savedLocations.findIndex(loc => loc.lat === marker.getLatLng().lat && loc.lon === marker.getLatLng().lng);
-        if (index !== -1) {
-            savedLocations[index].nombre = newName; // Actualizar el nombre
-            localStorage.setItem('savedLocations', JSON.stringify(savedLocations)); // Guardar en localStorage
-        }
-    }
-};
+                    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                    const index = savedLocations.findIndex(loc => loc.lat === marker.getLatLng().lat && loc.lon === marker.getLatLng().lng);
+                    if (index !== -1) {
+                        savedLocations[index].nombre = newName;
+                        localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+                    }
+                }
+            };
 
             // Función para eliminar un punto
             window.eliminarPunto = function(button) {
@@ -243,7 +240,6 @@ window.cambiarNombre = function(button) {
                     map.removeLayer(marker);
                     savedMarkers = savedMarkers.filter(m => m !== marker);
 
-                    // Eliminar el punto de localStorage
                     const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
                     const index = savedLocations.findIndex(loc => loc.lat === marker.getLatLng().lat && loc.lon === marker.getLatLng().lng);
                     if (index !== -1) {
@@ -251,7 +247,6 @@ window.cambiarNombre = function(button) {
                         localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
                     }
 
-                    // Actualizar los números de los puntos restantes
                     actualizarNumerosPuntos();
                 }
             };
@@ -261,7 +256,6 @@ window.cambiarNombre = function(button) {
                 savedMarkers.forEach((m, i) => {
                     const puntoNumero = i + 1;
 
-                    // Actualizar el ícono con el nuevo número
                     const customIcon = L.divIcon({
                         className: 'custom-icon',
                         html: `
@@ -279,7 +273,6 @@ window.cambiarNombre = function(button) {
 
                     m.setIcon(customIcon);
 
-                    // Actualizar el contenido del popup con el nuevo número
                     const popupContent = `
                         <div style="white-space: nowrap;">
                             <label for="nombrePunto">Nombre:</label>
@@ -294,46 +287,44 @@ window.cambiarNombre = function(button) {
             }
 
             // Recuperar las ubicaciones guardadas al cargar la página
-function cargarUbicacionesGuardadas() {
-    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
-    savedLocations.forEach((loc, index) => {
-        const puntoNumero = index + 1;
+            function cargarUbicacionesGuardadas() {
+                const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                savedLocations.forEach((loc, index) => {
+                    const puntoNumero = index + 1;
 
-        // Crear un ícono personalizado con el número del punto
-        const customIcon = L.divIcon({
-            className: 'custom-icon',
-            html: `
-                <div style="position: relative;">
-                    <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-                    <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-                        ${puntoNumero}
-                    </div>
-                </div>
-            `,
-            iconSize: [50, 50],
-            iconAnchor: [25, 50],
-            popupAnchor: [0, -50]
-        });
+                    const customIcon = L.divIcon({
+                        className: 'custom-icon',
+                        html: `
+                            <div style="position: relative;">
+                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+                                <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+                                    ${puntoNumero}
+                                </div>
+                            </div>
+                        `,
+                        iconSize: [50, 50],
+                        iconAnchor: [25, 50],
+                        popupAnchor: [0, -50]
+                    });
 
-        const marker = L.marker([loc.lat, loc.lon], {
-            title: loc.nombre, // Usar el nombre guardado
-            icon: customIcon
-        }).addTo(map);
+                    const marker = L.marker([loc.lat, loc.lon], {
+                        title: loc.nombre,
+                        icon: customIcon
+                    }).addTo(map);
 
-        // Crear el contenido del popup con el nombre guardado
-        const popupContent = `
-            <div style="white-space: nowrap;">
-                <label for="nombrePunto">Nombre:</label>
-                <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
-                <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
-            </div>
-        `;
+                    const popupContent = `
+                        <div style="white-space: nowrap;">
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
+                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                        </div>
+                    `;
 
-        marker.bindPopup(popupContent);
-        savedMarkers.push(marker);
-    });
-}
+                    marker.bindPopup(popupContent);
+                    savedMarkers.push(marker);
+                });
+            }
 
             // Cargar las ubicaciones guardadas al iniciar
             cargarUbicacionesGuardadas();
@@ -344,10 +335,7 @@ function cargarUbicacionesGuardadas() {
             // Evento para el botón de compartir ubicación
             document.getElementById("shareLocation").addEventListener("click", function () {
                 if (currentLat && currentLon) {
-                    // Crear un enlace con las coordenadas actuales
                     const link = `https://www.google.com/maps?q=${currentLat},${currentLon}`;
-                    
-                    // Mostrar el enlace en un cuadro de texto para que el usuario pueda copiarlo
                     const linkInput = document.createElement("input");
                     linkInput.type = "text";
                     linkInput.value = link;
@@ -357,25 +345,56 @@ function cargarUbicacionesGuardadas() {
                     linkInput.style.transform = "translate(-50%, -50%)";
                     linkInput.style.zIndex = 1000;
                     document.body.appendChild(linkInput);
-                    
-                    // Seleccionar el texto en el cuadro de texto
                     linkInput.select();
-                    linkInput.setSelectionRange(0, 99999); // Para dispositivos móviles
-                    
-                    // Copiar el texto al portapapeles
+                    linkInput.setSelectionRange(0, 99999);
                     document.execCommand("copy");
-                    
-                    // Eliminar el cuadro de texto después de copiar
                     document.body.removeChild(linkInput);
-                    
-                    // Mostrar un mensaje de confirmación
                     alert("Enlace copiado al portapapeles: " + link);
                 } else {
                     alert("No se ha obtenido la ubicación actual.");
                 }
             });
 
-            // Resto del código (localizarUsuario, obtenerDireccion, obtenerClima, etc.)
+            // Función para obtener la dirección y mostrar la etimología
+            function obtenerDireccion(lat, lon) {
+                return new Promise((resolve, reject) => {
+                    let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=es`;
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.address) {
+                                let calle = data.address.road || "Calle no encontrada";
+                                resolve(calle);
+                            } else {
+                                resolve(null);
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error en reverse geocode:", error);
+                            reject(error);
+                        });
+                });
+            }
+
+            // Evento de clic en el mapa para mostrar la etimología
+            map.on('click', function (e) {
+                let lat = e.latlng.lat;
+                let lon = e.latlng.lng;
+
+                obtenerDireccion(lat, lon).then(nombreCalle => {
+                    if (nombreCalle) {
+                        const etimologia = callesEtim[nombreCalle] || "Etimología no disponible.";
+                        L.popup()
+                            .setLatLng([lat, lon])
+                            .setContent(`<b>${nombreCalle}</b><br>${etimologia}`)
+                            .openOn(map);
+                    } else {
+                        alert("No se pudo obtener el nombre de la calle.");
+                    }
+                });
+            });
+
+            // Resto del código (localizarUsuario, obtenerClima, etc.)
             function localizarUsuario() {
                 if ("geolocation" in navigator) {
                     navigator.geolocation.getCurrentPosition(
@@ -416,84 +435,33 @@ function cargarUbicacionesGuardadas() {
                 }
             }
 
-            function obtenerDireccion(lat, lon) {
-                let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=es`;
-                fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.address) {
-                        let calle = data.address.road || "Calle no encontrada";
-                        let altura = data.address.house_number ? `, ${data.address.house_number}` : "";
-                        let barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
-                        let localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
-
-                        document.getElementById("location-info").innerText =
-                            `📍 Calle: ${calle}${altura}\n🏠 Barrio: ${barrio}\n🏙️ Localidad: ${localidad}`;
-                    } else {
-                        document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
-                    }
-                })
-                .catch(error => {
-                    document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
-                    console.error("Error en reverse geocode:", error);
-                });
-            }
-
             function obtenerClima(lat, lon) {
                 let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${API_KEY}`;
                 fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.main) {
-                        let temperatura = data.main.temp;
-                        let condiciones = data.weather[0].description;
-                        let humedad = data.main.humidity;
-                        let viento = (data.wind.speed * 3.6).toFixed(1);
-                        document.getElementById("weather-info").innerText =
-                            `🌡️ Temperatura: ${temperatura.toFixed(1)}°C\n🌦️ Condiciones: ${condiciones}\n 💧 Humedad: ${humedad}%\n🌬️ Viento: ${viento} km/h`;
-                    } else {
-                        document.getElementById("weather-info").innerText = "No se pudo obtener el clima.";
-                    }
-                })
-                .catch(error => {
-                    document.getElementById("weather-info").innerText = "Error obteniendo el clima.";
-                    console.error("Error obteniendo clima:", error);
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.main) {
+                            let temperatura = data.main.temp;
+                            let condiciones = data.weather[0].description;
+                            let humedad = data.main.humidity;
+                            let viento = (data.wind.speed * 3.6).toFixed(1);
+                            document.getElementById("weather-info").innerText =
+                                `🌡️ Temperatura: ${temperatura.toFixed(1)}°C\n🌦️ Condiciones: ${condiciones}\n 💧 Humedad: ${humedad}%\n🌬️ Viento: ${viento} km/h`;
+                        } else {
+                            document.getElementById("weather-info").innerText = "No se pudo obtener el clima.";
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById("weather-info").innerText = "Error obteniendo el clima.";
+                        console.error("Error obteniendo clima:", error);
+                    });
             }
-
-            map.on('click', function (e) {
-                let lat = e.latlng.lat;
-                let lon = e.latlng.lng;
-
-                if (userMarker) {
-                    userMarker.setLatLng([lat, lon]);
-                } else {
-                    userMarker = L.marker([lat, lon]).addTo(map);
-                }
-
-                if (precisionCircle) {
-                    precisionCircle.setLatLng([lat, lon]);
-                } else {
-                    precisionCircle = L.circle([lat, lon], {
-                        color: 'cyan',
-                        weight: 2,
-                        opacity: 1,
-                        fillColor: 'cyan',
-                        fillOpacity: 0.1,
-                        radius: 100
-                    }).addTo(map);
-                }
-
-                obtenerDireccion(lat, lon);
-                obtenerClima(lat, lon);
-            });
 
             document.getElementById("mapLayers").addEventListener("change", function () {
                 let selectedLayer = this.value;
                 if (selectedLayer === "temperatura") {
-                    window.location.href = "mapaWindy.html"; // Redirige a mapaWindy.html
+                    window.location.href = "mapaWindy.html";
                 } else {
-                    // Eliminar solo las capas base, no la capa de cámaras
                     map.eachLayer(layer => {
                         if (layer === layers.osm || layer === layers.satellite) {
                             map.removeLayer(layer);
@@ -510,7 +478,7 @@ function cargarUbicacionesGuardadas() {
                         savedMarkers.forEach(marker => marker.addTo(map));
                     }
                     if (cameraLayer) {
-                        cameraLayer.addTo(map); // Asegurar que la capa de cámaras permanezca
+                        cameraLayer.addTo(map);
                     }
                 }
             });
@@ -529,22 +497,22 @@ function cargarUbicacionesGuardadas() {
 
             L.Control.Version = L.Control.extend({
                 options: {
-                    position: 'bottomleft' // Mantener en la esquina inferior izquierda
+                    position: 'bottomleft'
                 },
                 onAdd: function(map) {
                     let div = L.DomUtil.create('div', 'leaflet-control-version');
                     div.style.position = "absolute";
-                    div.style.left = "0"; // Pegado al borde izquierdo
-                    div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.3.34 ";
-                    div.style.padding = "0px"; // Eliminar padding
-                    div.style.margin = "0"; // Eliminar margen
+                    div.style.left = "0";
+                    div.style.bottom = "0";
+                    div.innerHTML = " Ver: 1.3.35 ";
+                    div.style.padding = "0px";
+                    div.style.margin = "0";
                     div.style.background = "rgba(255, 255, 255, 0.8)";
-                    div.style.fontSize = "12px"; // Tamaño de fuente más pequeño
-                    div.style.borderRadius = "0px"; // Eliminar bordes redondeados
-                    div.style.border = "none"; // Eliminar borde
-                    div.style.whiteSpace = "nowrap"; // Mantener en una sola línea
-                    div.style.lineHeight = "normal"; // Ajustar altura de línea
+                    div.style.fontSize = "12px";
+                    div.style.borderRadius = "0px";
+                    div.style.border = "none";
+                    div.style.whiteSpace = "nowrap";
+                    div.style.lineHeight = "normal";
                     return div;
                 }
             });
