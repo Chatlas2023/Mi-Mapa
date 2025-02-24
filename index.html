@@ -5,7 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">   
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* Tus estilos CSS aquí */
+                #map {
+            height: 480px;
+            width: 100%;
+        }
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        #location-info, #weather-info {
+            font-family: 'Arial', sans-serif;
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: normal;
+            white-space: pre-line;
+        }
+        /* Estilos para los botones */
+        .btn {
+            padding: 7px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            width: 180px; /* Añadir un ancho fijo */
+        }
+        .btn-update {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-update:hover {
+            background-color: #0056b3;
+        }
+        .btn-center {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-center:hover {
+            background-color: #0056b3;
+        }
+        .btn-share {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-share:hover {
+            background-color: #218838;
+        }
+        #mapLayers {
+            padding: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        /* Estilos para el botón de guardar ubicación */
+        #saveLocation {
+            position: fixed;
+            bottom: 34px;
+            right: 10px;
+            background-color: #28a745;
+            color: white;
+            width: 100px; /* Hacer el botón más angosto */
+            height: 74px; /* Hacer el botón más alto */
+        }
+        #saveLocation:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
