@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">   
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        /* Estilos anteriores */
         #map {
             height: 480px;
             width: 100%;
@@ -70,6 +71,22 @@
         #saveLocation:hover {
             background-color: #218838;
         }
+
+        /* Nuevos estilos para el texto "Esperando ubicación" */
+        #location-info.esperando {
+            color: red; /* Color rojo */
+            animation: titilar 1s infinite; /* Animación de parpadeo */
+        }
+
+        /* Definición de la animación de parpadeo */
+        @keyframes titilar {
+            0%, 100% {
+                opacity: 1; /* Visible */
+            }
+            50% {
+                opacity: 0; /* Invisible */
+            }
+        }
     </style>
 </head>
 <body>
@@ -84,7 +101,7 @@
         <button id="centerMap" class="btn btn-center">Centrar</button>
         <button id="shareLocation" class="btn btn-share">Compartir Ubicación</button>
     </div>
-    <div id="location-info">Esperando ubicación...</div>
+    <div id="location-info" class="esperando">Esperando ubicación...</div>
     <div id="weather-info">Cargando clima...</div>
     <button id="saveLocation" class="btn">Guardar ubicación actual</button>
 
@@ -93,16 +110,16 @@
         document.addEventListener('DOMContentLoaded', function () {
             const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // clave de OpenWeatherMap
             // Definir el control de versión
-L.Control.Version = L.Control.extend({
-    options: {
-        position: 'bottomleft'
-    },
+            L.Control.Version = L.Control.extend({
+                options: {
+                    position: 'bottomleft'
+                },
                 onAdd: function(map) {
                     let div = L.DomUtil.create('div', 'leaflet-control-version');
                     div.style.position = "absolute";
                     div.style.left = "0"; // Pegado al borde izquierdo
                     div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.3.35 ";
+                    div.innerHTML = " Ver: 1.4.0 ";
                     div.style.padding = "0px"; // Eliminar padding
                     div.style.margin = "0"; // Eliminar margen
                     div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -112,8 +129,9 @@ L.Control.Version = L.Control.extend({
                     div.style.whiteSpace = "nowrap"; // Mantener en una sola línea
                     div.style.lineHeight = "normal"; // Ajustar altura de línea
                     return div;
-    }
-});
+                }
+            });
+
             let map = L.map('map').setView([-34.6037, -58.3816], 16); // Coordenadas iniciales de Buenos Aires
             map.addControl(new L.Control.Version());
             let userMarker = null;
@@ -122,17 +140,16 @@ L.Control.Version = L.Control.extend({
             let precisionCircle = null;
             let savedMarkers = [];
             let cameraLayer = null;
-            let callesEtim = {}; // Variable global para almacenar las etimologías
-            
+            let callesEtim = []; // Variable global para almacenar las etimologías
 
             // Cargar el archivo JSON con las etimologías de las calles
             fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
-            .then(response => response.json())
-            .then(data => {
-              callesEtim = data; // Almacenar los datos como un array de objetos
-              console.log("Datos cargados:", callesEtim); // Depuración: verificar los datos cargados
-            })
-            .catch(error => console.error('Error cargando el archivo JSON:', error));  
+                .then(response => response.json())
+                .then(data => {
+                    callesEtim = data; // Almacenar los datos como un array de objetos
+                    console.log("Datos cargados:", callesEtim); // Depuración: verificar los datos cargados
+                })
+                .catch(error => console.error('Error cargando el archivo JSON:', error));
 
             // Definir las capas del mapa
             let layers = {
@@ -185,49 +202,52 @@ L.Control.Version = L.Control.extend({
             loadCameras();
 
             // Función para obtener la dirección y mostrar la etimología
-function obtenerDireccion(lat, lon) {
-    return new Promise((resolve, reject) => {
-        let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=es`;
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.address) {
-                    let calle = data.address.road || "Calle no encontrada";
-                    let altura = data.address.house_number ? `, ${data.address.house_number}` : "";
-                    let barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
-                    let localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
+            function obtenerDireccion(lat, lon) {
+                return new Promise((resolve, reject) => {
+                    let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=es`;
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.address) {
+                                let calle = data.address.road || "Calle no encontrada";
+                                let altura = data.address.house_number ? `, ${data.address.house_number}` : "";
+                                let barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
+                                let localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
 
-                    // Actualizar el contenido del elemento #location-info
-                    document.getElementById("location-info").innerText =
-                        `📍 Calle: ${calle}${altura}\n🏠 Barrio: ${barrio}\n🏙️ Localidad: ${localidad}`;
+                                // Actualizar el contenido del elemento #location-info y quitar la clase 'esperando'
+                                document.getElementById("location-info").innerText =
+                                    `📍 Calle: ${calle}${altura}\n🏠 Barrio: ${barrio}\n🏙️ Localidad: ${localidad}`;
+                                document.getElementById("location-info").classList.remove("esperando");
 
-                    // Buscar la etimología de la calle en el array de objetos
-                    const calleEncontrada = callesEtim.find(item => item.Name === calle);
-                    if (calleEncontrada) {
-                        L.popup()
-                            .setLatLng([lat, lon])
-                            .setContent(`<b>${calle}</b><br>${calleEncontrada.Etimologia}`)
-                            .openOn(map);
-                    } else {
-                        L.popup()
-                            .setLatLng([lat, lon])
-                            .setContent(`<b>${calle}</b><br>Etimología no disponible.`)
-                            .openOn(map);
-                    }
+                                // Buscar la etimología de la calle en el array de objetos
+                                const calleEncontrada = callesEtim.find(item => item.Name === calle);
+                                if (calleEncontrada) {
+                                    L.popup()
+                                        .setLatLng([lat, lon])
+                                        .setContent(`<b>${calle}</b><br>${calleEncontrada.Etimologia}`)
+                                        .openOn(map);
+                                } else {
+                                    L.popup()
+                                        .setLatLng([lat, lon])
+                                        .setContent(`<b>${calle}</b><br>Etimología no disponible.`)
+                                        .openOn(map);
+                                }
 
-                    resolve(calle); // Resolver la promesa con el nombre de la calle
-                } else {
-                    document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
-                    resolve(null); // Resolver con null si no se encuentra la calle
-                }
-            })
-            .catch(error => {
-                console.error("Error en reverse geocode:", error);
-                document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
-                reject(error); // Rechazar la promesa en caso de error
-            });
-    });
-}
+                                resolve(calle); // Resolver la promesa con el nombre de la calle
+                            } else {
+                                document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
+                                document.getElementById("location-info").classList.remove("esperando");
+                                resolve(null); // Resolver con null si no se encuentra la calle
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error en reverse geocode:", error);
+                            document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
+                            document.getElementById("location-info").classList.remove("esperando");
+                            reject(error); // Rechazar la promesa en caso de error
+                        });
+                });
+            }
 
             // Evento de clic en el mapa para mostrar la etimología
             map.on('click', function (e) {
@@ -235,25 +255,25 @@ function obtenerDireccion(lat, lon) {
                 let lon = e.latlng.lng;
 
                 obtenerDireccion(lat, lon).then(nombreCalle => {
-                if (nombreCalle) {
-            // Buscar la etimología de la calle en el array de objetos
-                const calleEncontrada = callesEtim.find(item => item.Name === nombreCalle);
-                if (calleEncontrada) {
-                L.popup()
-                    .setLatLng([lat, lon])
-                    .setContent(`<b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}`)
-                    .openOn(map);
-                } else {
-                L.popup()
-                    .setLatLng([lat, lon])
-                    .setContent(`<b>${nombreCalle}</b><br>Etimología no disponible.`)
-                    .openOn(map);
-            }
-                } else {
-            alert("No se pudo obtener el nombre de la calle.");
-        }
-    });
-});
+                    if (nombreCalle) {
+                        // Buscar la etimología de la calle en el array de objetos
+                        const calleEncontrada = callesEtim.find(item => item.Name === nombreCalle);
+                        if (calleEncontrada) {
+                            L.popup()
+                                .setLatLng([lat, lon])
+                                .setContent(`<b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}`)
+                                .openOn(map);
+                        } else {
+                            L.popup()
+                                .setLatLng([lat, lon])
+                                .setContent(`<b>${nombreCalle}</b><br>Etimología no disponible.`)
+                                .openOn(map);
+                        }
+                    } else {
+                        alert("No se pudo obtener el nombre de la calle.");
+                    }
+                });
+            });
 
             // Función para localizar al usuario
             function localizarUsuario() {
