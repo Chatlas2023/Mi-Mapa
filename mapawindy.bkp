@@ -7,7 +7,7 @@
     <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
     <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
     <style>
-        #windy { width: 100%; height: 545px; }
+        #windy { width: 100%; height: 640px; }
         .btn {
             padding: 7px 15px;
             font-size: 14px;
@@ -25,10 +25,21 @@
         .btn-center:hover {
             background-color: #0056b3;
         }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 640px;
+            background-color: #f0f0f0;
+            font-size: 20px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
-    <div id="windy"></div>
+    <div id="loading" class="loading">Cargando el mapa...</div>
+    <div id="windy" style="display: none;"></div>
     <script>
         function getLocation() {
             if (navigator.geolocation) {
@@ -50,6 +61,13 @@
             windyInit(options, function(windyAPI) {
                 const { map, overlays } = windyAPI;
                 console.log('Windy API inicializada:', windyAPI);
+
+                // Oculta el mensaje de carga y muestra el mapa
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('windy').style.display = 'block';
+
+                // Redimensiona el mapa para que ocupe todo el espacio disponible
+                map.invalidateSize();
             });
         }
 
