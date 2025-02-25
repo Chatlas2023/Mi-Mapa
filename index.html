@@ -262,7 +262,8 @@
                         if (calleEncontrada) {
                             L.popup()
                                 .setLatLng([lat, lon])
-                                .setContent(`<b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}`)
+                                // .setContent(`<b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}`)
+                                .setContent(`<div style="font-size: 18px;"><b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}</div>`) // Aumentar el tamaño de la fuente a 18px
                                 .openOn(map);
                         } else {
                             L.popup()
