@@ -72,11 +72,18 @@
             background-color: #218838;
         }
 
-        /* Nuevos estilos para el texto "Esperando ubicación" */
-        #location-info.esperando {
-            color: red; /* Color rojo */
-            animation: titilar 1s infinite; /* Animación de parpadeo */
+        /* Nuevos estilos para el texto "Esperando ubicación"
+        // #location-info.esperando {
+      //      color: red; /* Color rojo */
+    //      animation: titilar 1s infinite; /* Animación de parpadeo */
         }
+        #location-info.esperando {
+    color: white; /* Color del texto */
+    background-color: red; /* Fondo rojo */
+    animation: titilar 1s infinite; /* Animación de parpadeo */
+    padding: 5px; /* Añadir un poco de padding para que el texto no esté pegado al borde */
+    border-radius: 5px; /* Bordes redondeados */
+}
 
         /* Definición de la animación de parpadeo */
         @keyframes titilar {
