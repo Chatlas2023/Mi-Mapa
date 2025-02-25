@@ -8,4 +8,4 @@ El mapa8 incluye versionado visible en el mapa y corrige el error al querer hace
 1.3.33 acerca el numero del punto al ícono y corrige numeración al eliminar puntos
 1.3.34 Primer versión que usa index.html sin redigir a mapaXX.html
 1.3.35 Intenta etimologia
-1.4.0 Etimología funcional
+1.4.0 Etimología funcional. Dejo de funcionar el guardado de puntos
