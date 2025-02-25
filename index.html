@@ -75,8 +75,6 @@
         /* Nuevos estilos para el texto "Esperando ubicación"
         // #location-info.esperando {
       //      color: red; /* Color rojo */
-    //      animation: titilar 1s infinite; /* Animación de parpadeo */
-        }
         #location-info.esperando {
     color: white; /* Color del texto */
     background-color: red; /* Fondo rojo */
@@ -85,15 +83,14 @@
     border-radius: 5px; /* Bordes redondeados */
 }
 
-        /* Definición de la animación de parpadeo */
-        @keyframes titilar {
-            0%, 100% {
-                opacity: 1; /* Visible */
-            }
-            50% {
-                opacity: 0; /* Invisible */
-            }
-        }
+@keyframes titilar {
+    0%, 100% {
+        opacity: 1; /* Visible */
+    }
+    50% {
+        opacity: 0.5; /* Semi-transparente */
+    }
+}
     </style>
 </head>
 <body>
