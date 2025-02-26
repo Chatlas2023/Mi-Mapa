@@ -73,18 +73,18 @@
         }
  /* Estilos para agrandar la "X" de cierre del popup */
     .leaflet-popup-close-button {
-        font-size: 24px; /* Tamaño de la "X" */
-        width: 30px; /* Ancho del botón */
-        height: 30px; /* Alto del botón */
-        line-height: 30px; /* Centrar verticalmente la "X" */
-        color: #000; /* Color de la "X" */
-        background-color: rgba(255, 255, 255, 0.8); /* Fondo del botón */
-        border-radius: 50%; /* Hacer el botón circular */
-        border: 1px solid #ccc; /* Borde del botón */
-        padding: 0; /* Eliminar padding */
-        margin: 5px 5px 0 0; /* Ajustar posición */
-        transition: background-color 0.3s ease; /* Transición suave */
-    }
+    font-size: 24px !important; /* Tamaño de la "X" */
+    width: 30px !important; /* Ancho del botón */
+    height: 30px !important; /* Alto del botón */
+    line-height: 30px !important; /* Centrar verticalmente la "X" */
+    color: #000 !important; /* Color de la "X" */
+    background-color: rgba(255, 255, 255, 0.8) !important; /* Fondo del botón */
+    border-radius: 50% !important; /* Hacer el botón circular */
+    border: 1px solid #ccc !important; /* Borde del botón */
+    padding: 0 !important; /* Eliminar padding */
+    margin: 5px 5px 0 0 !important; /* Ajustar posición */
+    transition: background-color 0.3s ease !important; /* Transición suave */
+}
 
     .leaflet-popup-close-button:hover {
         background-color: rgba(255, 0, 0, 0.8); /* Cambiar color al pasar el mouse */
@@ -141,7 +141,7 @@
                     div.style.position = "absolute";
                     div.style.left = "0"; // Pegado al borde izquierdo
                     div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.4.3 ";
+                    div.innerHTML = " Ver: 1.4.31 ";
                     div.style.padding = "0px"; // Eliminar padding
                     div.style.margin = "0"; // Eliminar margen
                     div.style.background = "rgba(255, 255, 255, 0.8)";
