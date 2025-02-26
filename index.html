@@ -71,7 +71,25 @@
         #saveLocation:hover {
             background-color: #218838;
         }
+ /* Estilos para agrandar la "X" de cierre del popup */
+    .leaflet-popup-close-button {
+        font-size: 24px; /* Tamaño de la "X" */
+        width: 30px; /* Ancho del botón */
+        height: 30px; /* Alto del botón */
+        line-height: 30px; /* Centrar verticalmente la "X" */
+        color: #000; /* Color de la "X" */
+        background-color: rgba(255, 255, 255, 0.8); /* Fondo del botón */
+        border-radius: 50%; /* Hacer el botón circular */
+        border: 1px solid #ccc; /* Borde del botón */
+        padding: 0; /* Eliminar padding */
+        margin: 5px 5px 0 0; /* Ajustar posición */
+        transition: background-color 0.3s ease; /* Transición suave */
+    }
 
+    .leaflet-popup-close-button:hover {
+        background-color: rgba(255, 0, 0, 0.8); /* Cambiar color al pasar el mouse */
+        color: #fff; /* Cambiar color de la "X" al pasar el mouse */
+    }
         /* Nuevos estilos para el texto "Esperando ubicación"
         // #location-info.esperando {
       //      color: red; /* Color rojo */
