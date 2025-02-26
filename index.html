@@ -71,20 +71,21 @@
         #saveLocation:hover {
             background-color: #218838;
         }
-
-    /* Estilos para agrandar la "X" de cierre del popup */
-    .leaflet-popup-close-button {
-    font-size: 24px !important; /* Tamaño de la "X" */
-    width: 30px !important; /* Ancho del botón */
-    height: 30px !important; /* Alto del botón */
-    line-height: 30px !important; /* Centrar verticalmente la "X" */
-    color: #000 !important; /* Color de la "X" */
-    background-color: rgba(255, 255, 255, 0.8) !important; /* Fondo del botón */
-    border-radius: 50% !important; /* Hacer el botón circular */
-    border: 1px solid #ccc !important; /* Borde del botón */
-    padding: 0 !important; /* Eliminar padding */
-    margin: 5px 5px 0 0 !important; /* Ajustar posición */
-    transition: background-color 0.3s ease !important; /* Transición suave */
+        font-size: 16px !important; /* Reducir el tamaño de la "X" */
+        width: 20px !important; /* Reducir el ancho del botón */
+        height: 20px !important; /* Reducir el alto del botón */
+        line-height: 20px !important; /* Centrar verticalmente la "X" */
+        color: #000 !important; /* Color de la "X" */
+        background-color: rgba(255, 255, 255, 0.8) !important; /* Fondo del botón */
+        border-radius: 50% !important; /* Hacer el botón circular */
+        border: 1px solid #ccc !important; /* Borde del botón */
+        padding: 0 !important; /* Eliminar padding */
+        margin: 5px 5px 0 0 !important; /* Ajustar posición */
+        transition: background-color 0.3s ease !important; /* Transición suave */
+        position: absolute !important; /* Posicionar absolutamente */
+        top: 5px !important; /* Ajustar la posición superior */
+        right: 5px !important; /* Ajustar la posición derecha */
+        z-index: 1000 !important; /* Asegurar que esté por encima del contenido */
     }
 
         /* Nuevos estilos para el texto "Esperando ubicación"
