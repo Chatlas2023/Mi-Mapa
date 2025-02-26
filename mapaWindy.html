@@ -26,13 +26,15 @@
             background-color: #0056b3;
         }
         .loading {
-            display: inline-block; /* Cambiado a inline-block */
-            background-color: red;
+              display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 640px;
+            background-color: #f0f0f0;
             font-size: 20px;
-            color: white;
-            animation: blink 1s infinite alternate;
-            padding: 10px; /* agrega padding para que no se pegue el texto al borde */
-    }
+            color: #333;
+        }
         @keyframes blink {
             from { opacity: 1; }
             to { opacity: 0.5; }
