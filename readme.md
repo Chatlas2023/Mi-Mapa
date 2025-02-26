@@ -9,3 +9,4 @@ El mapa8 incluye versionado visible en el mapa y corrige el error al querer hace
 1.3.34 Primer versión que usa index.html sin redigir a mapaXX.html
 1.3.35 Intenta etimologia
 1.4.0 Etimología funcional. Dejo de funcionar el guardado de puntos
+1.4.1 Guardado de puntos OK. Dejó de funcionar temperatura, etc al tocar el mapa
