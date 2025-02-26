@@ -123,7 +123,7 @@
                     div.style.position = "absolute";
                     div.style.left = "0"; // Pegado al borde izquierdo
                     div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.4.1 ";
+                    div.innerHTML = " Ver: 1.4.2 ";
                     div.style.padding = "0px"; // Eliminar padding
                     div.style.margin = "0"; // Eliminar margen
                     div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -268,7 +268,6 @@
                         if (calleEncontrada) {
                             L.popup()
                                 .setLatLng([lat, lon])
-                                // .setContent(`<b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}`)
                                 .setContent(`<div style="font-size: 18px;"><b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}</div>`) // Aumentar el tamaño de la fuente a 18px
                                 .openOn(map);
                         } else {
@@ -281,6 +280,8 @@
                         alert("No se pudo obtener el nombre de la calle.");
                     }
                 });
+                // Llamar a la función para obtener el clima en la nueva ubicación
+                obtenerClima(lat, lon);
             });
 
             // Función para localizar al usuario
