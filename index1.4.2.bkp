@@ -1,1 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">   
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* Estilos anteriores */
+        #map {
+            height: 480px;
+            width: 100%;
+        }
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        #location-info, #weather-info {
+            font-family: 'Arial', sans-serif;
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: normal;
+            white-space: pre-line;
+        }
+        .btn {
+            padding: 7px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            width: 180px;
+        }
+        .btn-update {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-update:hover {
+            background-color: #0056b3;
+        }
+        .btn-center {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-center:hover {
+            background-color: #0056b3;
+        }
+        .btn-share {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-share:hover {
+            background-color: #218838;
+        }
+        #mapLayers {
+            padding: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        #saveLocation {
+            position: fixed;
+            bottom: 34px;
+            right: 10px;
+            background-color: #28a745;
+            color: white;
+            width: 100px;
+            height: 74px;
+        }
+        #saveLocation:hover {
+            background-color: #218838;
+        }
 
+        /* Nuevos estilos para el texto "Esperando ubicación"
+        // #location-info.esperando {
+      //      color: red; /* Color rojo */
+        #location-info.esperando {
+    color: white; /* Color del texto */
+    background-color: red; /* Fondo rojo */
+    animation: titilar 1s infinite; /* Animación de parpadeo */
+    padding: 5px; /* Añadir un poco de padding para que el texto no esté pegado al borde */
+    border-radius: 5px; /* Bordes redondeados */
+}
+
+@keyframes titilar {
+    0%, 100% {
+        opacity: 1; /* Visible */
+    }
+    50% {
+        opacity: 0.5; /* Semi-transparente */
+    }
+}
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="controls">
+        <button id="getLocation" class="btn btn-update">Actualizar</button>
+        <select id="mapLayers">
+            <option value="osm">Estándar</option>
+            <option value="satellite">Satélite</option>
+            <option value="temperatura">Clima</option>
+        </select>
+        <button id="centerMap" class="btn btn-center">Centrar</button>
+        <button id="shareLocation" class="btn btn-share">Compartir Ubicación</button>
+    </div>
+    <div id="location-info" class="esperando">Esperando ubicación...</strong></div>
+    <div id="weather-info">Cargando clima...</div>
+    <button id="saveLocation" class="btn">Guardar ubicación actual</button>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // clave de OpenWeatherMap
+            // Definir el control de versión
+            L.Control.Version = L.Control.extend({
+                options: {
+                    position: 'bottomleft'
+                },
+                onAdd: function(map) {
+                    let div = L.DomUtil.create('div', 'leaflet-control-version');
+                    div.style.position = "absolute";
+                    div.style.left = "0"; // Pegado al borde izquierdo
+                    div.style.bottom = "0"; // Pegado al borde inferior
+                    div.innerHTML = " Ver: 1.4.2 ";
+                    div.style.padding = "0px"; // Eliminar padding
+                    div.style.margin = "0"; // Eliminar margen
+                    div.style.background = "rgba(255, 255, 255, 0.8)";
+                    div.style.fontSize = "12px"; // Tamaño de fuente más pequeño
+                    div.style.borderRadius = "0px"; // Eliminar bordes redondeados
+                    div.style.border = "none"; // Eliminar borde
+                    div.style.whiteSpace = "nowrap"; // Mantener en una sola línea
+                    div.style.lineHeight = "normal"; // Ajustar altura de línea
+                    return div;
+                }
+            });
+
+          //  let map = L.map('map').setView([-34.6037, -58.3816], 16); // Coordenadas iniciales de Buenos Aires
+            let map = L.map('map', { zoomControl: false }).setView([-34.6037, -58.3816], 16);
+
+            map.addControl(new L.Control.Version());
+            let userMarker = null;
+            let currentLat = null;
+            let currentLon = null;
+            let precisionCircle = null;
+            let savedMarkers = [];
+            let cameraLayer = null;
+            let callesEtim = []; // Variable global para almacenar las etimologías
+
+            // Cargar el archivo JSON con las etimologías de las calles
+            fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
+                .then(response => response.json())
+                .then(data => {
+                    callesEtim = data; // Almacenar los datos como un array de objetos
+                    console.log("Datos cargados:", callesEtim); // Depuración: verificar los datos cargados
+                })
+                .catch(error => console.error('Error cargando el archivo JSON:', error));
+
+            // Definir las capas del mapa
+            let layers = {
+                osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 22,
+                    attribution: '&copy; OpenStreetMap contributors'
+                }),
+                satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: '&copy; Esri'
+                })
+            };
+
+            // Añadir la capa estándar al mapa por defecto
+            layers.osm.addTo(map);
+
+            // Limitar el zoom máximo
+            map.on('zoomend', function () {
+                if (map.getZoom() > 19) {
+                    map.setZoom(19);
+                }
+            });
+
+            // Cargar las cámaras desde el archivo GeoJSON
+            function loadCameras() {
+                fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Camaras2.geojson')
+                    .then(response => response.json())
+                    .then(data => {
+                        cameraLayer = L.geoJSON(data, {
+                            pointToLayer: function (feature, latlng) {
+                                return L.marker(latlng, {
+                                    icon: L.icon({
+                                        iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Camera.png',
+                                        iconSize: [25, 25],
+                                        iconAnchor: [12, 25]
+                                    })
+                                }).bindPopup(`<div style="white-space: normal;min-width: 200px;">
+                                    <b>Serie:</b> ${feature.properties.serie || 'N/A'}<br>
+                                    <b>Calle:</b> ${feature.properties.calle || 'N/A'}<br>
+                                    <b>Altura:</b> ${feature.properties.altura || 'N/A'}<br>
+                                    <b>Localidad:</b> ${feature.properties.localidad || 'N/A'}
+                                </div>`);
+                            }
+                        }).addTo(map);
+                    })
+                    .catch(error => console.error('Error cargando las cámaras:', error));
+            }
+
+            // Cargar las cámaras al inicio
+            loadCameras();
+
+            // Función para obtener la dirección y mostrar la etimología
+            function obtenerDireccion(lat, lon) {
+                return new Promise((resolve, reject) => {
+                    let url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=es`;
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.address) {
+                                let calle = data.address.road || "Calle no encontrada";
+                                let altura = data.address.house_number ? `, ${data.address.house_number}` : "";
+                                let barrio = data.address.suburb || data.address.neighbourhood || "Barrio no encontrado";
+                                let localidad = data.address.city || data.address.town || data.address.village || "Localidad no encontrada";
+
+                                // Actualizar el contenido del elemento #location-info y quitar la clase 'esperando'
+                                document.getElementById("location-info").innerText =
+                                    `📍 Calle: ${calle}${altura}\n🏠 Barrio: ${barrio}\n🏙️ Localidad: ${localidad}`;
+                                document.getElementById("location-info").classList.remove("esperando");
+
+                                // Buscar la etimología de la calle en el array de objetos
+                                const calleEncontrada = callesEtim.find(item => item.Name === calle);
+                                if (calleEncontrada) {
+                                    L.popup()
+                                        .setLatLng([lat, lon])
+                                //        .setContent(`<b>${calle}</b><br>${calleEncontrada.Etimologia}`)
+                                        .setContent(`<div style="font-size: 18px;"><b>${calle}</b><br>${calleEncontrada.Etimologia}</div>`) // Aumentar el tamaño de la fuente a 18px
+                                        .openOn(map);
+                                } else {
+                                    L.popup()
+                                        .setLatLng([lat, lon])
+                                        .setContent(`<b>${calle}</b><br>`)
+                                        .openOn(map);
+                                }
+
+                                resolve(calle); // Resolver la promesa con el nombre de la calle
+                            } else {
+                                document.getElementById("location-info").innerText = "No se pudo obtener la dirección.";
+                                document.getElementById("location-info").classList.remove("esperando");
+                                resolve(null); // Resolver con null si no se encuentra la calle
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error en reverse geocode:", error);
+                            document.getElementById("location-info").innerText = "Error obteniendo la dirección.";
+                            document.getElementById("location-info").classList.remove("esperando");
+                            reject(error); // Rechazar la promesa en caso de error
+                        });
+                });
+            }
+
+            // Evento de clic en el mapa para mostrar la etimología
+            map.on('click', function (e) {
+                let lat = e.latlng.lat;
+                let lon = e.latlng.lng;
+
+                obtenerDireccion(lat, lon).then(nombreCalle => {
+                    if (nombreCalle) {
+                        // Buscar la etimología de la calle en el array de objetos
+                        const calleEncontrada = callesEtim.find(item => item.Name === nombreCalle);
+                        if (calleEncontrada) {
+                            L.popup()
+                                .setLatLng([lat, lon])
+                                .setContent(`<div style="font-size: 18px;"><b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}</div>`) // Aumentar el tamaño de la fuente a 18px
+                                .openOn(map);
+                        } else {
+                            L.popup()
+                                .setLatLng([lat, lon])
+                                .setContent(`<b>${nombreCalle}</b><br>`)
+                                .openOn(map);
+                        }
+                    } else {
+                        alert("No se pudo obtener el nombre de la calle.");
+                    }
+                });
+                // Llamar a la función para obtener el clima en la nueva ubicación
+                obtenerClima(lat, lon);
+            });
+
+            // Función para localizar al usuario
+            function localizarUsuario() {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        function (position) {
+                            currentLat = position.coords.latitude;
+                            currentLon = position.coords.longitude;
+
+                            map.setView([currentLat, currentLon], 15);
+
+                            if (userMarker) {
+                                userMarker.setLatLng([currentLat, currentLon]);
+                            } else {
+                                userMarker = L.marker([currentLat, currentLon]).addTo(map);
+                            }
+
+                            if (precisionCircle) {
+                                precisionCircle.setLatLng([currentLat, currentLon]);
+                            } else {
+                                precisionCircle = L.circle([currentLat, currentLon], {
+                                    color: 'cyan',
+                                    weight: 2,
+                                    opacity: 1,
+                                    fillColor: 'cyan',
+                                    fillOpacity: 0.1,
+                                    radius: 100
+                                }).addTo(map);
+                            }
+
+                            obtenerDireccion(currentLat, currentLon);
+                            obtenerClima(currentLat, currentLon);
+                        },
+                        function (error) {
+                            alert("Error obteniendo la ubicación: " + error.message);
+                        }
+                    );
+                } else {
+                    alert("Tu navegador no soporta geolocalización.");
+                }
+            }
+
+            // Función para obtener el clima
+            function obtenerClima(lat, lon) {
+                let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=es&appid=${API_KEY}`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.main) {
+                            let temperatura = data.main.temp;
+                            let condiciones = data.weather[0].description;
+                            let humedad = data.main.humidity;
+                            let viento = (data.wind.speed * 3.6).toFixed(1);
+                            document.getElementById("weather-info").innerText =
+                                `🌡️ Temperatura: ${temperatura.toFixed(1)}°C\n🌦️ Condiciones: ${condiciones}\n 💧 Humedad: ${humedad}%\n🌬️ Viento: ${viento} km/h`;
+                        } else {
+                            document.getElementById("weather-info").innerText = "No se pudo obtener el clima.";
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById("weather-info").innerText = "Error obteniendo el clima.";
+                        console.error("Error obteniendo clima:", error);
+                    });
+            }
+
+            // Evento para cambiar entre capas (estándar, satélite, clima)
+            document.getElementById("mapLayers").addEventListener("change", function () {
+                let selectedLayer = this.value;
+                if (selectedLayer === "temperatura") {
+                    // Redirigir a la página de clima (mapaWindy.html)
+                    window.location.href = "mapaWindy.html";
+                } else {
+                    // Eliminar solo las capas base, no la capa de cámaras
+                    map.eachLayer(layer => {
+                        if (layer === layers.osm || layer === layers.satellite) {
+                            map.removeLayer(layer);
+                        }
+                    });
+                    // Añadir la capa seleccionada
+                    layers[selectedLayer].addTo(map);
+                }
+            });
+
+            // Función para cargar puntos guardados al inicio
+            function cargarPuntosGuardados() {
+                const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+                savedLocations.forEach((loc, index) => {
+                    const puntoNumero = index + 1;
+                    const customIcon = L.divIcon({
+                        className: 'custom-icon',
+                        html: `
+                            <div style="position: relative;">
+                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+                                <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+                                    ${puntoNumero}
+                                </div>
+                            </div>
+                        `,
+                        iconSize: [50, 50],
+                        iconAnchor: [25, 50],
+                        popupAnchor: [0, -50]
+                    });
+
+                    const newMarker = L.marker([loc.lat, loc.lon], {
+                        title: loc.nombre,
+                        icon: customIcon
+                    }).addTo(map);
+
+                    const popupContent = `
+                        <div style="white-space: nowrap;">
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
+                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                        </div>
+                    `;
+
+                    newMarker.bindPopup(popupContent);
+                    savedMarkers.push(newMarker);
+                });
+            }
+
+            // Llamar a la función para cargar puntos guardados al inicio
+            cargarPuntosGuardados();
+
+            // Función para actualizar localStorage con los puntos actuales
+            function actualizarLocalStorage() {
+                const savedLocations = savedMarkers.map((marker, index) => {
+                    const latLng = marker.getLatLng();
+                    const nombre = marker.getPopup()._content.match(/value="([^"]+)"/)[1];
+                    return { lat: latLng.lat, lon: latLng.lng, nombre: nombre };
+                });
+                localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+            }
+
+            // Función para cambiar el nombre de un punto
+            window.cambiarNombre = function (button) {
+                const input = button.parentElement.querySelector('#nombrePunto');
+                const newName = input.value;
+                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
+                if (marker) {
+                    const popupContent = `
+                        <div style="white-space: nowrap;">
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
+                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                        </div>
+                    `;
+                    marker.setPopupContent(popupContent);
+                    actualizarLocalStorage();
+                }
+            };
+
+            // Función para eliminar un punto
+            window.eliminarPunto = function (button) {
+                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
+                if (marker) {
+                    map.removeLayer(marker);
+                    savedMarkers = savedMarkers.filter(m => m !== marker);
+                    actualizarLocalStorage();
+                    actualizarNumerosPuntos();
+                }
+            };
+
+            // Función para actualizar los números de los puntos
+            function actualizarNumerosPuntos() {
+                savedMarkers.forEach((m, i) => {
+                    const puntoNumero = i + 1;
+
+                    // Actualizar el ícono con el nuevo número
+                    const customIcon = L.divIcon({
+                        className: 'custom-icon',
+                        html: `
+                            <div style="position: relative;">
+                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+                                <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+                                    ${puntoNumero}
+                                </div>
+                            </div>
+                        `,
+                        iconSize: [50, 50],
+                        iconAnchor: [25, 50],
+                        popupAnchor: [0, -50]
+                    });
+
+                    m.setIcon(customIcon);
+
+                    // Actualizar el contenido del popup con el nuevo número
+                    const popupContent = `
+                        <div style="white-space: nowrap;">
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
+                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                        </div>
+                    `;
+
+                    m.setPopupContent(popupContent);
+                });
+            }
+
+            // Evento para el botón de guardar ubicación
+            document.getElementById("saveLocation").addEventListener("click", function () {
+                if (currentLat && currentLon) {
+                    const puntoNumero = savedMarkers.length + 1;
+                    const customIcon = L.divIcon({
+                        className: 'custom-icon',
+                        html: `
+                            <div style="position: relative;">
+                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+                                <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+                                    ${puntoNumero}
+                                </div>
+                            </div>
+                        `,
+                        iconSize: [50, 50],
+                        iconAnchor: [25, 50],
+                        popupAnchor: [0, -50]
+                    });
+
+                    const newMarker = L.marker([currentLat, currentLon], {
+                        title: "Punto",
+                        icon: customIcon
+                    }).addTo(map);
+
+                    savedMarkers.push(newMarker);
+
+                    const popupContent = `
+                        <div style="white-space: nowrap;">
+                            <label for="nombrePunto">Nombre:</label>
+                            <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
+                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Asignar Nombre</button>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                        </div>
+                    `;
+
+                    newMarker.bindPopup(popupContent).openPopup();
+                    actualizarLocalStorage();
+                } else {
+                    alert("No se ha obtenido la ubicación actual.");
+                }
+            });
+
+            // Evento para el botón de compartir ubicación
+            document.getElementById("shareLocation").addEventListener("click", function () {
+                if (currentLat && currentLon) {
+                    const link = `https://www.google.com/maps?q=${currentLat},${currentLon}`;
+                    const linkInput = document.createElement("input");
+                    linkInput.type = "text";
+                    linkInput.value = link;
+                    linkInput.style.position = "fixed";
+                    linkInput.style.top = "50%";
+                    linkInput.style.left = "50%";
+                    linkInput.style.transform = "translate(-50%, -50%)";
+                    linkInput.style.zIndex = 1000;
+                    document.body.appendChild(linkInput);
+                    linkInput.select();
+                    linkInput.setSelectionRange(0, 99999);
+                    document.execCommand("copy");
+                    document.body.removeChild(linkInput);
+                    alert("Enlace copiado al portapapeles: " + link);
+                } else {
+                    alert("No se ha obtenido la ubicación actual.");
+                }
+            });
+
+            // Evento para el botón de centrar el mapa
+            document.getElementById("centerMap").addEventListener("click", function () {
+                if (currentLat && currentLon) {
+                    map.setView([currentLat, currentLon], 15);
+                } else {
+                    alert("Aún no se ha obtenido la ubicación.");
+                }
+            });
+
+            // Evento para el botón de actualizar ubicación
+            document.getElementById("getLocation").addEventListener("click", localizarUsuario);
+
+            // Iniciar la localización del usuario al cargar la página
+            localizarUsuario();
+        });
+    </script>
+</body>
+</html>
