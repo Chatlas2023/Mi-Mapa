@@ -7,38 +7,36 @@
     <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
     <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
     <style>
-        #windy { width: 100%; height: 640px; }
-        .btn {
-            padding: 7px 15px;
-            font-size: 14px;
-            font-weight: bold;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            width: 180px;
-        }
-        .btn-center {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-center:hover {
-            background-color: #0056b3;
-        }
-        .loading {
-              display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 640px;
-            background-color: #f0f0f0;
-            font-size: 20px;
-            color: #333;
-        }
-        @keyframes blink {
-            from { opacity: 1; }
-            to { opacity: 0.5; }
-        }
+         #windy { width: 100%; height: 640px; }
+    .btn {
+        padding: 7px 15px;
+        font-size: 14px;
+        font-weight: bold;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        width: 180px;
+    }
+    .btn-center {
+        background-color: #007bff;
+        color: white;
+    }
+    .btn-center:hover {
+        background-color: #0056b3;
+    }
+    .loading {
+        display: inline-block; /* Cambiado a inline-block para que el fondo se ajuste al texto */
+        padding: 5px 10px; /* Añadido padding para que el texto no esté pegado al borde */
+        background-color: red;
+        color: white;
+        font-size: 20px;
+        animation: blink 1s infinite alternate; /* Añadida animación blink */
+    }
+    @keyframes blink {
+        from { opacity: 1; }
+        to { opacity: 0.5; }
+    }
     </style>
 </head>
 <body>
