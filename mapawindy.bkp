@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -35,10 +35,23 @@
             font-size: 20px;
             color: #333;
         }
+        .loading-text {
+            color: white;
+            background-color: red;
+            padding: 10px;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0% { background-color: red; }
+            50% { background-color: darkred; }
+            100% { background-color: red; }
+        }
     </style>
 </head>
 <body>
-    <div id="loading" class="loading">Cargando el mapa...</div>
+    <div id="loading" class="loading">
+        <span class="loading-text">Cargando el mapa...</span>
+    </div>
     <div id="windy" style="display: none;"></div>
     <script>
         function getLocation() {
