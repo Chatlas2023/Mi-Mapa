@@ -72,26 +72,24 @@
             background-color: #218838;
         }
 
-        /* Nuevos estilos para el texto "Esperando ubicación"
-        // #location-info.esperando {
-      //      color: red; /* Color rojo */
+        /* Nuevos estilos para el texto "Esperando ubicación" */
         #location-info.esperando {
-    color: white; /* Color del texto */
-    background-color: red; /* Fondo rojo */
-    animation: titilar 1s infinite; /* Animación de parpadeo */
-    padding: 5px; /* Añadir un poco de padding para que el texto no esté pegado al borde */
-    border-radius: 5px; /* Bordes redondeados */
-    display: inline-block;
-}
+            color: white; /* Color del texto */
+            background-color: red; /* Fondo rojo */
+            animation: titilar 1s infinite; /* Animación de parpadeo */
+            padding: 5px; /* Añadir un poco de padding para que el texto no esté pegado al borde */
+            border-radius: 5px; /* Bordes redondeados */
+            display: inline-block;
+        }
 
-@keyframes titilar {
-    0%, 100% {
-        opacity: 1; /* Visible */
-    }
-    50% {
-        opacity: 0.5; /* Semi-transparente */
-    }
-}
+        @keyframes titilar {
+            0%, 100% {
+                opacity: 1; /* Visible */
+            }
+            50% {
+                opacity: 0.5; /* Semi-transparente */
+            }
+        }
     </style>
 </head>
 <body>
@@ -106,7 +104,7 @@
         <button id="centerMap" class="btn btn-center">Centrar</button>
         <button id="shareLocation" class="btn btn-share">Compartir Ubicación</button>
     </div>
-    <div id="location-info" class="esperando">Esperando ubicación...</strong></div>
+    <div id="location-info" class="esperando">Esperando ubicación...</div>
     <div id="weather-info">Cargando clima...</div>
     <button id="saveLocation" class="btn">Guardar ubicación actual</button>
 
@@ -124,7 +122,7 @@
                     div.style.position = "absolute";
                     div.style.left = "0"; // Pegado al borde izquierdo
                     div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.4.2 ";
+                    div.innerHTML = " Ver: 1.4.3 ";
                     div.style.padding = "0px"; // Eliminar padding
                     div.style.margin = "0"; // Eliminar margen
                     div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -137,9 +135,7 @@
                 }
             });
 
-          //  let map = L.map('map').setView([-34.6037, -58.3816], 16); // Coordenadas iniciales de Buenos Aires
             let map = L.map('map', { zoomControl: false }).setView([-34.6037, -58.3816], 16);
-
             map.addControl(new L.Control.Version());
             let userMarker = null;
             let currentLat = null;
@@ -231,8 +227,7 @@
                                 if (calleEncontrada) {
                                     L.popup()
                                         .setLatLng([lat, lon])
-                                //        .setContent(`<b>${calle}</b><br>${calleEncontrada.Etimologia}`)
-                                        .setContent(`<div style="font-size: 18px;"><b>${calle}</b><br>${calleEncontrada.Etimologia}</div>`) // Aumentar el tamaño de la fuente a 18px
+                                        .setContent(`<div style="font-size: 18px;"><b>${calle}</b><br>${calleEncontrada.Etimologia}</div>`)
                                         .openOn(map);
                                 } else {
                                     L.popup()
@@ -269,7 +264,7 @@
                         if (calleEncontrada) {
                             L.popup()
                                 .setLatLng([lat, lon])
-                                .setContent(`<div style="font-size: 18px;"><b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}</div>`) // Aumentar el tamaño de la fuente a 18px
+                                .setContent(`<div style="font-size: 18px;"><b>${nombreCalle}</b><br>${calleEncontrada.Etimologia}</div>`)
                                 .openOn(map);
                         } else {
                             L.popup()
@@ -292,6 +287,10 @@
                         function (position) {
                             currentLat = position.coords.latitude;
                             currentLon = position.coords.longitude;
+
+                            // Almacenar la ubicación en sessionStorage
+                            sessionStorage.setItem('latitude', currentLat);
+                            sessionStorage.setItem('longitude', currentLon);
 
                             map.setView([currentLat, currentLon], 16);
 
