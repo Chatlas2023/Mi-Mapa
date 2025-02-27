@@ -122,7 +122,7 @@
                     div.style.position = "absolute";
                     div.style.left = "0"; // Pegado al borde izquierdo
                     div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.4.3 ";
+                    div.innerHTML = " Ver: 1.4.2 ";
                     div.style.padding = "0px"; // Eliminar padding
                     div.style.margin = "0"; // Eliminar margen
                     div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -562,8 +562,21 @@
             // Evento para el botón de actualizar ubicación
             document.getElementById("getLocation").addEventListener("click", localizarUsuario);
 
-            // Iniciar la localización del usuario al cargar la página
-            localizarUsuario();
+            // Recuperar la ubicación almacenada en sessionStorage al cargar la página
+            const storedLat = parseFloat(sessionStorage.getItem('latitude'));
+            const storedLon = parseFloat(sessionStorage.getItem('longitude'));
+
+            if (!isNaN(storedLat) && !isNaN(storedLon)) {
+                // Usar la ubicación almacenada
+                currentLat = storedLat;
+                currentLon = storedLon;
+                map.setView([currentLat, currentLon], 16);
+                obtenerDireccion(currentLat, currentLon);
+                obtenerClima(currentLat, currentLon);
+            } else {
+                // Si no hay ubicación almacenada, obtener una nueva
+                localizarUsuario();
+            }
         });
     </script>
 </body>
