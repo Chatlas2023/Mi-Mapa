@@ -337,7 +337,7 @@
                             let humedad = data.main.humidity;
                             let viento = (data.wind.speed * 3.6).toFixed(1);
                             document.getElementById("weather-info").innerText =
-                                `🌡️ Temperatura: ${temperatura.toFixed(1)}°C\n🌦️ Estado: ${condiciones}\n 💧 Humedad: ${humedad}%\n🌬️ Viento: ${viento} km/h`;
+                                `🌡️ Temperatura: ${temperatura.toFixed(1)}°C\n🌦️ Clima: ${condiciones}\n 💧 Humedad: ${humedad}%\n🌬️ Viento: ${viento} km/h`;
                         } else {
                             document.getElementById("weather-info").innerText = "No se pudo obtener el clima.";
                         }
