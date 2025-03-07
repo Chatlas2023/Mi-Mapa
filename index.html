@@ -59,17 +59,36 @@
             font-weight: bold;
             border-radius: 5px;
         }
-        #saveLocation {
+
+        /* Estilos para los botones apilados */
+        #saveLocation, #toggleDarkMode {
             position: fixed;
-            bottom: 34px;
             right: 10px;
+            width: 100px;
+            font-size: 14px; /* Ajustar el tamaño de la fuente */
+            padding: 5px; /* Reducir el padding */
+        }
+
+        #saveLocation {
+            bottom: 34px; /* Posición original */
+            height: 37px; /* Mitad del alto original */
             background-color: #28a745;
             color: white;
-            width: 100px;
-            height: 74px;
         }
+
         #saveLocation:hover {
             background-color: #218838;
+        }
+
+        #toggleDarkMode {
+            bottom: 76px; /* Colocado justo encima del botón "Guardar Ubicación" */
+            height: 37px; /* Misma altura que el botón "Guardar Ubicación" */
+            background-color: #333;
+            color: white;
+        }
+
+        #toggleDarkMode:hover {
+            background-color: #555;
         }
 
         /* Nuevos estilos para el texto "Esperando ubicación" */
@@ -160,11 +179,11 @@
         </select>
         <button id="centerMap" class="btn btn-center">Centrar</button>
         <button id="shareLocation" class="btn btn-share">Compartir Ubicación</button>
-        <button id="toggleDarkMode" class="btn btn-dark">Modo Oscuro</button>
     </div>
     <div id="location-info" class="esperando">Esperando ubicación...</div>
     <div id="weather-info">Cargando clima...</div>
-    <button id="saveLocation" class="btn">Guardar ubicación actual</button>
+    <button id="toggleDarkMode" class="btn btn-dark">Modo Oscuro</button>
+    <button id="saveLocation" class="btn">Guardar Ubicación</button>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -180,7 +199,7 @@
                     div.style.position = "absolute";
                     div.style.left = "0"; // Pegado al borde izquierdo
                     div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.4.5 ";
+                    div.innerHTML = " Ver: 1.4.6 ";
                     div.style.padding = "0px"; // Eliminar padding
                     div.style.margin = "0"; // Eliminar margen
                     div.style.background = "rgba(255, 255, 255, 0.8)";
