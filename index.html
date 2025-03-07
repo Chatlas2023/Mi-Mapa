@@ -70,10 +70,18 @@
         }
 
         #saveLocation {
-            bottom: 36px; /* Posición original */
-            height: 37px; /* Mitad del alto original */
-            background-color: #28a745;
-            color: white;
+    position: fixed;
+    right: 10px;
+    bottom: 36px;
+    width: 100px;
+    height: 37px;
+    font-size: 14px;
+    background-color: #28a745;
+    color: white;
+    display: flex; /* Usar flexbox */
+    align-items: center; /* Centrar verticalmente */
+    justify-content: center; /* Centrar horizontalmente */
+    padding: 0; /* Eliminar padding si es necesario */
         }
 
         #saveLocation:hover {
