@@ -90,6 +90,63 @@
                 opacity: 0.5; /* Semi-transparente */
             }
         }
+
+        /* Estilos para el modo oscuro */
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode #map {
+            filter: brightness(0.6) invert(1) contrast(3);
+        }
+
+        .dark-mode #location-info,
+        .dark-mode #weather-info {
+            color: #ffffff;
+        }
+
+        .dark-mode .btn {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-mode .btn-update {
+            background-color: #1a73e8;
+        }
+
+        .dark-mode .btn-update:hover {
+            background-color: #1557b3;
+        }
+
+        .dark-mode .btn-center {
+            background-color: #1a73e8;
+        }
+
+        .dark-mode .btn-center:hover {
+            background-color: #1557b3;
+        }
+
+        .dark-mode .btn-share {
+            background-color: #34a853;
+        }
+
+        .dark-mode .btn-share:hover {
+            background-color: #2d8a47;
+        }
+
+        .dark-mode #saveLocation {
+            background-color: #34a853;
+        }
+
+        .dark-mode #saveLocation:hover {
+            background-color: #2d8a47;
+        }
+
+        .dark-mode #location-info.esperando {
+            color: white;
+            background-color: red;
+        }
     </style>
 </head>
 <body>
@@ -103,6 +160,7 @@
         </select>
         <button id="centerMap" class="btn btn-center">Centrar</button>
         <button id="shareLocation" class="btn btn-share">Compartir Ubicación</button>
+        <button id="toggleDarkMode" class="btn btn-dark">Modo Oscuro</button>
     </div>
     <div id="location-info" class="esperando">Esperando ubicación...</div>
     <div id="weather-info">Cargando clima...</div>
@@ -122,7 +180,7 @@
                     div.style.position = "absolute";
                     div.style.left = "0"; // Pegado al borde izquierdo
                     div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.4.4 ";
+                    div.innerHTML = " Ver: 1.4.5 ";
                     div.style.padding = "0px"; // Eliminar padding
                     div.style.margin = "0"; // Eliminar margen
                     div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -578,6 +636,16 @@
                 // Si no hay ubicación almacenada, obtener una nueva
                 localizarUsuario();
             }
+
+            // Función para alternar entre modo claro y oscuro
+            document.getElementById("toggleDarkMode").addEventListener("click", function () {
+                document.body.classList.toggle("dark-mode");
+                if (document.body.classList.contains("dark-mode")) {
+                    this.textContent = "Modo Claro";
+                } else {
+                    this.textContent = "Modo Oscuro";
+                }
+            });
         });
     </script>
 </body>
