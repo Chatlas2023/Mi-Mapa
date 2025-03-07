@@ -5,80 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">   
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* Estilos base */
-        body {
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            flex-direction: column;
-            height: 100vh; /* Ocupar toda la altura de la pantalla */
-            overflow: hidden; /* Evitar desbordamiento */
-        }
-
-        /* Contenedor del mapa */
-        #map-container {
-            flex: 1; /* Ocupar el espacio restante */
-            position: relative;
-        }
-
-        /* Estilos del mapa */
+        /* Estilos anteriores */
         #map {
-            height: 100%; /* Ocupar todo el contenedor */
+            height: 470px;
             width: 100%;
         }
-
-        /* Controles superiores */
         #controls {
             display: flex;
             justify-content: space-between;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #ddd;
+            margin-top: 10px;
         }
-
-        /* Información de ubicación y clima */
-        #info-container {
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-top: 1px solid #ddd;
-        }
-
         #location-info, #weather-info {
+            font-family: 'Arial', sans-serif;
+            margin-top: 10px;
             font-size: 16px;
             font-weight: normal;
             white-space: pre-line;
         }
-
-        /* Botones flotantes */
-        #saveLocation, #toggleDarkMode {
-            position: fixed;
-            right: 10px;
-            width: 100px;
+        .btn {
+            padding: 7px 15px;
             font-size: 14px;
-            padding: 5px;
-            background-color: #28a745;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-weight: bold;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.3s ease;
+            width: 180px;
+        }
+        .btn-update {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-update:hover {
+            background-color: #0056b3;
+        }
+        .btn-center {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-center:hover {
+            background-color: #0056b3;
+        }
+        .btn-share {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-share:hover {
+            background-color: #218838;
+        }
+        #mapLayers {
+            padding: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+
+        /* Estilos para los botones apilados */
+        #saveLocation, #toggleDarkMode {
+            position: fixed;
+            right: 10px;
+            width: 100px;
+            font-size: 14px; /* Ajustar el tamaño de la fuente */
+            padding: 5px; /* Reducir el padding */
         }
 
         #saveLocation {
-            bottom: 80px; /* Posición sobre el botón de modo oscuro */
-            height: 37px;
+    position: fixed;
+    right: 10px;
+    bottom: 36px;
+    width: 100px;
+    height: 37px;
+    font-size: 14px;
+    background-color: #28a745;
+    color: white;
+    display: flex; /* Usar flexbox */
+    align-items: center; /* Centrar verticalmente */
+    justify-content: center; /* Centrar horizontalmente */
+    padding: 0; /* Eliminar padding si es necesario */
+        }
+
+        #saveLocation:hover {
+            background-color: #218838;
         }
 
         #toggleDarkMode {
-            bottom: 30px; /* Posición en la parte inferior */
-            height: 37px;
+            bottom: 78px; /* Colocado justo encima del botón "Guardar Ubicación" */
+            height: 37px; /* Misma altura que el botón "Guardar Ubicación" */
+            background-color: #333;
+            color: white;
         }
 
-        #saveLocation:hover, #toggleDarkMode:hover {
-            background-color: #218838;
+        #toggleDarkMode:hover {
+            background-color: #555;
+        }
+
+        /* Nuevos estilos para el texto "Esperando ubicación" */
+        #location-info.esperando {
+            color: white; /* Color del texto */
+            background-color: red; /* Fondo rojo */
+            animation: titilar 1s infinite; /* Animación de parpadeo */
+            padding: 5px; /* Añadir un poco de padding para que el texto no esté pegado al borde */
+            border-radius: 5px; /* Bordes redondeados */
+            display: inline-block;
+        }
+
+        @keyframes titilar {
+            0%, 100% {
+                opacity: 1; /* Visible */
+            }
+            50% {
+                opacity: 0.5; /* Semi-transparente */
+            }
         }
 
         /* Estilos para el modo oscuro */
@@ -137,32 +174,10 @@
             color: white;
             background-color: red;
         }
-
-        /* Consultas de medios para pantallas pequeñas */
-        @media (max-width: 600px) {
-            #map {
-                height: 70vh; /* Reducir la altura del mapa en móviles */
-            }
-            .btn {
-                font-size: 12px; /* Reducir el tamaño de la fuente en móviles */
-            }
-        }
-
-        /* Consultas de medios para pantallas grandes */
-        @media (min-width: 1025px) {
-            #map {
-                height: 80vh; /* Aumentar la altura del mapa en escritorio */
-            }
-        }
     </style>
 </head>
 <body>
-    <!-- Contenedor del mapa -->
-    <div id="map-container">
-        <div id="map"></div>
-    </div>
-
-    <!-- Controles superiores -->
+    <div id="map"></div>
     <div id="controls">
         <button id="getLocation" class="btn btn-update">Actualizar</button>
         <select id="mapLayers">
@@ -173,14 +188,8 @@
         <button id="centerMap" class="btn btn-center">Centrar</button>
         <button id="shareLocation" class="btn btn-share">Compartir Ubicación</button>
     </div>
-
-    <!-- Información de ubicación y clima -->
-    <div id="info-container">
-        <div id="location-info" class="esperando">Esperando ubicación...</div>
-        <div id="weather-info">Cargando clima...</div>
-    </div>
-
-    <!-- Botones flotantes -->
+    <div id="location-info" class="esperando">Esperando ubicación...</div>
+    <div id="weather-info">Cargando clima...</div>
     <button id="toggleDarkMode" class="btn btn-dark">Modo Oscuro</button>
     <button id="saveLocation" class="btn">Guardar Ubicación</button>
 
@@ -188,15 +197,31 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // clave de OpenWeatherMap
+            // Definir el control de versión
+            L.Control.Version = L.Control.extend({
+                options: {
+                    position: 'bottomleft'
+                },
+                onAdd: function(map) {
+                    let div = L.DomUtil.create('div', 'leaflet-control-version');
+                    div.style.position = "absolute";
+                    div.style.left = "0"; // Pegado al borde izquierdo
+                    div.style.bottom = "0"; // Pegado al borde inferior
+                    div.innerHTML = " Ver: 1.4.6 ";
+                    div.style.padding = "0px"; // Eliminar padding
+                    div.style.margin = "0"; // Eliminar margen
+                    div.style.background = "rgba(255, 255, 255, 0.8)";
+                    div.style.fontSize = "12px"; // Tamaño de fuente más pequeño
+                    div.style.borderRadius = "0px"; // Eliminar bordes redondeados
+                    div.style.border = "none"; // Eliminar borde
+                    div.style.whiteSpace = "nowrap"; // Mantener en una sola línea
+                    div.style.lineHeight = "normal"; // Ajustar altura de línea
+                    return div;
+                }
+            });
 
-            // Inicializar el mapa
             let map = L.map('map', { zoomControl: false }).setView([-34.6037, -58.3816], 16);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 22,
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-
-            // Resto del código JavaScript
+            map.addControl(new L.Control.Version());
             let userMarker = null;
             let currentLat = null;
             let currentLon = null;
