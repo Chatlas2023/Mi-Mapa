@@ -5,21 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">   
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* Estilos base */
-        body {
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            overflow: hidden; /* Evitar desbordamiento al escalar */
-        }
+        /* Estilos anteriores */
         #map {
-            height: 80vh; /* 80% de la altura de la pantalla */
-            width: 100vw; /* 100% del ancho de la pantalla */
+            height: 470px;
+            width: 100%;
         }
         #controls {
             display: flex;
             justify-content: space-between;
             margin-top: 10px;
-            padding: 0 10px;
         }
         #location-info, #weather-info {
             font-family: 'Arial', sans-serif;
@@ -71,27 +65,34 @@
             position: fixed;
             right: 10px;
             width: 100px;
-            font-size: 14px;
-            padding: 5px;
-            background-color: #28a745;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 14px; /* Ajustar el tamaño de la fuente */
+            padding: 5px; /* Reducir el padding */
         }
 
         #saveLocation {
-            bottom: 23px;
-            height: 37px;
-        }
-
-        #toggleDarkMode {
-            bottom: 65px;
-            height: 37px;
+    position: fixed;
+    right: 10px;
+    bottom: 36px;
+    width: 100px;
+    height: 37px;
+    font-size: 14px;
+    background-color: #28a745;
+    color: white;
+    display: flex; /* Usar flexbox */
+    align-items: center; /* Centrar verticalmente */
+    justify-content: center; /* Centrar horizontalmente */
+    padding: 0; /* Eliminar padding si es necesario */
         }
 
         #saveLocation:hover {
             background-color: #218838;
+        }
+
+        #toggleDarkMode {
+            bottom: 78px; /* Colocado justo encima del botón "Guardar Ubicación" */
+            height: 37px; /* Misma altura que el botón "Guardar Ubicación" */
+            background-color: #333;
+            color: white;
         }
 
         #toggleDarkMode:hover {
@@ -100,20 +101,20 @@
 
         /* Nuevos estilos para el texto "Esperando ubicación" */
         #location-info.esperando {
-            color: white;
-            background-color: red;
-            animation: titilar 1s infinite;
-            padding: 5px;
-            border-radius: 5px;
+            color: white; /* Color del texto */
+            background-color: red; /* Fondo rojo */
+            animation: titilar 1s infinite; /* Animación de parpadeo */
+            padding: 5px; /* Añadir un poco de padding para que el texto no esté pegado al borde */
+            border-radius: 5px; /* Bordes redondeados */
             display: inline-block;
         }
 
         @keyframes titilar {
             0%, 100% {
-                opacity: 1;
+                opacity: 1; /* Visible */
             }
             50% {
-                opacity: 0.5;
+                opacity: 0.5; /* Semi-transparente */
             }
         }
 
@@ -173,23 +174,6 @@
             color: white;
             background-color: red;
         }
-
-        /* Consultas de medios para pantallas pequeñas */
-        @media (max-width: 600px) {
-            #map {
-                height: 70vh; /* Reducir la altura del mapa en móviles */
-            }
-            .btn {
-                font-size: 12px; /* Reducir el tamaño de la fuente en móviles */
-            }
-        }
-
-        /* Consultas de medios para pantallas grandes */
-        @media (min-width: 1025px) {
-            #map {
-                height: 90vh; /* Aumentar la altura del mapa en escritorio */
-            }
-        }
     </style>
 </head>
 <body>
@@ -211,37 +195,6 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Función para escalar la aplicación según el tamaño de la pantalla
-        function scaleApplication() {
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-
-            // Tamaño de diseño base (por ejemplo, para móviles)
-            const baseWidth = 360; // Ancho de diseño base
-            const baseHeight = 640; // Alto de diseño base
-
-            // Calcular la escala necesaria
-            const scaleValue = Math.min(
-                screenWidth / baseWidth,
-                screenHeight / baseHeight
-            );
-
-            // Aplicar la escala a todo el cuerpo de la página
-            document.body.style.transform = `scale(${scaleValue})`;
-            document.body.style.transformOrigin = 'top left';
-
-            // Ajustar el tamaño del mapa dinámicamente
-            const map = document.getElementById('map');
-            map.style.height = `${screenHeight * 0.8}px`; // 80% de la altura de la pantalla
-            map.style.width = `${screenWidth}px`; // 100% del ancho de la pantalla
-        }
-
-        // Escalar la aplicación al cargar la página
-        window.addEventListener('load', scaleApplication);
-
-        // Escalar la aplicación al cambiar el tamaño de la ventana
-        window.addEventListener('resize', scaleApplication);
-
         document.addEventListener('DOMContentLoaded', function () {
             const API_KEY = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // clave de OpenWeatherMap
             // Definir el control de versión
@@ -254,7 +207,7 @@
                     div.style.position = "absolute";
                     div.style.left = "0"; // Pegado al borde izquierdo
                     div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.5.1 ";
+                    div.innerHTML = " Ver: 1.4.6 ";
                     div.style.padding = "0px"; // Eliminar padding
                     div.style.margin = "0"; // Eliminar margen
                     div.style.background = "rgba(255, 255, 255, 0.8)";
