@@ -452,124 +452,65 @@
                 }
             });
 
-            // Función para cargar puntos guardados al inicio
-            function cargarPuntosGuardados() {
-                const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
-                savedLocations.forEach((loc, index) => {
-                    const puntoNumero = index + 1;
-                    const customIcon = L.divIcon({
-                        className: 'custom-icon',
-                        html: `
-                            <div style="position: relative;">
-                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-                                <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-                                    ${puntoNumero}
-                                </div>
-                            </div>
-                        `,
-                        iconSize: [50, 50],
-                        iconAnchor: [25, 50],
-                        popupAnchor: [0, -50]
-                    });
+// Función para cargar puntos guardados al inicio
+function cargarPuntosGuardados() {
+    const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+    savedLocations.forEach((loc, index) => {
+        const puntoNumero = index + 1;
+        const customIcon = L.divIcon({
+            className: 'custom-icon',
+            html: `
+                <div style="position: relative;">
+                    <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+                    <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+                        ${puntoNumero}
+                    </div>
+                </div>
+            `,
+            iconSize: [50, 50],
+            iconAnchor: [25, 50],
+            popupAnchor: [0, -50]
+        });
 
-                    const newMarker = L.marker([loc.lat, loc.lon], {
-                        title: loc.nombre,
-                        icon: customIcon
-                    }).addTo(map);
+        const newMarker = L.marker([loc.lat, loc.lon], {
+            title: loc.nombre,
+            icon: customIcon
+        }).addTo(map);
 
-                    const popupContent = `
-                        <div style="white-space: nowrap;">
-                            <label for="nombrePunto">Nombre:</label>
-                            <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
-                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
-                        </div>
-                    `;
+        const popupContent = `
+            <div style="white-space: nowrap;">
+                <label for="nombrePunto">Nombre:</label>
+                <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
+                <div>Latitud: ${loc.lat.toFixed(6)}</div>
+                <div>Longitud: ${loc.lon.toFixed(6)}</div><br>
+                <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon})" style="margin-left: 5px;">Compartir Coordenadas</button>
+            </div>
+        `;
 
-                    newMarker.bindPopup(popupContent);
-                    savedMarkers.push(newMarker);
-                });
-            }
-
-            // Llamar a la función para cargar puntos guardados al inicio
-            cargarPuntosGuardados();
-
-            // Función para actualizar localStorage con los puntos actuales
-            function actualizarLocalStorage() {
-                const savedLocations = savedMarkers.map((marker, index) => {
-                    const latLng = marker.getLatLng();
-                    const nombre = marker.getPopup()._content.match(/value="([^"]+)"/)[1];
-                    return { lat: latLng.lat, lon: latLng.lng, nombre: nombre };
-                });
-                localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
-            }
-
-            // Función para cambiar el nombre de un punto
-            window.cambiarNombre = function (button) {
-                const input = button.parentElement.querySelector('#nombrePunto');
-                const newName = input.value;
-                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
-                if (marker) {
-                    const popupContent = `
-                        <div style="white-space: nowrap;">
-                            <label for="nombrePunto">Nombre:</label>
-                            <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
-                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
-                        </div>
-                    `;
-                    marker.setPopupContent(popupContent);
-                    actualizarLocalStorage();
-                }
-            };
-
-            // Función para eliminar un punto
-            window.eliminarPunto = function (button) {
-                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.parentElement.innerHTML);
-                if (marker) {
-                    map.removeLayer(marker);
-                    savedMarkers = savedMarkers.filter(m => m !== marker);
-                    actualizarLocalStorage();
-                    actualizarNumerosPuntos();
-                }
-            };
-
-            // Función para actualizar los números de los puntos
-            function actualizarNumerosPuntos() {
-                savedMarkers.forEach((m, i) => {
-                    const puntoNumero = i + 1;
-
-                    // Actualizar el ícono con el nuevo número
-                    const customIcon = L.divIcon({
-                        className: 'custom-icon',
-                        html: `
-                            <div style="position: relative;">
-                                <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-                                <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-                                    ${puntoNumero}
-                                </div>
-                            </div>
-                        `,
-                        iconSize: [50, 50],
-                        iconAnchor: [25, 50],
-                        popupAnchor: [0, -50]
-                    });
-
-                    m.setIcon(customIcon);
-
-                    // Actualizar el contenido del popup con el nuevo número
-                    const popupContent = `
-                        <div style="white-space: nowrap;">
-                            <label for="nombrePunto">Nombre:</label>
-                            <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
-                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
-                        </div>
-                    `;
-
-                    m.setPopupContent(popupContent);
-                });
-            }
+        newMarker.bindPopup(popupContent);
+        savedMarkers.push(newMarker);
+    });
+}
+            // Función para compartir las coordenadas
+window.compartirCoordenadas = function (lat, lon) {
+    const coordenadas = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    const linkInput = document.createElement("input");
+    linkInput.type = "text";
+    linkInput.value = coordenadas;
+    linkInput.style.position = "fixed";
+    linkInput.style.top = "50%";
+    linkInput.style.left = "50%";
+    linkInput.style.transform = "translate(-50%, -50%)";
+    linkInput.style.zIndex = 1000;
+    document.body.appendChild(linkInput);
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999);
+    document.execCommand("copy");
+    document.body.removeChild(linkInput);
+    alert("Coordenadas copiadas al portapapeles: " + coordenadas);
+};
 
             // Evento para el botón de guardar ubicación
             document.getElementById("saveLocation").addEventListener("click", function () {
