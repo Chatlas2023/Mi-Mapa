@@ -14,4 +14,3 @@ El mapa8 incluye versionado visible en el mapa y corrige el error al querer hace
 1.4.3 Usa la posición cargada en index.html para centrar mapWindy.html. Versión estable, realiza la carga más rápidamente
 1.4.4 Informa la sensación térmica además de la temperatura.
 1.4.6 Modo oscuro
-1.5.1 Prueba de escalado según tamaño de diferentes pantallas
