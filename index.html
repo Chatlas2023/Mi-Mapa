@@ -484,7 +484,7 @@
                             <div>Latitud: ${loc.lat.toFixed(6)}</div>
                             <div>Longitud: ${loc.lon.toFixed(6)}</div><br>
                             <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
                             <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon})" style="margin-left: 5px;">Compartir Coordenadas</button>
                         </div>
                     `;
@@ -540,7 +540,7 @@ window.cambiarNombre = function (button) {
                 <div>Latitud: ${latLng.lat.toFixed(6)}</div>
                 <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
                 <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br>
+                <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
                 <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng})" style="margin-left: 5px;">Compartir Coordenadas</button>
             </div>
         `;
@@ -593,7 +593,7 @@ window.eliminarPunto = function (button) {
                             <div>Latitud: ${m.getLatLng().lat.toFixed(6)}</div>
                             <div>Longitud: ${m.getLatLng().lng.toFixed(6)}</div><br>
                             <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
                             <button onclick="compartirCoordenadas(${m.getLatLng().lat}, ${m.getLatLng().lng})" style="margin-left: 5px;">Compartir Coordenadas</button>
                         </div>
                     `;
@@ -638,7 +638,7 @@ window.eliminarPunto = function (button) {
                             <div>Latitud: ${currentLat.toFixed(6)}</div>
                             <div>Longitud: ${currentLon.toFixed(6)}</div><br>
                             <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Asignar Nombre</button>
-                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br>
+                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
                             <button onclick="compartirCoordenadas(${currentLat}, ${currentLon})" style="margin-left: 5px;">Compartir Coordenadas</button>
                         </div>
                     `;
