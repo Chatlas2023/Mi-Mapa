@@ -558,7 +558,7 @@ window.cambiarNombre = function (button) {
                 <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
                 <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
                 <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-                <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng})" style="margin-left: 5px;">Compartir Punto Cargado</button>
+                <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng})" style="margin-left: 5px;">Compartir  Punto Cargado</button>
             </div>
         `;
         marker.setPopupContent(popupContent);
@@ -611,7 +611,7 @@ window.eliminarPunto = function (button) {
                             <div>Longitud: ${m.getLatLng().lng.toFixed(6)}</div><br>
                             <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
                             <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-                            <button onclick="compartirCoordenadas(${m.getLatLng().lat}, ${m.getLatLng().lng})" style="margin-left: 5px;">Compartir Punto Cargado</button>
+                            <button onclick="compartirCoordenadas(${m.getLatLng().lat}, ${m.getLatLng().lng})" style="margin-left: 5px;">Compartir  Punto Cargado</button>
                         </div>
                     `;
 
@@ -656,7 +656,7 @@ window.eliminarPunto = function (button) {
                             <div>Longitud: ${currentLon.toFixed(6)}</div><br>
                             <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Asignar Nombre</button>
                             <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-                            <button onclick="compartirCoordenadas(${currentLat}, ${currentLon})" style="margin-left: 5px;">Compartir Punto Cargado</button>
+                            <button onclick="compartirCoordenadas(${currentLat}, ${currentLon})" style="margin-left: 5px;">Compartir  Punto Cargado</button>
                         </div>
                     `;
 
