@@ -207,7 +207,7 @@
                     div.style.position = "absolute";
                     div.style.left = "0"; // Pegado al borde izquierdo
                     div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.4.7 ";
+                    div.innerHTML = " Ver: 1.4.8 ";
                     div.style.padding = "0px"; // Eliminar padding
                     div.style.margin = "0"; // Eliminar margen
                     div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -524,38 +524,44 @@
             }
 
             // Función para cambiar el nombre de un punto
-            window.cambiarNombre = function (button) {
-                const input = button.parentElement.querySelector('#nombrePunto');
-                const newName = input.value;
-                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.innerHTML);
-                if (marker) {
-                    const popupContent = `
-                        <div style="white-space: nowrap;">
-                            <label for="nombrePunto">Nombre:</label>
-                            <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
-                            <div>Latitud: ${marker.getLatLng().lat.toFixed(6)}</div>
-                            <div>Longitud: ${marker.getLatLng().lng.toFixed(6)}</div><br>
-                            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-                            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
-                            <button onclick="compartirCoordenadas(${marker.getLatLng().lat}, ${marker.getLatLng().lng})" style="margin-left: 5px;">Compartir Coordenadas</button>
-                        </div>
-                    `;
-                    marker.setPopupContent(popupContent);
-                    actualizarLocalStorage(); // Actualizar localStorage después de cambiar el nombre
-                }
-            };
+window.cambiarNombre = function (button) {
+    const input = button.parentElement.querySelector('#nombrePunto');
+    const newName = input.value;
+    const marker = savedMarkers.find(marker => {
+        const popupContent = marker.getPopup()._content;
+        return popupContent.includes(button.parentElement.innerHTML.trim());
+    });
+    if (marker) {
+        const latLng = marker.getLatLng();
+        const popupContent = `
+            <div style="white-space: nowrap;">
+                <label for="nombrePunto">Nombre:</label>
+                <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
+                <div>Latitud: ${latLng.lat.toFixed(6)}</div>
+                <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
+                <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+                <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button>
+                <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng})" style="margin-left: 5px;">Compartir Coordenadas</button>
+            </div>
+        `;
+        marker.setPopupContent(popupContent);
+        actualizarLocalStorage(); // Actualizar localStorage después de cambiar el nombre
+    }
+};
 
-            // Función para eliminar un punto
-            window.eliminarPunto = function (button) {
-                const marker = savedMarkers.find(marker => marker.getPopup()._content === button.parentElement.innerHTML);
-                if (marker) {
-                    map.removeLayer(marker);
-                    savedMarkers = savedMarkers.filter(m => m !== marker);
-                    actualizarLocalStorage(); // Actualizar localStorage después de eliminar el punto
-                    actualizarNumerosPuntos(); // Actualizar los números de los puntos restantes
-                }
-            };
-
+// Función para eliminar un punto
+window.eliminarPunto = function (button) {
+    const marker = savedMarkers.find(marker => {
+        const popupContent = marker.getPopup()._content;
+        return popupContent.includes(button.parentElement.innerHTML.trim());
+    });
+    if (marker) {
+        map.removeLayer(marker);
+        savedMarkers = savedMarkers.filter(m => m !== marker);
+        actualizarLocalStorage(); // Actualizar localStorage después de eliminar el punto
+        actualizarNumerosPuntos(); // Actualizar los números de los puntos restantes
+    }
+};
             // Función para actualizar los números de los puntos
             function actualizarNumerosPuntos() {
                 savedMarkers.forEach((m, i) => {
