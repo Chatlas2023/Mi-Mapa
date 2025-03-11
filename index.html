@@ -207,7 +207,7 @@
                     div.style.position = "absolute";
                     div.style.left = "0"; // Pegado al borde izquierdo
                     div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.4.10 ";
+                    div.innerHTML = " Ver: 1.4.11 ";
                     div.style.padding = "0px"; // Eliminar padding
                     div.style.margin = "0"; // Eliminar margen
                     div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -496,7 +496,7 @@
 
             // Función para compartir las coordenadas
 window.compartirCoordenadas = function (lat, lon) {
-    const link = `https://www.google.com/maps?q=${currentLat},${currentLon}`;
+    const link = `https://www.google.com/maps?q=${lat},${lon}`; // Usar los parámetros lat y lon
     const linkInput = document.createElement("input");
     linkInput.type = "text";
     linkInput.value = link;
