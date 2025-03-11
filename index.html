@@ -23,65 +23,70 @@
             white-space: pre-line;
         }
         .btn {
-            padding: 7px 15px;
-            font-size: 14px;
-            font-weight: bold;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            width: 180px;
+    padding: 7px 15px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    width: 180px;
+    height: 37px; /* Alto fijo igual que el botón Guardar Ubicación */
+    display: flex; /* Usar flexbox para centrar el texto */
+    align-items: center; /* Centrar verticalmente */
+    justify-content: center; /* Centrar horizontalmente */
         }
-        .btn-update {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-update:hover {
-            background-color: #0056b3;
-        }
-        .btn-center {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-center:hover {
-            background-color: #0056b3;
-        }
-        .btn-share {
-            background-color: #28a745;
-            color: white;
-        }
-        .btn-share:hover {
-            background-color: #218838;
-        }
+.btn-update {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-update:hover {
+    background-color: #0056b3;
+}
+
+.btn-center {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-center:hover {
+    background-color: #0056b3;
+}
+
+.btn-share {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-share:hover {
+    background-color: #218838;
+}
         #mapLayers {
-            padding: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 5px;
+    padding: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 5px;
+    height: 37px; /* Alto fijo igual que los botones */
+    display: flex;
+    align-items: center;
+    justify-content: center;
         }
 
         /* Estilos para los botones apilados */
-        #saveLocation, #toggleDarkMode {
-            position: fixed;
-            right: 10px;
-            width: 100px;
-            font-size: 14px; /* Ajustar el tamaño de la fuente */
-            padding: 5px; /* Reducir el padding */
-        }
-
-        #saveLocation {
-            position: fixed;
-            right: 10px;
-            bottom: 36px;
-            width: 100px;
-            height: 37px;
-            font-size: 14px;
-            background-color: #28a745;
-            color: white;
-            display: flex; /* Usar flexbox */
-            align-items: center; /* Centrar verticalmente */
-            justify-content: center; /* Centrar horizontalmente */
-            padding: 0; /* Eliminar padding si es necesario */
+#saveLocation {
+    position: fixed;
+    right: 10px;
+    bottom: 36px;
+    width: 100px;
+    height: 37px; /* Alto fijo */
+    font-size: 14px;
+    background-color: #28a745;
+    color: white;
+    display: flex; /* Usar flexbox */
+    align-items: center; /* Centrar verticalmente */
+    justify-content: center; /* Centrar horizontalmente */
+    padding: 0; /* Eliminar padding si es necesario */
         }
 
         #saveLocation:hover {
@@ -207,7 +212,7 @@
                     div.style.position = "absolute";
                     div.style.left = "0"; // Pegado al borde izquierdo
                     div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.4.11 ";
+                    div.innerHTML = " Ver: 1.4.12 ";
                     div.style.padding = "0px"; // Eliminar padding
                     div.style.margin = "0"; // Eliminar margen
                     div.style.background = "rgba(255, 255, 255, 0.8)";
