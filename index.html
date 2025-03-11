@@ -495,23 +495,23 @@
             }
 
             // Función para compartir las coordenadas
-            window.compartirCoordenadas = function (lat, lon) {
-                const coordenadas = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-                const link = `https://www.google.com/maps?q=${coordenadas}`; // Generar el enlace de Google Maps
-                const linkInput = document.createElement("input");
-                linkInput.type = "text";
-                linkInput.value = coordenadas;
-                linkInput.style.position = "fixed";
-                linkInput.style.top = "50%";
-                linkInput.style.left = "50%";
-                linkInput.style.transform = "translate(-50%, -50%)";
-                linkInput.style.zIndex = 1000;
-                document.body.appendChild(linkInput);
-                linkInput.select();
-                linkInput.setSelectionRange(0, 99999);
-                document.execCommand("copy");
-                document.body.removeChild(linkInput);
-                alert("Coordenadas copiadas al portapapeles: " + link);
+window.compartirCoordenadas = function (lat, lon) {
+    const coordenadas = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    const link = `https://www.google.com/maps?q=${coordenadas}`; // Generar el enlace de Google Maps
+    const linkInput = document.createElement("input");
+    linkInput.type = "text";
+    linkInput.value = link;
+    linkInput.style.position = "fixed";
+    linkInput.style.top = "50%";
+    linkInput.style.left = "50%";
+    linkInput.style.transform = "translate(-50%, -50%)";
+    linkInput.style.zIndex = 1000;
+    document.body.appendChild(linkInput);
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999);
+    document.execCommand("copy");
+    document.body.removeChild(linkInput);
+    alert("Enlace copiado al portapapeles: " + link);
             };
 
             // Función para actualizar localStorage con los puntos actuales
