@@ -15,3 +15,5 @@ El mapa8 incluye versionado visible en el mapa y corrige el error al querer hace
 1.4.4 Informa la sensación térmica además de la temperatura.
 1.4.6 Modo oscuro
 1.4.11 Muestra coordenadas del punto y permite compartirlo
+1.4.14 Ultima versión antes de combinar Mi-Mapa con Seguime
+1.5.01 Combina dos aplicaciones
