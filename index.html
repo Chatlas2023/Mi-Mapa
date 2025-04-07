@@ -416,38 +416,53 @@
     }
 
     // Iniciar/detener seguimiento
-    function toggleTracking() {
-      const button = document.getElementById('toggle-tracking');
+function toggleTracking() {
+  const button = document.getElementById('toggle-tracking');
+  
+  if (isTracking) {
+    // Detener seguimiento
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    button.textContent = 'Iniciar Seguimiento';
+    button.classList.remove('btn-danger');
+    button.classList.add('btn-primary');
+    isTracking = false;
+    updateStatus("Seguimiento detenido");
+  } else {
+    // Iniciar seguimiento
+    if (navigator.geolocation) {
+      updateStatus("Obteniendo ubicación...");
+      button.textContent = 'Detener Seguimiento';
+      button.classList.remove('btn-primary');
+      button.classList.add('btn-danger');
       
-      if (isTracking) {
-        // Detener seguimiento
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-        button.textContent = 'Iniciar Seguimiento';
-        button.classList.remove('btn-danger');
-        button.classList.add('btn-primary');
-        isTracking = false;
-      } else {
-        // Iniciar seguimiento
-        if (navigator.geolocation) {
-          watchId = navigator.geolocation.watchPosition(
-            handlePositionUpdate,
-            handlePositionError,
-            {
-              enableHighAccuracy: true,
-              maximumAge: 10000,
-              timeout: 15000
-            }
-          );
-          button.textContent = 'Detener Seguimiento';
-          button.classList.remove('btn-primary');
-          button.classList.add('btn-danger');
-          isTracking = true;
-        } else {
-          alert('Tu navegador no soporta geolocalización');
+      // Reiniciar variables de seguimiento
+      coordinates = [];
+      polyline.setLatLngs([]);
+      totalDistance = 0;
+      speedValues = [];
+      updateDistanceInfo();
+      
+      watchId = navigator.geolocation.watchPosition(
+        handlePositionUpdate,
+        handlePositionError,
+        {
+          enableHighAccuracy: true,
+          maximumAge: 10000,
+          timeout: 20000
         }
-      }
+      );
+      isTracking = true;
+    } else {
+      alert('Tu navegador no soporta geolocalización');
+      updateStatus("Error: Geolocalización no soportada");
     }
+  }
+}
+    function updateStatus(message) {
+  console.log(message); // Para depuración
+  // Puedes agregar un elemento en tu HTML para mostrar el estado si lo deseas
+}
 
     // Manejar actualización de posición
     function handlePositionUpdate(position) {
