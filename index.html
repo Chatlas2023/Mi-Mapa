@@ -6,6 +6,24 @@
   <title>GeoTraker - Seguimiento Inteligente</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
+    /* Control de versión estilo Chatlas */
+.version-control {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0 5px;
+  font-size: 10px;
+  z-index: 1000;
+  line-height: normal;
+  border-radius: 0;
+  white-space: nowrap;
+}
+
+body.dark-mode .version-control {
+  background: rgba(40, 40, 40, 0.9);
+  color: white;
+}
     :root {
       --primary-color: #007bff;
       --danger-color: #dc3545;
@@ -213,7 +231,7 @@
       <button id="toggle-dark" class="btn-dark">Modo Oscuro</button>
     </div>
   </div>
-
+  <div class="version-control">Ver: 1.5.1</div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     // Variables globales
