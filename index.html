@@ -416,49 +416,51 @@
     }
 
     // Iniciar/detener seguimiento
-function toggleTracking() {
-  const button = document.getElementById('toggle-tracking');
-  
-  if (isTracking) {
-    // Detener seguimiento
-    navigator.geolocation.clearWatch(watchId);
-    watchId = null;
-    button.textContent = 'Iniciar Seguimiento';
-    button.classList.remove('btn-danger');
-    button.classList.add('btn-primary');
-    isTracking = false;
-    updateStatus("Seguimiento detenido");
-  } else {
-    // Iniciar seguimiento
-    if (navigator.geolocation) {
-      updateStatus("Obteniendo ubicación...");
-      button.textContent = 'Detener Seguimiento';
-      button.classList.remove('btn-primary');
-      button.classList.add('btn-danger');
+    function toggleTracking() {
+      const button = document.getElementById('toggle-tracking');
       
-      // Reiniciar variables de seguimiento
-      coordinates = [];
-      polyline.setLatLngs([]);
-      totalDistance = 0;
-      speedValues = [];
-      updateDistanceInfo();
-      
-      watchId = navigator.geolocation.watchPosition(
-        handlePositionUpdate,
-        handlePositionError,
-        {
-          enableHighAccuracy: true,
-          maximumAge: 10000,
-          timeout: 20000
+      if (isTracking) {
+        // Detener seguimiento
+        if (watchId) {
+          navigator.geolocation.clearWatch(watchId);
+          watchId = null;
         }
-      );
-      isTracking = true;
-    } else {
-      alert('Tu navegador no soporta geolocalización');
-      updateStatus("Error: Geolocalización no soportada");
+        button.textContent = 'Iniciar Seguimiento';
+        button.classList.remove('btn-danger');
+        button.classList.add('btn-primary');
+        isTracking = false;
+        updateStatus("Seguimiento detenido");
+      } else {
+        // Iniciar seguimiento
+        if (navigator.geolocation) {
+          updateStatus("Obteniendo ubicación...");
+          button.textContent = 'Detener Seguimiento';
+          button.classList.remove('btn-primary');
+          button.classList.add('btn-danger');
+          
+          // Reiniciar variables de seguimiento
+          coordinates = [];
+          if (polyline) polyline.setLatLngs([]);
+          totalDistance = 0;
+          speedValues = [];
+          updateDistanceInfo();
+          
+          watchId = navigator.geolocation.watchPosition(
+            handlePositionUpdate,
+            handlePositionError,
+            {
+              enableHighAccuracy: true,
+              maximumAge: 10000,
+              timeout: 20000
+            }
+          );
+          isTracking = true;
+        } else {
+          alert('Tu navegador no soporta geolocalización');
+          updateStatus("Error: Geolocalización no soportada");
+        }
+      }
     }
-  }
-}
     function updateStatus(message) {
   console.log(message); // Para depuración
   // Puedes agregar un elemento en tu HTML para mostrar el estado si lo deseas
@@ -807,8 +809,16 @@ function toggleTracking() {
     function toggleDarkMode() {
       document.body.classList.toggle('dark-mode');
       const button = document.getElementById('toggle-dark');
-      button.textContent = document.body.classList.contains('dark-mode') ? 
-        'Modo Claro' : 'Modo Oscuro';
+      
+      if (document.body.classList.contains('dark-mode')) {
+        button.textContent = 'Modo Claro';
+        button.classList.remove('btn-dark');
+        button.classList.add('btn-light');
+      } else {
+        button.textContent = 'Modo Oscuro';
+        button.classList.remove('btn-light');
+        button.classList.add('btn-dark');
+      }
       
       // Guardar preferencia
       localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
