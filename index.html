@@ -6,7 +6,7 @@
   <title>GeoTraker - Seguimiento Inteligente</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    /* Control de versión estilo Chatlas */
+    /* Control de versión */
     .version-control {
       position: absolute;
       left: 0;
@@ -51,7 +51,7 @@
       z-index: 1;
     }
     
-    /* Panel de control principal */
+    /* Panel de control */
     #control-panel {
       display: flex;
       flex-wrap: wrap;
@@ -62,7 +62,7 @@
       z-index: 1000;
     }
     
-    /* Panel de información combinada */
+    /* Panel de información */
     #info-panel {
       position: absolute;
       top: 10px;
@@ -75,7 +75,7 @@
       max-width: 280px;
     }
     
-    /* Contenedor de información de calle */
+    /* Contenedores de información */
     #street-info-container {
       padding: 10px;
       background: rgba(255, 255, 255, 0.9);
@@ -85,7 +85,6 @@
       z-index: 1000;
     }
 
-    /* Contenedor de rutas guardadas */
     #saved-routes-container {
       padding: 10px;
       background: rgba(255, 255, 255, 0.9);
@@ -227,12 +226,45 @@
       border-color: #555;
     }
     
-    /* Ajustes para el mapa en modo oscuro */
+    /* Mapa en modo oscuro */
     body.dark-mode #map {
       filter: invert(1) hue-rotate(180deg) brightness(0.7) contrast(0.8);
     }
     
-    /* Versión responsive */
+    /* Spinner */
+    .spinner {
+      display: none;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 3px solid #007bff;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+
+    body.dark-mode .spinner {
+      border-top: 3px solid #4dabf7;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Alertas */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(20px); }
+    }
+
+    /* Responsive */
     @media (max-width: 768px) {
       #info-panel {
         max-width: 200px;
@@ -253,28 +285,6 @@
       .toolbar {
         display: inline-flex;
       }
-    }
-
-    /* Spinner para carga */
-    .spinner {
-      display: none;
-      border: 3px solid rgba(0, 0, 0, 0.1);
-      border-radius: 50%;
-      border-top: 3px solid #007bff;
-      width: 20px;
-      height: 20px;
-      animation: spin 1s linear infinite;
-      margin-left: 10px;
-      vertical-align: middle;
-    }
-
-    body.dark-mode .spinner {
-      border-top: 3px solid #4dabf7;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -337,7 +347,7 @@
     <ul id="saved-routes-list"></ul>
   </div>
   
-  <div class="version-control">Ver: 2.0.2</div>
+  <div class="version-control">Ver: 2.1.0</div>
   
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -447,6 +457,40 @@
       }
     }
 
+    // Función para iniciar el seguimiento
+    function startTracking() {
+      updateStatus("Obteniendo ubicación...");
+      
+      // Reiniciar variables de seguimiento
+      coordinates = [];
+      if (polyline) polyline.setLatLngs([]);
+      totalDistance = 0;
+      speedValues = [];
+      updateDistanceInfo();
+      
+      // Opciones de geolocalización
+      const options = {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 20000
+      };
+      
+      watchId = navigator.geolocation.watchPosition(
+        handlePositionUpdate,
+        handlePositionError,
+        options
+      );
+    }
+
+    // Función para detener el seguimiento
+    function stopTracking() {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      updateStatus("Seguimiento detenido");
+    }
+
     // Iniciar/detener seguimiento
     function toggleTracking() {
       const button = document.getElementById('toggle-tracking');
@@ -454,46 +498,52 @@
       
       if (isTracking) {
         // Detener seguimiento
-        if (watchId) {
-          navigator.geolocation.clearWatch(watchId);
-          watchId = null;
-        }
+        stopTracking();
         button.textContent = 'Iniciar Seguimiento';
         button.classList.remove('btn-danger');
         button.classList.add('btn-primary');
         spinner.style.display = 'none';
         isTracking = false;
-        updateStatus("Seguimiento detenido");
       } else {
-        // Iniciar seguimiento
-        if (navigator.geolocation) {
-          updateStatus("Obteniendo ubicación...");
+        // Verificar si la geolocalización está disponible
+        if (!navigator.geolocation) {
+          showAlert('Tu navegador no soporta geolocalización', 'danger');
+          return;
+        }
+        
+        // Verificar permisos
+        if (navigator.permissions && navigator.permissions.query) {
+          navigator.permissions.query({name: 'geolocation'}).then(permissionStatus => {
+            if (permissionStatus.state === 'denied') {
+              showAlert('Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.', 'danger');
+              return;
+            }
+            
+            // Iniciar seguimiento
+            startTracking();
+            button.textContent = 'Detener Seguimiento';
+            spinner.style.display = 'inline-block';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-danger');
+            isTracking = true;
+          }).catch(error => {
+            console.error('Error verificando permisos:', error);
+            // Intentar iniciar de todos modos
+            startTracking();
+            button.textContent = 'Detener Seguimiento';
+            spinner.style.display = 'inline-block';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-danger');
+            isTracking = true;
+          });
+        } else {
+          // Navegadores más antiguos sin API de permisos
+          startTracking();
           button.textContent = 'Detener Seguimiento';
           spinner.style.display = 'inline-block';
           button.classList.remove('btn-primary');
           button.classList.add('btn-danger');
-          
-          // Reiniciar variables de seguimiento
-          coordinates = [];
-          if (polyline) polyline.setLatLngs([]);
-          totalDistance = 0;
-          speedValues = [];
-          updateDistanceInfo();
-          
-          watchId = navigator.geolocation.watchPosition(
-            handlePositionUpdate,
-            handlePositionError,
-            {
-              enableHighAccuracy: true,
-              maximumAge: 10000,
-              timeout: 20000
-            }
-          );
           isTracking = true;
-        } else {
-          alert('Tu navegador no soporta geolocalización');
-          updateStatus("Error: Geolocalización no soportada");
-          showAlert('Tu navegador no soporta geolocalización', 'danger');
         }
       }
     }
@@ -506,10 +556,10 @@
       const speed = position.coords.speed ? position.coords.speed * 3.6 : 0; // km/h
       const accuracy = position.coords.accuracy;
       
-      // Ocultar spinner una vez que tenemos la primera posición
+      // Ocultar spinner al obtener la primera posición
       document.getElementById('tracking-spinner').style.display = 'none';
       
-      // Muestreo adaptativo
+      // Muestreo adaptativo basado en velocidad
       const minInterval = speed < 5 ? 15000 : speed < 20 ? 7000 : 3000;
       
       if (!lastPositionTime || now - lastPositionTime >= minInterval) {
@@ -517,7 +567,6 @@
         lastPositionTime = now;
       }
       
-      // Actualizar velocidad actual
       updateSpeedInfo(speed);
     }
 
@@ -595,6 +644,13 @@
       }
       
       showAlert(errorMessage, 'danger');
+      
+      // Restablecer el botón si hay un error
+      const button = document.getElementById('toggle-tracking');
+      button.textContent = 'Iniciar Seguimiento';
+      button.classList.remove('btn-danger');
+      button.classList.add('btn-primary');
+      isTracking = false;
     }
 
     // Actualizar información de velocidad
@@ -949,7 +1005,7 @@
       }
 
       // Verificar permisos de geolocalización al cargar
-      if (navigator.permissions) {
+      if (navigator.permissions && navigator.permissions.query) {
         navigator.permissions.query({name: 'geolocation'}).then(permissionStatus => {
           if (permissionStatus.state === 'denied') {
             showAlert('La geolocalización está bloqueada. Por favor habilítala para usar el seguimiento.', 'danger');
