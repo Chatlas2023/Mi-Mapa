@@ -452,127 +452,113 @@
     }
 
     // Función para iniciar el seguimiento - VERSIÓN MEJORADA
+    // Función para iniciar el seguimiento - VERSIÓN CORREGIDA
     function startTracking() {
-      updateStatus("Obteniendo ubicación...");
-      
-      // Reiniciar variables de seguimiento
-      coordinates = [];
-      if (polyline) polyline.setLatLngs([]);
-      totalDistance = 0;
-      speedValues = [];
-      updateDistanceInfo();
-      
-      // Opciones de geolocalización mejoradas
-      const options = {
-        enableHighAccuracy: true,  // Forzar alta precisión
-        maximumAge: 0,            // No usar posiciones en caché
-        timeout: 30000            // 30 segundos de espera
-      };
-      
-      try {
-        // Mostrar feedback visual mientras se obtiene la posición
-        document.getElementById('sampling-mode').textContent = "🟡 Buscando GPS...";
-        document.getElementById('tracking-spinner').style.display = 'inline-block';
-        
-        // Primero obtenemos una posición inmediata para verificar que funciona
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                // Si obtenemos posición, procesamos y luego iniciamos el watchPosition
-                handlePositionUpdate(position);
-                watchId = navigator.geolocation.watchPosition(
-                    handlePositionUpdate,
-                    handlePositionError,
-                    options
-                );
-                updateStatus("Seguimiento iniciado correctamente");
-                return true;
-            },
-            (error) => {
-                handlePositionError(error);
-                return false;
-            },
-            options
-        );
-      } catch (error) {
-        console.error('Error al iniciar seguimiento:', error);
-        handlePositionError(error);
-        return false;
-      }
+        return new Promise((resolve) => {
+            updateStatus("Obteniendo ubicación...");
+            
+            coordinates = [];
+            if (polyline) polyline.setLatLngs([]);
+            totalDistance = 0;
+            speedValues = [];
+            updateDistanceInfo();
+            
+            const options = {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 30000
+            };
+            
+            document.getElementById('sampling-mode').textContent = "🟡 Buscando GPS...";
+            document.getElementById('tracking-spinner').style.display = 'inline-block';
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    watchId = navigator.geolocation.watchPosition(
+                        handlePositionUpdate,
+                        handlePositionError,
+                        options
+                    );
+                    updateStatus("Seguimiento iniciado correctamente");
+                    resolve(true);
+                },
+                (error) => {
+                    handlePositionError(error);
+                    resolve(false);
+                },
+                options
+            );
+        });
     }
 
     // Función para detener el seguimiento
     function stopTracking() {
-      if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-      }
-      updateStatus("Seguimiento detenido");
+        if (watchId !== null) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+        updateStatus("Seguimiento detenido");
     }
 
-    // Iniciar/detener seguimiento - VERSIÓN MEJORADA
+    // Iniciar/detener seguimiento - VERSIÓN CORREGIDA
     async function toggleTracking() {
-      const button = document.getElementById('toggle-tracking');
-      const spinner = document.getElementById('tracking-spinner');
-      
-      if (isTracking) {
-        stopTracking();
-        button.textContent = 'Iniciar Seguimiento';
-        button.classList.remove('btn-danger');
-        button.classList.add('btn-primary');
-        spinner.style.display = 'none';
-        isTracking = false;
-        return;
-      }
-      
-      if (!navigator.geolocation) {
-        showAlert('Tu navegador no soporta geolocalización', 'danger');
-        return;
-      }
-      
-      spinner.style.display = 'inline-block';
-      button.disabled = true;
-      
-      try {
-        // Verificar permisos de forma más robusta
-        let permissionStatus = { state: 'prompt' }; // Estado por defecto
+        const button = document.getElementById('toggle-tracking');
+        const spinner = document.getElementById('tracking-spinner');
         
-        if (navigator.permissions && navigator.permissions.query) {
-          try {
-            permissionStatus = await navigator.permissions.query({name: 'geolocation'});
-          } catch (e) {
-            console.warn('API de permisos no soportada completamente', e);
-          }
+        if (isTracking) {
+            stopTracking();
+            button.textContent = 'Iniciar Seguimiento';
+            button.classList.remove('btn-danger');
+            button.classList.add('btn-primary');
+            spinner.style.display = 'none';
+            isTracking = false;
+            return;
         }
         
-        // Si el permiso fue denegado anteriormente
-        if (permissionStatus.state === 'denied') {
-          showAlert('Permiso de ubicación denegado. Por favor habilita los permisos de ubicación en la configuración de tu navegador.', 'danger');
-          spinner.style.display = 'none';
-          button.disabled = false;
-          return;
+        if (!navigator.geolocation) {
+            showAlert('Tu navegador no soporta geolocalización', 'danger');
+            return;
         }
         
-        // Iniciar seguimiento con manejo de errores mejorado
-        const trackingStarted = startTracking();
+        spinner.style.display = 'inline-block';
+        button.disabled = true;
         
-        if (trackingStarted) {
-          button.textContent = 'Detener Seguimiento';
-          button.classList.remove('btn-primary');
-          button.classList.add('btn-danger');
-          isTracking = true;
-        } else {
-          // Si no se pudo iniciar, mostrar mensaje
-          showAlert('No se pudo iniciar el seguimiento. Intenta nuevamente.', 'warning');
+        try {
+            let permissionStatus;
+            if (navigator.permissions && navigator.permissions.query) {
+                try {
+                    permissionStatus = await navigator.permissions.query({name: 'geolocation'});
+                } catch (e) {
+                    console.warn('API de permisos no soportada completamente', e);
+                }
+            }
+            
+            if (permissionStatus && permissionStatus.state === 'denied') {
+                showAlert('Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.', 'danger');
+                spinner.style.display = 'none';
+                button.disabled = false;
+                return;
+            }
+            
+            const trackingStarted = await startTracking();
+            
+            if (trackingStarted) {
+                button.textContent = 'Detener Seguimiento';
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-danger');
+                isTracking = true;
+            } else {
+                showAlert('No se pudo iniciar el seguimiento. Intenta nuevamente.', 'warning');
+            }
+        } catch (error) {
+            console.error('Error al iniciar seguimiento:', error);
+            showAlert('Error al iniciar el seguimiento: ' + error.message, 'danger');
+        } finally {
+            button.disabled = false;
+            if (!isTracking) {
+                spinner.style.display = 'none';
+            }
         }
-      } catch (error) {
-        console.error('Error al iniciar seguimiento:', error);
-        showAlert('Error al iniciar el seguimiento: ' + error.message, 'danger');
-      } finally {
-        button.disabled = false;
-        if (!isTracking) {
-          spinner.style.display = 'none';
-        }
-      }
     }
 
     // Manejar actualización de posición - VERSIÓN MEJORADA
@@ -1016,25 +1002,25 @@
 
     // Inicializar aplicación
     document.addEventListener('DOMContentLoaded', function() {
-      // Asignar event listeners
-      document.getElementById('toggle-tracking').addEventListener('click', toggleTracking);
-      document.getElementById('save-point').addEventListener('click', savePoint);
-      document.getElementById('save-route').addEventListener('click', saveRoute);
-      document.getElementById('share-route').addEventListener('click', exportRoute);
-      document.getElementById('clear-route').addEventListener('click', clearRoute);
-      document.getElementById('toggle-dark').addEventListener('click', toggleDarkMode);
+        // Asignar event listeners
+        document.getElementById('toggle-tracking').addEventListener('click', toggleTracking);
+        document.getElementById('save-point').addEventListener('click', savePoint);
+        document.getElementById('save-route').addEventListener('click', saveRoute);
+        document.getElementById('share-route').addEventListener('click', exportRoute);
+        document.getElementById('clear-route').addEventListener('click', clearRoute);
+        document.getElementById('toggle-dark').addEventListener('click', toggleDarkMode);
 
-      // Inicializar el mapa
-      initMap();
+        // Inicializar el mapa
+        initMap();
 
-      // Configurar modo oscuro si estaba activado
-      if (localStorage.getItem('darkMode') === 'true') {
-        document.body.classList.add('dark-mode');
-        const button = document.getElementById('toggle-dark');
-        button.textContent = 'Modo Claro';
-        button.classList.remove('btn-dark');
-        button.classList.add('btn-light');
-      }
+        // Configurar modo oscuro si estaba activado
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            const button = document.getElementById('toggle-dark');
+            button.textContent = 'Modo Claro';
+            button.classList.remove('btn-dark');
+            button.classList.add('btn-light');
+        }
     });
   </script>
 </body>
