@@ -372,32 +372,171 @@
       osm: null,
       satellite: null
     };
-        // MODIFICACIÓN: Hacer las funciones globales
-    window.loadRoute = function(index) {
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
-      const route = savedRoutes[index];
 
-      if (route) {
-        if (confirm(`¿Cargar ruta "${route.name}"? Esto borrará la ruta actual.`)) {
-          coordinates = route.coordinates;
-          totalDistance = route.distance;
-          avgSpeed = route.avgSpeed || 0;
-          
-          // Actualizar mapa
-          polyline.setLatLngs(coordinates.map(c => [c.lat, c.lng]));
-          if (coordinates.length > 0) {
-            map.fitBounds(polyline.getBounds());
+    // Declarar todas las funciones como globales primero
+    window.initMap = function() {
+      map = L.map('map', {
+        zoomControl: false
+      }).setView([-34.6037, -58.3816], 13);
+
+      // Capas base
+      mapLayers.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      mapLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '© Esri'
+      });
+
+      // Control de capas
+      document.getElementById('map-layers').addEventListener('change', function() {
+        const selectedLayer = this.value;
+        Object.values(mapLayers).forEach(layer => map.removeLayer(layer));
+        mapLayers[selectedLayer].addTo(map);
+      });
+
+      // Inicializar polilínea
+      polyline = L.polyline([], { color: '#007bff', weight: 5 }).addTo(map);
+
+      // Cargar datos de barrios
+      loadNeighborhoods();
+      
+      // Cargar etimologías de calles
+      loadStreetEtymology();
+      
+      // Cargar rutas guardadas
+      loadSavedRoutes();
+    };
+
+    window.loadNeighborhoods = async function() {
+      try {
+        const response = await fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson');
+        const data = await response.json();
+        
+        neighborhoodsLayer = L.geoJSON(data, {
+          style: {
+            color: '#ff7800',
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.1
+          },
+          onEachFeature: function(feature, layer) {
+            layer.on('click', function(e) {
+              updateNeighborhoodInfo(feature.properties.Name);
+            });
           }
-          
-          // Actualizar UI
-          updateDistanceInfo();
-          document.getElementById('avg-speed').textContent = Math.round(avgSpeed);
-          document.getElementById('current-speed').textContent = '0';
-          
-          showAlert(`Ruta "${route.name}" cargada correctamente`, 'success');
+        }).addTo(map);
+      } catch (error) {
+        console.error('Error cargando barrios:', error);
+        showAlert('Error al cargar datos de barrios', 'danger');
+      }
+    };
+
+    window.loadStreetEtymology = async function() {
+      try {
+        const response = await fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json');
+        streetsData = await response.json();
+      } catch (error) {
+        console.error('Error cargando etimologías:', error);
+        showAlert('Error al cargar etimologías de calles', 'danger');
+      }
+    };
+
+    window.startTracking = function() {
+      updateStatus("Obteniendo ubicación...");
+      
+      // Reiniciar variables de seguimiento
+      coordinates = [];
+      if (polyline) polyline.setLatLngs([]);
+      totalDistance = 0;
+      speedValues = [];
+      updateDistanceInfo();
+      
+      // Opciones de geolocalización
+      const options = {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 20000
+      };
+      
+      try {
+        watchId = navigator.geolocation.watchPosition(
+          handlePositionUpdate,
+          handlePositionError,
+          options
+        );
+        return true;
+      } catch (error) {
+        console.error('Error al iniciar seguimiento:', error);
+        handlePositionError(error);
+        return false;
+      }
+    };
+
+    window.stopTracking = function() {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      updateStatus("Seguimiento detenido");
+    };
+
+    window.toggleTracking = async function() {
+      const button = document.getElementById('toggle-tracking');
+      const spinner = document.getElementById('tracking-spinner');
+      
+      if (isTracking) {
+        stopTracking();
+        button.textContent = 'Iniciar Seguimiento';
+        button.classList.remove('btn-danger');
+        button.classList.add('btn-primary');
+        spinner.style.display = 'none';
+        isTracking = false;
+        return;
+      }
+      
+      if (!navigator.geolocation) {
+        showAlert('Tu navegador no soporta geolocalización', 'danger');
+        return;
+      }
+      
+      spinner.style.display = 'inline-block';
+      button.disabled = true;
+      
+      try {
+        let permissionStatus;
+        if (navigator.permissions && navigator.permissions.query) {
+          try {
+            permissionStatus = await navigator.permissions.query({name: 'geolocation'});
+          } catch (e) {
+            console.warn('API de permisos no soportada completamente', e);
+          }
+        }
+        
+        if (permissionStatus && permissionStatus.state === 'denied') {
+          showAlert('Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.', 'danger');
+          return;
+        }
+        
+        const trackingStarted = startTracking();
+        
+        if (trackingStarted) {
+          button.textContent = 'Detener Seguimiento';
+          button.classList.remove('btn-primary');
+          button.classList.add('btn-danger');
+          isTracking = true;
+        }
+      } catch (error) {
+        console.error('Error al iniciar seguimiento:', error);
+        showAlert('Error al iniciar el seguimiento: ' + error.message, 'danger');
+      } finally {
+        button.disabled = false;
+        if (!isTracking) {
+          spinner.style.display = 'none';
         }
       }
     };
+
         window.deleteRoute = function(index) {
       const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
       const routeName = savedRoutes[index].name;
@@ -1034,45 +1173,40 @@
     }
 
     // Inicializar aplicación
-    document.addEventListener('DOMContentLoaded', function() {
-      initMap();
-      
-      // Configurar event listeners de forma más robusta
-      const addListener = (id, fn) => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('click', fn);
-      };
+     document.addEventListener('DOMContentLoaded', function() {
+      // Asignar event listeners de manera segura
+      function safeAddListener(id, handler) {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener('click', handler);
+        } else {
+          console.error('Elemento no encontrado:', id);
+        }
+      }
 
-      addListener('toggle-tracking', function() {
-        setTimeout(toggleTracking, 50);
-      });
-      addListener('save-point', savePoint);
-      addListener('save-route', saveRoute);
-      addListener('share-route', exportRoute);
-      addListener('clear-route', clearRoute);
-      addListener('toggle-dark', toggleDarkMode);
-      
-      // Verificar que los botones de rutas guardadas tengan listeners
+      // Asignar todos los listeners
+      safeAddListener('toggle-tracking', toggleTracking);
+      safeAddListener('save-point', savePoint);
+      safeAddListener('save-route', saveRoute);
+      safeAddListener('share-route', exportRoute);
+      safeAddListener('clear-route', clearRoute);
+      safeAddListener('toggle-dark', toggleDarkMode);
+
+      // Inicializar el mapa después de que todos los listeners están configurados
+      initMap();
+
+      // Configurar listeners para rutas guardadas después de que se carguen
       setTimeout(() => {
-        const loadButtons = document.querySelectorAll('#saved-routes-list button.btn-primary');
-        const deleteButtons = document.querySelectorAll('#saved-routes-list button.btn-danger');
-        
-        loadButtons.forEach((btn, index) => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            loadRoute(index);
-          });
+        document.querySelectorAll('#saved-routes-list button.btn-primary').forEach((btn, index) => {
+          btn.onclick = () => loadRoute(index);
         });
         
-        deleteButtons.forEach((btn, index) => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteRoute(index);
-          });
+        document.querySelectorAll('#saved-routes-list button.btn-danger').forEach((btn, index) => {
+          btn.onclick = () => deleteRoute(index);
         });
-      }, 500);
-      
-      // Aplicar modo oscuro si estaba activado
+      }, 1000);
+
+      // Modo oscuro
       if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
         const button = document.getElementById('toggle-dark');
@@ -1081,16 +1215,6 @@
           button.classList.remove('btn-dark');
           button.classList.add('btn-light');
         }
-      }
-
-      // Verificar permisos de geolocalización al cargar
-      if (navigator.permissions && navigator.permissions.query) {
-        navigator.permissions.query({name: 'geolocation'}).then(permissionStatus => {
-          console.log('Estado de permiso:', permissionStatus.state);
-          if (permissionStatus.state === 'denied') {
-            showAlert('La geolocalización está bloqueada. Por favor habilítala para usar el seguimiento.', 'danger');
-          }
-        }).catch(console.error);
       }
     });
   </script>
