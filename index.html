@@ -303,6 +303,10 @@
       <span class="info-value" id="neighborhood">-</span>
     </div>
     <div class="info-row">
+      <span class="info-label">Precisión:</span>
+      <span class="info-value" id="accuracy">-</span>
+    </div>
+    <div class="info-row">
       <span class="info-label">Modo:</span>
       <span class="info-value" id="sampling-mode">🟢 Eco</span>
     </div>
@@ -337,7 +341,7 @@
     <ul id="saved-routes-list"></ul>
   </div>
   
-  <div class="version-control">Ver: 2.1.1</div>
+  <div class="version-control">Ver: 2.1.2</div>
   
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -447,7 +451,7 @@
       }
     }
 
-    // Función para iniciar el seguimiento
+    // Función para iniciar el seguimiento - VERSIÓN MEJORADA
     function startTracking() {
       updateStatus("Obteniendo ubicación...");
       
@@ -458,20 +462,37 @@
       speedValues = [];
       updateDistanceInfo();
       
-      // Opciones de geolocalización
+      // Opciones de geolocalización mejoradas
       const options = {
-        enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 20000
+        enableHighAccuracy: true,  // Forzar alta precisión
+        maximumAge: 0,            // No usar posiciones en caché
+        timeout: 30000            // 30 segundos de espera
       };
       
       try {
-        watchId = navigator.geolocation.watchPosition(
-          handlePositionUpdate,
-          handlePositionError,
-          options
+        // Mostrar feedback visual mientras se obtiene la posición
+        document.getElementById('sampling-mode').textContent = "🟡 Buscando GPS...";
+        document.getElementById('tracking-spinner').style.display = 'inline-block';
+        
+        // Primero obtenemos una posición inmediata para verificar que funciona
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                // Si obtenemos posición, procesamos y luego iniciamos el watchPosition
+                handlePositionUpdate(position);
+                watchId = navigator.geolocation.watchPosition(
+                    handlePositionUpdate,
+                    handlePositionError,
+                    options
+                );
+                updateStatus("Seguimiento iniciado correctamente");
+                return true;
+            },
+            (error) => {
+                handlePositionError(error);
+                return false;
+            },
+            options
         );
-        return true;
       } catch (error) {
         console.error('Error al iniciar seguimiento:', error);
         handlePositionError(error);
@@ -488,7 +509,7 @@
       updateStatus("Seguimiento detenido");
     }
 
-    // Iniciar/detener seguimiento
+    // Iniciar/detener seguimiento - VERSIÓN MEJORADA
     async function toggleTracking() {
       const button = document.getElementById('toggle-tracking');
       const spinner = document.getElementById('tracking-spinner');
@@ -512,7 +533,9 @@
       button.disabled = true;
       
       try {
-        let permissionStatus;
+        // Verificar permisos de forma más robusta
+        let permissionStatus = { state: 'prompt' }; // Estado por defecto
+        
         if (navigator.permissions && navigator.permissions.query) {
           try {
             permissionStatus = await navigator.permissions.query({name: 'geolocation'});
@@ -521,13 +544,15 @@
           }
         }
         
-        if (permissionStatus && permissionStatus.state === 'denied') {
-          showAlert('Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.', 'danger');
+        // Si el permiso fue denegado anteriormente
+        if (permissionStatus.state === 'denied') {
+          showAlert('Permiso de ubicación denegado. Por favor habilita los permisos de ubicación en la configuración de tu navegador.', 'danger');
           spinner.style.display = 'none';
           button.disabled = false;
           return;
         }
         
+        // Iniciar seguimiento con manejo de errores mejorado
         const trackingStarted = startTracking();
         
         if (trackingStarted) {
@@ -535,6 +560,9 @@
           button.classList.remove('btn-primary');
           button.classList.add('btn-danger');
           isTracking = true;
+        } else {
+          // Si no se pudo iniciar, mostrar mensaje
+          showAlert('No se pudo iniciar el seguimiento. Intenta nuevamente.', 'warning');
         }
       } catch (error) {
         console.error('Error al iniciar seguimiento:', error);
@@ -547,16 +575,32 @@
       }
     }
 
-    // Manejar actualización de posición
+    // Manejar actualización de posición - VERSIÓN MEJORADA
     function handlePositionUpdate(position) {
       const now = Date.now();
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
-      const speed = position.coords.speed ? position.coords.speed * 3.6 : 0;
+      const speed = position.coords.speed ? position.coords.speed * 3.6 : 0; // km/h
       const accuracy = position.coords.accuracy;
       
-      document.getElementById('tracking-spinner').style.display = 'none';
+      // Mostrar precisión en la interfaz
+      document.getElementById('accuracy').textContent = `${accuracy.toFixed(1)} m`;
       
+      // Verificar precisión (si la precisión es mayor a 100m, puede ser poco útil)
+      if (accuracy > 100) {
+        console.warn(`Precisión baja: ${accuracy} metros`);
+        document.getElementById('sampling-mode').textContent = "⚠️ Baja precisión";
+      } else {
+        document.getElementById('tracking-spinner').style.display = 'none';
+      }
+      
+      // Solo procesar si tenemos coordenadas válidas
+      if (isNaN(lat) || isNaN(lng)) {
+        console.error('Coordenadas inválidas:', lat, lng);
+        return;
+      }
+      
+      // Muestreo adaptativo basado en velocidad
       const minInterval = speed < 5 ? 15000 : speed < 20 ? 7000 : 3000;
       
       if (!lastPositionTime || now - lastPositionTime >= minInterval) {
@@ -609,34 +653,45 @@
       getStreetInfo(lat, lng);
     }
 
-    // Manejar errores de geolocalización
+    // Manejar errores de geolocalización - VERSIÓN MEJORADA
     function handlePositionError(error) {
       console.error('Error de geolocalización:', error);
-      document.getElementById('sampling-mode').textContent = '❌ Error';
+      document.getElementById('sampling-mode').textContent = '❌ Error GPS';
       document.getElementById('tracking-spinner').style.display = 'none';
       
       let errorMessage;
       switch(error.code) {
         case error.PERMISSION_DENIED:
-          errorMessage = "Se denegó el permiso para acceder a la geolocalización";
+          errorMessage = "Permiso de ubicación denegado. Por favor habilita los permisos de ubicación en tu navegador.";
           break;
         case error.POSITION_UNAVAILABLE:
-          errorMessage = "La información de ubicación no está disponible";
+          errorMessage = "No se puede obtener la ubicación. Verifica tu conexión a internet o activa el GPS.";
           break;
         case error.TIMEOUT:
-          errorMessage = "Se agotó el tiempo de espera para obtener la ubicación";
+          errorMessage = "Tiempo de espera agotado. El GPS está tardando demasiado en responder.";
           break;
         default:
-          errorMessage = "Error desconocido al obtener la ubicación";
+          errorMessage = "Error desconocido al obtener la ubicación.";
       }
       
       showAlert(errorMessage, 'danger');
       
+      // Restablecer el estado de seguimiento
       const button = document.getElementById('toggle-tracking');
       button.textContent = 'Iniciar Seguimiento';
       button.classList.remove('btn-danger');
       button.classList.add('btn-primary');
       isTracking = false;
+      
+      // Intentar obtener la posición nuevamente después de 5 segundos si estábamos en modo tracking
+      if (isTracking) {
+        setTimeout(() => {
+          if (isTracking) {
+            console.log("Reintentando obtener ubicación...");
+            startTracking();
+          }
+        }, 5000);
+      }
     }
 
     // Actualizar información de velocidad
