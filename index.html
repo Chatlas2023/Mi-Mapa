@@ -6,7 +6,6 @@
   <title>GeoTraker - Seguimiento Inteligente</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    /* Control de versión */
     .version-control {
       position: absolute;
       left: 0;
@@ -51,7 +50,6 @@
       z-index: 1;
     }
     
-    /* Panel de control */
     #control-panel {
       display: flex;
       flex-wrap: wrap;
@@ -62,7 +60,6 @@
       z-index: 1000;
     }
     
-    /* Panel de información */
     #info-panel {
       position: absolute;
       top: 10px;
@@ -75,7 +72,6 @@
       max-width: 280px;
     }
     
-    /* Contenedores de información */
     #street-info-container {
       padding: 10px;
       background: rgba(255, 255, 255, 0.9);
@@ -152,7 +148,6 @@
       text-align: right;
     }
     
-    /* Barra de herramientas */
     .toolbar {
       display: flex;
       gap: 8px;
@@ -204,7 +199,6 @@
       border: 1px solid #ddd;
     }
     
-    /* Modo oscuro */
     body.dark-mode {
       background-color: #121212;
       color: #f1f1f1;
@@ -226,12 +220,10 @@
       border-color: #555;
     }
     
-    /* Mapa en modo oscuro */
     body.dark-mode #map {
       filter: invert(1) hue-rotate(180deg) brightness(0.7) contrast(0.8);
     }
     
-    /* Spinner */
     .spinner {
       display: none;
       border: 3px solid rgba(0, 0, 0, 0.1);
@@ -253,7 +245,6 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Alertas */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -264,7 +255,6 @@
       to { opacity: 0; transform: translateY(20px); }
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
       #info-panel {
         max-width: 200px;
@@ -371,182 +361,6 @@
     let mapLayers = {
       osm: null,
       satellite: null
-    };
-
-    // Declarar todas las funciones como globales primero
-    window.initMap = function() {
-      map = L.map('map', {
-        zoomControl: false
-      }).setView([-34.6037, -58.3816], 13);
-
-      // Capas base
-      mapLayers.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
-
-      mapLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '© Esri'
-      });
-
-      // Control de capas
-      document.getElementById('map-layers').addEventListener('change', function() {
-        const selectedLayer = this.value;
-        Object.values(mapLayers).forEach(layer => map.removeLayer(layer));
-        mapLayers[selectedLayer].addTo(map);
-      });
-
-      // Inicializar polilínea
-      polyline = L.polyline([], { color: '#007bff', weight: 5 }).addTo(map);
-
-      // Cargar datos de barrios
-      loadNeighborhoods();
-      
-      // Cargar etimologías de calles
-      loadStreetEtymology();
-      
-      // Cargar rutas guardadas
-      loadSavedRoutes();
-    };
-
-    window.loadNeighborhoods = async function() {
-      try {
-        const response = await fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson');
-        const data = await response.json();
-        
-        neighborhoodsLayer = L.geoJSON(data, {
-          style: {
-            color: '#ff7800',
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.1
-          },
-          onEachFeature: function(feature, layer) {
-            layer.on('click', function(e) {
-              updateNeighborhoodInfo(feature.properties.Name);
-            });
-          }
-        }).addTo(map);
-      } catch (error) {
-        console.error('Error cargando barrios:', error);
-        showAlert('Error al cargar datos de barrios', 'danger');
-      }
-    };
-
-    window.loadStreetEtymology = async function() {
-      try {
-        const response = await fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json');
-        streetsData = await response.json();
-      } catch (error) {
-        console.error('Error cargando etimologías:', error);
-        showAlert('Error al cargar etimologías de calles', 'danger');
-      }
-    };
-
-    window.startTracking = function() {
-      updateStatus("Obteniendo ubicación...");
-      
-      // Reiniciar variables de seguimiento
-      coordinates = [];
-      if (polyline) polyline.setLatLngs([]);
-      totalDistance = 0;
-      speedValues = [];
-      updateDistanceInfo();
-      
-      // Opciones de geolocalización
-      const options = {
-        enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 20000
-      };
-      
-      try {
-        watchId = navigator.geolocation.watchPosition(
-          handlePositionUpdate,
-          handlePositionError,
-          options
-        );
-        return true;
-      } catch (error) {
-        console.error('Error al iniciar seguimiento:', error);
-        handlePositionError(error);
-        return false;
-      }
-    };
-
-    window.stopTracking = function() {
-      if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-      }
-      updateStatus("Seguimiento detenido");
-    };
-
-    window.toggleTracking = async function() {
-      const button = document.getElementById('toggle-tracking');
-      const spinner = document.getElementById('tracking-spinner');
-      
-      if (isTracking) {
-        stopTracking();
-        button.textContent = 'Iniciar Seguimiento';
-        button.classList.remove('btn-danger');
-        button.classList.add('btn-primary');
-        spinner.style.display = 'none';
-        isTracking = false;
-        return;
-      }
-      
-      if (!navigator.geolocation) {
-        showAlert('Tu navegador no soporta geolocalización', 'danger');
-        return;
-      }
-      
-      spinner.style.display = 'inline-block';
-      button.disabled = true;
-      
-      try {
-        let permissionStatus;
-        if (navigator.permissions && navigator.permissions.query) {
-          try {
-            permissionStatus = await navigator.permissions.query({name: 'geolocation'});
-          } catch (e) {
-            console.warn('API de permisos no soportada completamente', e);
-          }
-        }
-        
-        if (permissionStatus && permissionStatus.state === 'denied') {
-          showAlert('Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.', 'danger');
-          return;
-        }
-        
-        const trackingStarted = startTracking();
-        
-        if (trackingStarted) {
-          button.textContent = 'Detener Seguimiento';
-          button.classList.remove('btn-primary');
-          button.classList.add('btn-danger');
-          isTracking = true;
-        }
-      } catch (error) {
-        console.error('Error al iniciar seguimiento:', error);
-        showAlert('Error al iniciar el seguimiento: ' + error.message, 'danger');
-      } finally {
-        button.disabled = false;
-        if (!isTracking) {
-          spinner.style.display = 'none';
-        }
-      }
-    };
-
-        window.deleteRoute = function(index) {
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
-      const routeName = savedRoutes[index].name;
-      
-      if (confirm(`¿Eliminar permanentemente la ruta "${routeName}"?`)) {
-        savedRoutes.splice(index, 1);
-        localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
-        loadSavedRoutes();
-        showAlert(`Ruta "${routeName}" eliminada`, 'success');
-      }
     };
 
     // Iconos personalizados
@@ -657,7 +471,7 @@
           handlePositionError,
           options
         );
-        return true; // Indicar que se inició correctamente
+        return true;
       } catch (error) {
         console.error('Error al iniciar seguimiento:', error);
         handlePositionError(error);
@@ -665,7 +479,7 @@
       }
     }
 
-    // Función para detener el seguimiento - MODIFICADA
+    // Función para detener el seguimiento
     function stopTracking() {
       if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
@@ -674,13 +488,12 @@
       updateStatus("Seguimiento detenido");
     }
 
-    // Iniciar/detener seguimiento - FUNCIÓN COMPLETAMENTE REESCRITA
+    // Iniciar/detener seguimiento
     async function toggleTracking() {
       const button = document.getElementById('toggle-tracking');
       const spinner = document.getElementById('tracking-spinner');
       
       if (isTracking) {
-        // Detener seguimiento
         stopTracking();
         button.textContent = 'Iniciar Seguimiento';
         button.classList.remove('btn-danger');
@@ -690,18 +503,15 @@
         return;
       }
       
-      // Verificar si la geolocalización está disponible
       if (!navigator.geolocation) {
         showAlert('Tu navegador no soporta geolocalización', 'danger');
         return;
       }
       
-      // Mostrar spinner mientras se verifican permisos
       spinner.style.display = 'inline-block';
       button.disabled = true;
       
       try {
-        // Verificar permisos de geolocalización
         let permissionStatus;
         if (navigator.permissions && navigator.permissions.query) {
           try {
@@ -713,10 +523,11 @@
         
         if (permissionStatus && permissionStatus.state === 'denied') {
           showAlert('Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.', 'danger');
+          spinner.style.display = 'none';
+          button.disabled = false;
           return;
         }
         
-        // Intentar iniciar el seguimiento
         const trackingStarted = startTracking();
         
         if (trackingStarted) {
@@ -741,13 +552,11 @@
       const now = Date.now();
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
-      const speed = position.coords.speed ? position.coords.speed * 3.6 : 0; // km/h
+      const speed = position.coords.speed ? position.coords.speed * 3.6 : 0;
       const accuracy = position.coords.accuracy;
       
-      // Ocultar spinner al obtener la primera posición
       document.getElementById('tracking-spinner').style.display = 'none';
       
-      // Muestreo adaptativo basado en velocidad
       const minInterval = speed < 5 ? 15000 : speed < 20 ? 7000 : 3000;
       
       if (!lastPositionTime || now - lastPositionTime >= minInterval) {
@@ -760,7 +569,6 @@
 
     // Procesar nueva posición
     function processNewPosition(lat, lng, speed, accuracy) {
-      // Agregar coordenada
       if (coordinates.length === 0 || 
           calculateDistance(coordinates[coordinates.length-1].lat, 
                           coordinates[coordinates.length-1].lng, 
@@ -768,7 +576,6 @@
         coordinates.push({ lat, lng });
         polyline.addLatLng([lat, lng]);
         
-        // Actualizar distancia total
         if (coordinates.length > 1) {
           const lastCoord = coordinates[coordinates.length-2];
           totalDistance += calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng) / 1000;
@@ -776,14 +583,12 @@
         }
       }
       
-      // Actualizar marcador de usuario
       if (!userMarker) {
         userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
       } else {
         userMarker.setLatLng([lat, lng]);
       }
       
-      // Actualizar círculo de precisión
       if (!precisionCircle) {
         precisionCircle = L.circle([lat, lng], {
           radius: accuracy,
@@ -795,18 +600,12 @@
         precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
       }
       
-      // Centrar mapa si es necesario
       if (coordinates.length < 5 || coordinates.length % 10 === 0) {
         map.setView([lat, lng], map.getZoom());
       }
       
-      // Obtener información del barrio
       findNeighborhood(lat, lng);
-      
-      // Obtener información del clima
       getWeather(lat, lng);
-      
-      // Obtener información de la calle
       getStreetInfo(lat, lng);
     }
 
@@ -833,7 +632,6 @@
       
       showAlert(errorMessage, 'danger');
       
-      // Restablecer el botón si hay un error
       const button = document.getElementById('toggle-tracking');
       button.textContent = 'Iniciar Seguimiento';
       button.classList.remove('btn-danger');
@@ -846,7 +644,6 @@
       currentSpeed = Math.round(speed);
       document.getElementById('current-speed').textContent = `${currentSpeed} km/h`;
       
-      // Calcular velocidad promedio
       if (speed > 0) {
         speedValues.push(speed);
         if (speedValues.length > 10) speedValues.shift();
@@ -854,7 +651,6 @@
         document.getElementById('avg-speed').textContent = `${avgSpeed} km/h`;
       }
       
-      // Actualizar modo de muestreo
       let mode;
       if (speed < 5) mode = "🟢 Eco (15s)";
       else if (speed < 20) mode = "🟡 Normal (7s)";
@@ -903,8 +699,6 @@
           const temp = data.main.temp.toFixed(1);
           const feelsLike = data.main.feels_like.toFixed(1);
           const weather = data.weather[0].description;
-          const humidity = data.main.humidity;
-          const wind = (data.wind.speed * 3.6).toFixed(1);
           
           document.getElementById('weather').textContent = 
             `${temp}°C (ST: ${feelsLike}°C) - ${weather}`;
@@ -927,7 +721,6 @@
           const streetName = data.address.road;
           const streetData = streetsData.find(item => item.Name === streetName);
           
-          // Actualizar el DOM en lugar de mostrar popup
           const streetNameElement = document.getElementById('street-name');
           const streetEtymologyElement = document.getElementById('street-etymology');
           
@@ -939,7 +732,6 @@
             streetEtymologyElement.textContent = "No hay información etimológica disponible para esta calle.";
           }
           
-          // Hacer scroll automático al nuevo contenido
           document.getElementById('street-info-container').scrollTop = 0;
         }
       } catch (error) {
@@ -1010,13 +802,11 @@
         return;
       }
 
-      // Crear enlace de Google Maps
       const origin = `${coordinates[0].lat},${coordinates[0].lng}`;
       const destination = `${coordinates[coordinates.length-1].lat},${coordinates[coordinates.length-1].lng}`;
       const waypoints = coordinates.slice(1, -1).map(c => `${c.lat},${c.lng}`).join('|');
       const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
 
-      // Copiar al portapapeles
       navigator.clipboard.writeText(mapsUrl).then(() => {
         showAlert('Enlace de la ruta copiado al portapapeles', 'success');
       }).catch(err => {
@@ -1055,13 +845,11 @@
           totalDistance = route.distance;
           avgSpeed = route.avgSpeed || 0;
           
-          // Actualizar mapa
           polyline.setLatLngs(coordinates.map(c => [c.lat, c.lng]));
           if (coordinates.length > 0) {
             map.fitBounds(polyline.getBounds());
           }
           
-          // Actualizar UI
           updateDistanceInfo();
           document.getElementById('avg-speed').textContent = Math.round(avgSpeed);
           document.getElementById('current-speed').textContent = '0';
@@ -1115,14 +903,13 @@
         button.textContent = 'Modo Claro';
         button.classList.remove('btn-dark');
         button.classList.add('btn-light');
+        localStorage.setItem('darkMode', 'true');
       } else {
         button.textContent = 'Modo Oscuro';
         button.classList.remove('btn-light');
         button.classList.add('btn-dark');
+        localStorage.setItem('darkMode', 'false');
       }
-      
-      // Guardar preferencia
-      localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
     }
 
     // Mostrar alerta
@@ -1158,7 +945,7 @@
 
     // Calcular distancia entre coordenadas (Haversine)
     function calculateDistance(lat1, lng1, lat2, lng2) {
-      const R = 6371e3; // Radio de la Tierra en metros
+      const R = 6371e3;
       const φ1 = lat1 * Math.PI/180;
       const φ2 = lat2 * Math.PI/180;
       const Δφ = (lat2-lat1) * Math.PI/180;
@@ -1173,48 +960,25 @@
     }
 
     // Inicializar aplicación
-     document.addEventListener('DOMContentLoaded', function() {
-      // Asignar event listeners de manera segura
-      function safeAddListener(id, handler) {
-        const element = document.getElementById(id);
-        if (element) {
-          element.addEventListener('click', handler);
-        } else {
-          console.error('Elemento no encontrado:', id);
-        }
-      }
+    document.addEventListener('DOMContentLoaded', function() {
+      // Asignar event listeners
+      document.getElementById('toggle-tracking').addEventListener('click', toggleTracking);
+      document.getElementById('save-point').addEventListener('click', savePoint);
+      document.getElementById('save-route').addEventListener('click', saveRoute);
+      document.getElementById('share-route').addEventListener('click', exportRoute);
+      document.getElementById('clear-route').addEventListener('click', clearRoute);
+      document.getElementById('toggle-dark').addEventListener('click', toggleDarkMode);
 
-      // Asignar todos los listeners
-      safeAddListener('toggle-tracking', toggleTracking);
-      safeAddListener('save-point', savePoint);
-      safeAddListener('save-route', saveRoute);
-      safeAddListener('share-route', exportRoute);
-      safeAddListener('clear-route', clearRoute);
-      safeAddListener('toggle-dark', toggleDarkMode);
-
-      // Inicializar el mapa después de que todos los listeners están configurados
+      // Inicializar el mapa
       initMap();
 
-      // Configurar listeners para rutas guardadas después de que se carguen
-      setTimeout(() => {
-        document.querySelectorAll('#saved-routes-list button.btn-primary').forEach((btn, index) => {
-          btn.onclick = () => loadRoute(index);
-        });
-        
-        document.querySelectorAll('#saved-routes-list button.btn-danger').forEach((btn, index) => {
-          btn.onclick = () => deleteRoute(index);
-        });
-      }, 1000);
-
-      // Modo oscuro
+      // Configurar modo oscuro si estaba activado
       if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
         const button = document.getElementById('toggle-dark');
-        if (button) {
-          button.textContent = 'Modo Claro';
-          button.classList.remove('btn-dark');
-          button.classList.add('btn-light');
-        }
+        button.textContent = 'Modo Claro';
+        button.classList.remove('btn-dark');
+        button.classList.add('btn-light');
       }
     });
   </script>
