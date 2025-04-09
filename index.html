@@ -372,6 +372,43 @@
       osm: null,
       satellite: null
     };
+        // MODIFICACIÓN: Hacer las funciones globales
+    window.loadRoute = function(index) {
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
+      const route = savedRoutes[index];
+
+      if (route) {
+        if (confirm(`¿Cargar ruta "${route.name}"? Esto borrará la ruta actual.`)) {
+          coordinates = route.coordinates;
+          totalDistance = route.distance;
+          avgSpeed = route.avgSpeed || 0;
+          
+          // Actualizar mapa
+          polyline.setLatLngs(coordinates.map(c => [c.lat, c.lng]));
+          if (coordinates.length > 0) {
+            map.fitBounds(polyline.getBounds());
+          }
+          
+          // Actualizar UI
+          updateDistanceInfo();
+          document.getElementById('avg-speed').textContent = Math.round(avgSpeed);
+          document.getElementById('current-speed').textContent = '0';
+          
+          showAlert(`Ruta "${route.name}" cargada correctamente`, 'success');
+        }
+      }
+    };
+        window.deleteRoute = function(index) {
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
+      const routeName = savedRoutes[index].name;
+      
+      if (confirm(`¿Eliminar permanentemente la ruta "${routeName}"?`)) {
+        savedRoutes.splice(index, 1);
+        localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
+        loadSavedRoutes();
+        showAlert(`Ruta "${routeName}" eliminada`, 'success');
+      }
+    };
 
     // Iconos personalizados
     const userIcon = L.icon({
@@ -1000,32 +1037,60 @@
     document.addEventListener('DOMContentLoaded', function() {
       initMap();
       
-      // Configurar event listeners
-            document.getElementById('toggle-tracking').addEventListener('click', function() {
-        // Pequeño retraso para permitir que el spinner se muestre
+      // Configurar event listeners de forma más robusta
+      const addListener = (id, fn) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', fn);
+      };
+
+      addListener('toggle-tracking', function() {
         setTimeout(toggleTracking, 50);
       });
-      document.getElementById('save-point').addEventListener('click', savePoint);
-      document.getElementById('save-route').addEventListener('click', saveRoute);
-      document.getElementById('share-route').addEventListener('click', exportRoute);
-      document.getElementById('clear-route').addEventListener('click', clearRoute);
-      document.getElementById('toggle-dark').addEventListener('click', toggleDarkMode);
+      addListener('save-point', savePoint);
+      addListener('save-route', saveRoute);
+      addListener('share-route', exportRoute);
+      addListener('clear-route', clearRoute);
+      addListener('toggle-dark', toggleDarkMode);
+      
+      // Verificar que los botones de rutas guardadas tengan listeners
+      setTimeout(() => {
+        const loadButtons = document.querySelectorAll('#saved-routes-list button.btn-primary');
+        const deleteButtons = document.querySelectorAll('#saved-routes-list button.btn-danger');
+        
+        loadButtons.forEach((btn, index) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            loadRoute(index);
+          });
+        });
+        
+        deleteButtons.forEach((btn, index) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteRoute(index);
+          });
+        });
+      }, 500);
       
       // Aplicar modo oscuro si estaba activado
       if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
-        document.getElementById('toggle-dark').textContent = 'Modo Claro';
-        document.getElementById('toggle-dark').classList.remove('btn-dark');
-        document.getElementById('toggle-dark').classList.add('btn-light');
+        const button = document.getElementById('toggle-dark');
+        if (button) {
+          button.textContent = 'Modo Claro';
+          button.classList.remove('btn-dark');
+          button.classList.add('btn-light');
+        }
       }
 
       // Verificar permisos de geolocalización al cargar
       if (navigator.permissions && navigator.permissions.query) {
         navigator.permissions.query({name: 'geolocation'}).then(permissionStatus => {
+          console.log('Estado de permiso:', permissionStatus.state);
           if (permissionStatus.state === 'denied') {
             showAlert('La geolocalización está bloqueada. Por favor habilítala para usar el seguimiento.', 'danger');
           }
-        });
+        }).catch(console.error);
       }
     });
   </script>
