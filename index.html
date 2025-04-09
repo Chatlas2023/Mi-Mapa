@@ -475,24 +475,31 @@
         timeout: 20000
       };
       
-      watchId = navigator.geolocation.watchPosition(
-        handlePositionUpdate,
-        handlePositionError,
-        options
-      );
+      try {
+        watchId = navigator.geolocation.watchPosition(
+          handlePositionUpdate,
+          handlePositionError,
+          options
+        );
+        return true; // Indicar que se inició correctamente
+      } catch (error) {
+        console.error('Error al iniciar seguimiento:', error);
+        handlePositionError(error);
+        return false;
+      }
     }
 
-    // Función para detener el seguimiento
+    // Función para detener el seguimiento - MODIFICADA
     function stopTracking() {
-      if (watchId) {
+      if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
       }
       updateStatus("Seguimiento detenido");
     }
 
-    // Iniciar/detener seguimiento
-    function toggleTracking() {
+    // Iniciar/detener seguimiento - FUNCIÓN COMPLETAMENTE REESCRITA
+    async function toggleTracking() {
       const button = document.getElementById('toggle-tracking');
       const spinner = document.getElementById('tracking-spinner');
       
@@ -504,46 +511,51 @@
         button.classList.add('btn-primary');
         spinner.style.display = 'none';
         isTracking = false;
-      } else {
-        // Verificar si la geolocalización está disponible
-        if (!navigator.geolocation) {
-          showAlert('Tu navegador no soporta geolocalización', 'danger');
+        return;
+      }
+      
+      // Verificar si la geolocalización está disponible
+      if (!navigator.geolocation) {
+        showAlert('Tu navegador no soporta geolocalización', 'danger');
+        return;
+      }
+      
+      // Mostrar spinner mientras se verifican permisos
+      spinner.style.display = 'inline-block';
+      button.disabled = true;
+      
+      try {
+        // Verificar permisos de geolocalización
+        let permissionStatus;
+        if (navigator.permissions && navigator.permissions.query) {
+          try {
+            permissionStatus = await navigator.permissions.query({name: 'geolocation'});
+          } catch (e) {
+            console.warn('API de permisos no soportada completamente', e);
+          }
+        }
+        
+        if (permissionStatus && permissionStatus.state === 'denied') {
+          showAlert('Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.', 'danger');
           return;
         }
         
-        // Verificar permisos
-        if (navigator.permissions && navigator.permissions.query) {
-          navigator.permissions.query({name: 'geolocation'}).then(permissionStatus => {
-            if (permissionStatus.state === 'denied') {
-              showAlert('Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.', 'danger');
-              return;
-            }
-            
-            // Iniciar seguimiento
-            startTracking();
-            button.textContent = 'Detener Seguimiento';
-            spinner.style.display = 'inline-block';
-            button.classList.remove('btn-primary');
-            button.classList.add('btn-danger');
-            isTracking = true;
-          }).catch(error => {
-            console.error('Error verificando permisos:', error);
-            // Intentar iniciar de todos modos
-            startTracking();
-            button.textContent = 'Detener Seguimiento';
-            spinner.style.display = 'inline-block';
-            button.classList.remove('btn-primary');
-            button.classList.add('btn-danger');
-            isTracking = true;
-          });
-        } else {
-          // Navegadores más antiguos sin API de permisos
-          startTracking();
+        // Intentar iniciar el seguimiento
+        const trackingStarted = startTracking();
+        
+        if (trackingStarted) {
           button.textContent = 'Detener Seguimiento';
-          spinner.style.display = 'inline-block';
           button.classList.remove('btn-primary');
           button.classList.add('btn-danger');
           isTracking = true;
+        }
+      } catch (error) {
+        console.error('Error al iniciar seguimiento:', error);
+        showAlert('Error al iniciar el seguimiento: ' + error.message, 'danger');
+      } finally {
+        button.disabled = false;
+        if (!isTracking) {
+          spinner.style.display = 'none';
         }
       }
     }
@@ -989,7 +1001,10 @@
       initMap();
       
       // Configurar event listeners
-      document.getElementById('toggle-tracking').addEventListener('click', toggleTracking);
+            document.getElementById('toggle-tracking').addEventListener('click', function() {
+        // Pequeño retraso para permitir que el spinner se muestre
+        setTimeout(toggleTracking, 50);
+      });
       document.getElementById('save-point').addEventListener('click', savePoint);
       document.getElementById('save-route').addEventListener('click', saveRoute);
       document.getElementById('share-route').addEventListener('click', exportRoute);
