@@ -487,11 +487,13 @@
     }
 
     // Función para iniciar el seguimiento
-    function startTracking() {
-      return new Promise((resolve) => {
-        console.log('Iniciando seguimiento...');
+// Función para iniciar el seguimiento - Versión mejorada
+function startTracking() {
+    return new Promise((resolve, reject) => {
+        console.log('Solicitando permisos de geolocalización...');
         updateStatus("Obteniendo ubicación...");
         
+        // Reiniciar variables de seguimiento
         coordinates = [];
         if (polyline) polyline.setLatLngs([]);
         totalDistance = 0;
@@ -499,50 +501,110 @@
         updateDistanceInfo();
         
         const options = {
-          enableHighAccuracy: true,
-          maximumAge: 0,
-          timeout: 30000
+            enableHighAccuracy: true,  // Usar GPS si está disponible
+            maximumAge: 0,           // No usar posiciones en caché
+            timeout: 15000           // Tiempo máximo de espera (15 segundos)
         };
         
         document.getElementById('sampling-mode').textContent = "🟡 Buscando GPS...";
         document.getElementById('tracking-spinner').style.display = 'inline-block';
+        document.getElementById('accuracy').textContent = "-";
         
+        // Primero obtener posición actual
         navigator.geolocation.getCurrentPosition(
-          (position) => {
-            watchId = navigator.geolocation.watchPosition(
-              handlePositionUpdate,
-              handlePositionError,
-              options
-            );
-            updateStatus("Seguimiento iniciado correctamente");
-            console.log('Seguimiento iniciado correctamente');
-            resolve(true);
-          },
-          (error) => {
-            handlePositionError(error);
-            resolve(false);
-          },
-          options
+            (position) => {
+                console.log('Posición inicial obtenida:', position);
+                
+                // Procesar la posición inicial
+                handlePositionUpdate(position);
+                
+                // Iniciar seguimiento continuo
+                watchId = navigator.geolocation.watchPosition(
+                    handlePositionUpdate,
+                    handlePositionError,
+                    options
+                );
+                
+                updateStatus("Seguimiento iniciado correctamente");
+                console.log('Seguimiento GPS activado');
+                resolve(true);
+            },
+            (error) => {
+                console.error('Error al obtener posición inicial:', error);
+                handlePositionError(error);
+                reject(error);
+            },
+            options
         );
-      });
-    }
+    });
+}
 
-    // Función para detener el seguimiento
-    function stopTracking() {
-      if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-      }
-      updateStatus("Seguimiento detenido");
-      console.log('Seguimiento detenido');
+// Función mejorada para manejar actualización de posición
+function handlePositionUpdate(position) {
+    console.log('Nueva posición recibida:', position);
+    
+    const now = Date.now();
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    const speed = position.coords.speed !== null ? position.coords.speed : 0; // En m/s
+    const accuracy = position.coords.accuracy;
+    
+    // Actualizar interfaz
+    updateSamplingMode(speed * 3.6); // Convertir m/s a km/h
+    document.getElementById('tracking-spinner').style.display = 'none';
+    document.getElementById('accuracy').textContent = `${Math.round(accuracy)} m`;
+    
+    // Determinar intervalo de muestreo basado en velocidad
+    const minInterval = speed < 1.4 ? 15000 : speed < 5.6 ? 7000 : 3000;
+    
+    if (!lastPositionTime || now - lastPositionTime >= minInterval) {
+        processNewPosition(lat, lng, speed, accuracy);
+        lastPositionTime = now;
     }
+    
+    // Actualizar velocidad siempre
+    updateSpeedInfo(speed);
+}
 
-    // Iniciar/detener seguimiento
-    async function toggleTracking() {
-      const button = document.getElementById('toggle-tracking');
-      const spinner = document.getElementById('tracking-spinner');
-      
-      if (isTracking) {
+// Manejo mejorado de errores de geolocalización
+function handlePositionError(error) {
+    console.error('Error de geolocalización:', error);
+    document.getElementById('sampling-mode').textContent = '❌ Error GPS';
+    document.getElementById('tracking-spinner').style.display = 'none';
+    
+    let errorMessage;
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            errorMessage = "Permiso de ubicación denegado. Por favor habilita los permisos de ubicación en la configuración de tu navegador.";
+            break;
+        case error.POSITION_UNAVAILABLE:
+            errorMessage = "Información de ubicación no disponible. Asegúrate de tener activado el GPS y conexión a internet.";
+            break;
+        case error.TIMEOUT:
+            errorMessage = "Tiempo de espera agotado. El GPS está tardando demasiado en responder. Intenta en un área con mejor recepción.";
+            break;
+        default:
+            errorMessage = "Error desconocido al obtener la ubicación.";
+    }
+    
+    showAlert(errorMessage, 'danger');
+    
+    // Si estaba en modo seguimiento, detenerlo
+    if (isTracking) {
+        const button = document.getElementById('toggle-tracking');
+        button.textContent = 'Iniciar Seguimiento';
+        button.classList.remove('btn-danger');
+        button.classList.add('btn-primary');
+        isTracking = false;
+    }
+}
+
+// Modificar la función toggleTracking para mejor manejo de errores
+async function toggleTracking() {
+    const button = document.getElementById('toggle-tracking');
+    const spinner = document.getElementById('tracking-spinner');
+    
+    if (isTracking) {
         stopTracking();
         button.textContent = 'Iniciar Seguimiento';
         button.classList.remove('btn-danger');
@@ -550,53 +612,66 @@
         spinner.style.display = 'none';
         isTracking = false;
         return;
-      }
-      
-      if (!navigator.geolocation) {
-        showAlert('Tu navegador no soporta geolocalización', 'danger');
+    }
+    
+    // Verificar si el navegador soporta geolocalización
+    if (!navigator.geolocation) {
+        showAlert('Tu navegador no soporta geolocalización. Actualiza a una versión más reciente.', 'danger');
         return;
-      }
-      
-      spinner.style.display = 'inline-block';
-      button.disabled = true;
-      
-      try {
+    }
+    
+    spinner.style.display = 'inline-block';
+    button.disabled = true;
+    
+    try {
+        // Verificar permisos (nuevo enfoque más robusto)
         let permissionStatus;
-        if (navigator.permissions && navigator.permissions.query) {
-          try {
-            permissionStatus = await navigator.permissions.query({name: 'geolocation'});
-          } catch (e) {
+        try {
+            if (navigator.permissions && navigator.permissions.query) {
+                permissionStatus = await navigator.permissions.query({name: 'geolocation'});
+                
+                if (permissionStatus.state === 'denied') {
+                    showAlert('Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.', 'danger');
+                    spinner.style.display = 'none';
+                    button.disabled = false;
+                    return;
+                }
+            }
+        } catch (e) {
             console.warn('API de permisos no soportada completamente', e);
-          }
         }
         
-        if (permissionStatus && permissionStatus.state === 'denied') {
-          showAlert('Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.', 'danger');
-          spinner.style.display = 'none';
-          button.disabled = false;
-          return;
-        }
-        
+        // Iniciar seguimiento
         const trackingStarted = await startTracking();
         
         if (trackingStarted) {
-          button.textContent = 'Detener Seguimiento';
-          button.classList.remove('btn-primary');
-          button.classList.add('btn-danger');
-          isTracking = true;
+            button.textContent = 'Detener Seguimiento';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-danger');
+            isTracking = true;
         } else {
-          showAlert('No se pudo iniciar el seguimiento. Intenta nuevamente.', 'warning');
+            showAlert('No se pudo iniciar el seguimiento. Intenta nuevamente.', 'warning');
         }
-      } catch (error) {
+    } catch (error) {
         console.error('Error al iniciar seguimiento:', error);
-        showAlert('Error al iniciar el seguimiento: ' + error.message, 'danger');
-      } finally {
+        let errorMsg = 'Error al iniciar el seguimiento. ';
+        
+        if (error.code === error.PERMISSION_DENIED) {
+            errorMsg += 'Permiso de ubicación denegado.';
+        } else if (error.code === error.TIMEOUT) {
+            errorMsg += 'Tiempo de espera agotado. ¿Tienes el GPS activado?';
+        } else {
+            errorMsg += error.message;
+        }
+        
+        showAlert(errorMsg, 'danger');
+    } finally {
         button.disabled = false;
         if (!isTracking) {
-          spinner.style.display = 'none';
+            spinner.style.display = 'none';
         }
-      }
     }
+}
 
     // Función para manejar actualización de posición
     function handlePositionUpdate(position) {
@@ -1013,6 +1088,9 @@
     function updateStatus(message) {
       console.log(message);
     }
+
+     console.log('Navegador soporta geolocalización:', !!navigator.geolocation);
+console.log('Estado de permisos:', await navigator.permissions.query({name: 'geolocation'}));
 
     // Calcular distancia entre coordenadas (Haversine)
     function calculateDistance(lat1, lng1, lat2, lng2) {
