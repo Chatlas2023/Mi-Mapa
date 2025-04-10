@@ -341,7 +341,7 @@
     <ul id="saved-routes-list"></ul>
   </div>
   
-  <div class="version-control">Ver: 2.1.2</div>
+  <div class="version-control">Ver: 2.1.3</div>
   
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
    <script>
@@ -381,57 +381,62 @@
     });
 
     // Inicialización del mapa
-    function initMap() {
-      // Verificar si Leaflet se cargó correctamente
-      if (typeof L === 'undefined') {
-        console.error('Leaflet no se cargó correctamente');
-        showAlert('Error al cargar el mapa. Recarga la página.', 'danger');
-        return;
-      }
+function initMap() {
+  // Verificar si Leaflet se cargó correctamente
+  if (typeof L === 'undefined') {
+    console.error('Leaflet no se cargó correctamente');
+    showAlert('Error al cargar el mapa. Recarga la página.', 'danger');
+    return;
+  }
 
-      console.log('Inicializando mapa...');
-      
-      // Crear el mapa con vista inicial en Buenos Aires
-      map = L.map('map', {
-        zoomControl: false,
-        preferCanvas: true
-      }).setView([-34.6037, -58.3816], 13);
+  console.log('Inicializando mapa...');
+  
+  // Crear el mapa con vista inicial en Buenos Aires
+  map = L.map('map', {
+    zoomControl: false,
+    preferCanvas: true
+  }).setView([-34.6037, -58.3816], 13);
 
-      // Añadir marcador de prueba para verificar que el mapa funciona
-      L.marker([-34.6037, -58.3816]).addTo(map)
-        .bindPopup('Punto de prueba')
-        .openPopup();
+  // Añadir marcador de prueba para verificar que el mapa funciona
+  L.marker([-34.6037, -58.3816]).addTo(map)
+    .bindPopup('Punto de prueba')
+    .openPopup();
 
-      // Capas base
-      mapLayers.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
+  // Capas base
+  mapLayers.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
 
-      mapLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '© Esri'
-      });
+  mapLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '© Esri'
+  });
 
-      // Control de capas
-      document.getElementById('map-layers').addEventListener('change', function() {
-        const selectedLayer = this.value;
-        Object.values(mapLayers).forEach(layer => map.removeLayer(layer));
-        mapLayers[selectedLayer].addTo(map);
-      });
+  // Asegurarse de que el contenedor del mapa tenga las dimensiones correctas
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 0);
 
-      // Inicializar polilínea
-      polyline = L.polyline([], { color: '#007bff', weight: 5 }).addTo(map);
+  // Control de capas
+  document.getElementById('map-layers').addEventListener('change', function() {
+    const selectedLayer = this.value;
+    Object.values(mapLayers).forEach(layer => map.removeLayer(layer));
+    mapLayers[selectedLayer].addTo(map);
+  });
 
-      // Cargar datos de barrios
-      loadNeighborhoods();
-      
-      // Cargar etimologías de calles
-      loadStreetEtymology();
-      
-      // Cargar rutas guardadas
-      loadSavedRoutes();
-      
-      console.log('Mapa inicializado correctamente');
-    }
+  // Inicializar polilínea
+  polyline = L.polyline([], { color: '#007bff', weight: 5 }).addTo(map);
+
+  // Cargar datos de barrios
+  loadNeighborhoods();
+  
+  // Cargar etimologías de calles
+  loadStreetEtymology();
+  
+  // Cargar rutas guardadas
+  loadSavedRoutes();
+  
+  console.log('Mapa inicializado correctamente');
+}
 
     // Función para actualizar el modo de muestreo
     function updateSamplingMode(speed) {
@@ -1088,10 +1093,6 @@ async function toggleTracking() {
     function updateStatus(message) {
       console.log(message);
     }
-
-     console.log('Navegador soporta geolocalización:', !!navigator.geolocation);
-console.log('Estado de permisos:', await navigator.permissions.query({name: 'geolocation'}));
-
     // Calcular distancia entre coordenadas (Haversine)
     function calculateDistance(lat1, lng1, lat2, lng2) {
       const R = 6371e3;
