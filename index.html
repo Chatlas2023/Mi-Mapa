@@ -381,15 +381,16 @@
     });
 
     // Inicialización del mapa
-    function initMap() {
-      map = L.map('map', {
-        zoomControl: false
-      }).setView([-34.6037, -58.3816], 13);
+function initMap() {
+    map = L.map('map', {
+        zoomControl: false,
+        preferCanvas: true // Mejor rendimiento para muchos marcadores
+    }).setView([-34.6037, -58.3816], 13);
 
       // Capas base
-      mapLayers.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    mapLayers.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
+    }).addTo(map);
 
       mapLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: '© Esri'
@@ -561,143 +562,134 @@
         }
     }
 
-    // Manejar actualización de posición - VERSIÓN MEJORADA
-    function handlePositionUpdate(position) {
-      const now = Date.now();
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      const speed = position.coords.speed ? position.coords.speed * 3.6 : 0; // km/h
-      const accuracy = position.coords.accuracy;
-      
-      // Mostrar precisión en la interfaz
-      document.getElementById('accuracy').textContent = `${accuracy.toFixed(1)} m`;
-      
-      // Verificar precisión (si la precisión es mayor a 100m, puede ser poco útil)
-      if (accuracy > 100) {
-        console.warn(`Precisión baja: ${accuracy} metros`);
-        document.getElementById('sampling-mode').textContent = "⚠️ Baja precisión";
-      } else {
-        document.getElementById('tracking-spinner').style.display = 'none';
-      }
-      
-      // Solo procesar si tenemos coordenadas válidas
-      if (isNaN(lat) || isNaN(lng)) {
-        console.error('Coordenadas inválidas:', lat, lng);
-        return;
-      }
-      
-      // Muestreo adaptativo basado en velocidad
-      const minInterval = speed < 5 ? 15000 : speed < 20 ? 7000 : 3000;
-      
-      if (!lastPositionTime || now - lastPositionTime >= minInterval) {
+ // Función para manejar actualización de posición - VERSIÓN CORREGIDA
+function handlePositionUpdate(position) {
+    const now = Date.now();
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    const speed = position.coords.speed; // En m/s
+    const accuracy = position.coords.accuracy;
+    
+    // Ocultar spinner al obtener la primera posición
+    document.getElementById('tracking-spinner').style.display = 'none';
+    document.getElementById('accuracy').textContent = `${Math.round(accuracy)} m`;
+    
+    // Determinar intervalo de muestreo basado en velocidad
+    const minInterval = speed < 1.4 ? 15000 : speed < 5.6 ? 7000 : 3000; // 5 km/h = 1.4 m/s, 20 km/h = 5.6 m/s
+    
+    if (!lastPositionTime || now - lastPositionTime >= minInterval) {
         processNewPosition(lat, lng, speed, accuracy);
         lastPositionTime = now;
-      }
-      
-      updateSpeedInfo(speed);
     }
+    
+    // Forzar actualización de velocidad incluso si no hay nueva posición
+    updateSpeedInfo(speed);
+}
 
-    // Procesar nueva posición
-    function processNewPosition(lat, lng, speed, accuracy) {
-      if (coordinates.length === 0 || 
-          calculateDistance(coordinates[coordinates.length-1].lat, 
-                          coordinates[coordinates.length-1].lng, 
-                          lat, lng) > 10) {
-        coordinates.push({ lat, lng });
-        polyline.addLatLng([lat, lng]);
-        
-        if (coordinates.length > 1) {
-          const lastCoord = coordinates[coordinates.length-2];
-          totalDistance += calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng) / 1000;
-          updateDistanceInfo();
-        }
-      }
-      
-      if (!userMarker) {
-        userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
-      } else {
-        userMarker.setLatLng([lat, lng]);
-      }
-      
-      if (!precisionCircle) {
-        precisionCircle = L.circle([lat, lng], {
-          radius: accuracy,
-          color: '#007bff',
-          fillColor: '#007bff',
-          fillOpacity: 0.1
+// Función para procesar nueva posición - VERSIÓN CORREGIDA
+function processNewPosition(lat, lng, speed, accuracy) {
+    // Crear o actualizar marcador de usuario
+    if (!userMarker) {
+        userMarker = L.marker([lat, lng], { 
+            icon: userIcon,
+            zIndexOffset: 1000 
         }).addTo(map);
-      } else {
-        precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
-      }
-      
-      if (coordinates.length < 5 || coordinates.length % 10 === 0) {
-        map.setView([lat, lng], map.getZoom());
-      }
-      
-      findNeighborhood(lat, lng);
-      getWeather(lat, lng);
-      getStreetInfo(lat, lng);
+        
+        // Centrar el mapa en la posición inicial
+        map.setView([lat, lng], 16);
+    } else {
+        userMarker.setLatLng([lat, lng]);
     }
+    
+    // Actualizar círculo de precisión
+    if (!precisionCircle) {
+        precisionCircle = L.circle([lat, lng], {
+            radius: accuracy,
+            color: '#007bff',
+            fillColor: '#007bff',
+            fillOpacity: 0.2,
+            weight: 2
+        }).addTo(map);
+    } else {
+        precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
+    }
+    
+    // Agregar coordenada a la ruta
+    coordinates.push({ lat, lng });
+    polyline.setLatLngs(coordinates.map(coord => [coord.lat, coord.lng]));
+    
+    // Calcular distancia si hay más de un punto
+    if (coordinates.length > 1) {
+        const lastCoord = coordinates[coordinates.length-2];
+        totalDistance += calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng) / 1000;
+        updateDistanceInfo();
+    }
+    
+    // Actualizar información de velocidad
+    updateSpeedInfo(speed);
+    
+    // Obtener información adicional
+    findNeighborhood(lat, lng);
+    getWeather(lat, lng);
+    getStreetInfo(lat, lng);
+    
+    // Actualizar vista del mapa periódicamente
+    if (coordinates.length % 5 === 0) {
+        map.setView([lat, lng]);
+    }
+}
 
     // Manejar errores de geolocalización - VERSIÓN MEJORADA
-    function handlePositionError(error) {
-      console.error('Error de geolocalización:', error);
-      document.getElementById('sampling-mode').textContent = '❌ Error GPS';
-      document.getElementById('tracking-spinner').style.display = 'none';
-      
-      let errorMessage;
-      switch(error.code) {
+function handlePositionError(error) {
+    console.error('Error de geolocalización:', error);
+    document.getElementById('sampling-mode').textContent = '❌ Error GPS';
+    document.getElementById('tracking-spinner').style.display = 'none';
+    
+    let errorMessage;
+    switch(error.code) {
         case error.PERMISSION_DENIED:
-          errorMessage = "Permiso de ubicación denegado. Por favor habilita los permisos de ubicación en tu navegador.";
-          break;
+            errorMessage = "Permiso de ubicación denegado. Por favor habilita los permisos de ubicación.";
+            break;
         case error.POSITION_UNAVAILABLE:
-          errorMessage = "No se puede obtener la ubicación. Verifica tu conexión a internet o activa el GPS.";
-          break;
+            errorMessage = "Información de ubicación no disponible. ¿Tienes el GPS activado?";
+            break;
         case error.TIMEOUT:
-          errorMessage = "Tiempo de espera agotado. El GPS está tardando demasiado en responder.";
-          break;
+            errorMessage = "Tiempo de espera agotado. El GPS está tardando demasiado en responder.";
+            break;
         default:
-          errorMessage = "Error desconocido al obtener la ubicación.";
-      }
-      
-      showAlert(errorMessage, 'danger');
-      
-      // Restablecer el estado de seguimiento
-      const button = document.getElementById('toggle-tracking');
-      button.textContent = 'Iniciar Seguimiento';
-      button.classList.remove('btn-danger');
-      button.classList.add('btn-primary');
-      isTracking = false;
-      
-      // Intentar obtener la posición nuevamente después de 5 segundos si estábamos en modo tracking
-      if (isTracking) {
-        setTimeout(() => {
-          if (isTracking) {
-            console.log("Reintentando obtener ubicación...");
-            startTracking();
-          }
-        }, 5000);
-      }
+            errorMessage = "Error desconocido al obtener la ubicación.";
     }
+    
+    showAlert(errorMessage, 'danger');
+    console.log("Coordenadas actuales:", coordinates);
+    console.log("Precisión actual:", document.getElementById('accuracy').textContent);
+}
 
     // Actualizar información de velocidad
-    function updateSpeedInfo(speed) {
-      currentSpeed = Math.round(speed);
-      document.getElementById('current-speed').textContent = `${currentSpeed} km/h`;
-      
-      if (speed > 0) {
-        speedValues.push(speed);
+function updateSpeedInfo(speed) {
+    // Convertir m/s a km/h si es necesario
+    currentSpeed = speed !== null ? Math.round(speed * 3.6) : 0;
+    document.getElementById('current-speed').textContent = `${currentSpeed} km/h`;
+    
+    // Calcular velocidad promedio
+    if (currentSpeed > 0) {
+        speedValues.push(currentSpeed);
         if (speedValues.length > 10) speedValues.shift();
         avgSpeed = Math.round(speedValues.reduce((a, b) => a + b, 0) / speedValues.length);
         document.getElementById('avg-speed').textContent = `${avgSpeed} km/h`;
-      }
-      
-      let mode;
-      if (speed < 5) mode = "🟢 Eco (15s)";
-      else if (speed < 20) mode = "🟡 Normal (7s)";
-      else mode = "🔴 Precisión (3s)";
-      document.getElementById('sampling-mode').textContent = mode;
     }
+    
+function updateSamplingMode(speed) {
+    let mode;
+    if (speed < 5) {
+        mode = "🟢 Eco (15s)";
+    } else if (speed < 20) {
+        mode = "🟡 Normal (7s)";
+    } else {
+        mode = "🔴 Precisión (3s)";
+    }
+    document.getElementById('sampling-mode').textContent = mode;
+}
 
     // Actualizar información de distancia
     function updateDistanceInfo() {
