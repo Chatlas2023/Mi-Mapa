@@ -394,8 +394,8 @@ function initMap() {
 
       mapLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: '© Esri'
-      });
-
+          }).addTo(map);
+      
       // Control de capas
       document.getElementById('map-layers').addEventListener('change', function() {
         const selectedLayer = this.value;
@@ -569,6 +569,7 @@ function handlePositionUpdate(position) {
     const lng = position.coords.longitude;
     const speed = position.coords.speed; // En m/s
     const accuracy = position.coords.accuracy;
+   updateSamplingMode(speed * 3.6); // Convertir m/s a km/h
     
     // Ocultar spinner al obtener la primera posición
     document.getElementById('tracking-spinner').style.display = 'none';
@@ -679,7 +680,13 @@ function updateSpeedInfo(speed) {
         document.getElementById('avg-speed').textContent = `${avgSpeed} km/h`;
     }
     
-function updateSamplingMode(speed) {
+
+
+    // Actualizar información de distancia
+    function updateDistanceInfo() {
+      document.getElementById('distance').textContent = `${totalDistance.toFixed(2)} km`;
+    }
+  function updateSamplingMode(speed) {
     let mode;
     if (speed < 5) {
         mode = "🟢 Eco (15s)";
@@ -690,11 +697,6 @@ function updateSamplingMode(speed) {
     }
     document.getElementById('sampling-mode').textContent = mode;
 }
-
-    // Actualizar información de distancia
-    function updateDistanceInfo() {
-      document.getElementById('distance').textContent = `${totalDistance.toFixed(2)} km`;
-    }
 
     // Encontrar barrio
     function findNeighborhood(lat, lng) {
