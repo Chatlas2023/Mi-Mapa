@@ -6,7 +6,6 @@
   <title>GeoTraker - Seguimiento Inteligente</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    /* Estilos anteriores se mantienen igual */
     .version-control {
       position: absolute;
       left: 0;
@@ -95,15 +94,6 @@
       padding: 0;
       margin: 0;
     }
-    #toggle-tracking:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-#tracking-spinner {
-  margin-left: 8px;
-  vertical-align: middle;
-}
 
     #saved-routes-list li {
       padding: 8px;
@@ -250,6 +240,20 @@
       border-top: 3px solid #4dabf7;
     }
 
+    #toggle-tracking:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    #toggle-tracking.connecting {
+      background-color: #ffc107;
+      color: #212529;
+    }
+
+    #toggle-tracking.connecting:hover {
+      background-color: #e0a800;
+    }
+
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -352,7 +356,7 @@
     <ul id="saved-routes-list"></ul>
   </div>
   
-  <div class="version-control">Ver: 2.1.5</div>
+  <div class="version-control">Ver: 2.1.6</div>
   
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -419,18 +423,20 @@
         Object.values(mapLayers).forEach(layer => map.removeLayer(layer));
         mapLayers[selectedLayer].addTo(map);
       });
-document.getElementById('new-route').addEventListener('click', function() {
-  if (confirm('¿Iniciar una nueva ruta? Esto borrará el recorrido actual.')) {
-    coordinates = [];
-    totalDistance = 0;
-    speedValues = [];
-    polyline.setLatLngs([]);
-    updateDistanceInfo();
-    document.getElementById('current-speed').textContent = '0 km/h';
-    document.getElementById('avg-speed').textContent = '0 km/h';
-    showAlert('Preparado para nueva ruta', 'success');
-  }
-});
+
+      document.getElementById('new-route').addEventListener('click', function() {
+        if (confirm('¿Iniciar una nueva ruta? Esto borrará el recorrido actual.')) {
+          coordinates = [];
+          totalDistance = 0;
+          speedValues = [];
+          polyline.setLatLngs([]);
+          updateDistanceInfo();
+          document.getElementById('current-speed').textContent = '0 km/h';
+          document.getElementById('avg-speed').textContent = '0 km/h';
+          showAlert('Preparado para nueva ruta', 'success');
+        }
+      });
+
       // Inicializar polilínea
       polyline = L.polyline([], { color: '#007bff', weight: 5 }).addTo(map);
 
@@ -501,19 +507,9 @@ document.getElementById('new-route').addEventListener('click', function() {
           icon: userIcon,
           zIndexOffset: 1000 
         }).addTo(map);
-        
-        // Centrar el mapa en la posición inicial
-        map.setView([lat, lng], 16);
       } else {
         userMarker.setLatLng([lat, lng]);
       }
-      if (coordinates.length % 3 === 0) {  // Centrar cada 3 puntos
-  map.setView([lat, lng], map.getZoom(), {
-    animate: true,
-    duration: 1,
-    easeLinearity: 0.5
-  });
-}
       
       // Actualizar círculo de precisión
       if (!precisionCircle) {
@@ -528,29 +524,43 @@ document.getElementById('new-route').addEventListener('click', function() {
         precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
       }
       
-      // Agregar coordenada a la ruta
-      coordinates.push({ lat, lng });
-      polyline.setLatLngs(coordinates.map(coord => [coord.lat, coord.lng]));
+      // Solo agregar nueva coordenada si es significativamente diferente
+      const MIN_DISTANCE = 5; // metros
+      let shouldAddPoint = true;
+      if (coordinates.length > 0) {
+        const lastCoord = coordinates[coordinates.length-1];
+        const distance = calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng);
+        shouldAddPoint = distance > MIN_DISTANCE;
+      }
       
-      // Calcular distancia si hay más de un punto
-      if (coordinates.length > 1) {
-        const lastCoord = coordinates[coordinates.length-2];
-        totalDistance += calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng) / 1000;
-        updateDistanceInfo();
+      if (shouldAddPoint) {
+        coordinates.push({ lat, lng });
+        polyline.setLatLngs(coordinates.map(coord => [coord.lat, coord.lng]));
+        
+        // Calcular distancia si hay más de un punto
+        if (coordinates.length > 1) {
+          const lastCoord = coordinates[coordinates.length-2];
+          totalDistance += calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng) / 1000;
+          updateDistanceInfo();
+        }
       }
       
       // Actualizar información de velocidad
       updateSpeedInfo(speed);
       
+      // Centrar mapa suavemente cada 3 puntos
+      if (coordinates.length % 3 === 0) {
+        map.setView([lat, lng], map.getZoom(), {
+          animate: true,
+          duration: 0.5,
+          easeLinearity: 0.25
+        });
+      }
+      
       // Obtener información adicional
       findNeighborhood(lat, lng);
       getWeather(lat, lng);
       getStreetInfo(lat, lng);
-      
-      // Actualizar vista del mapa periódicamente
-      if (coordinates.length % 5 === 0) {
-        map.setView([lat, lng]);
-      }
     }
 
     // Función para manejar actualización de posición
@@ -583,6 +593,11 @@ document.getElementById('new-route').addEventListener('click', function() {
       document.getElementById('sampling-mode').textContent = '❌ Error GPS';
       document.getElementById('tracking-spinner').style.display = 'none';
       
+      if (!navigator.onLine) {
+        showAlert("Sin conexión a internet. Algunas funciones pueden no estar disponibles", "warning");
+        return;
+      }
+      
       let errorMessage;
       switch(error.code) {
         case error.PERMISSION_DENIED:
@@ -607,119 +622,141 @@ document.getElementById('new-route').addEventListener('click', function() {
     }
 
     // Función para iniciar el seguimiento
-function startTracking() {
-  return new Promise((resolve, reject) => {
-    console.log('Iniciando seguimiento GPS...');
-    
-    document.getElementById('sampling-mode').textContent = "🟡 Buscando GPS...";
-    document.getElementById('tracking-spinner').style.display = 'inline-block';
-    document.getElementById('accuracy').textContent = "-";
-    
-    const options = {
-      enableHighAccuracy: true,
-      maximumAge: 0,
-      timeout: 15000
-    };
-    
-    // Primero obtener posición actual
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        // Procesar siempre la primera posición, incluso si hay coordenadas previas
-        handlePositionUpdate(position);
+    function startTracking() {
+      return new Promise((resolve, reject) => {
+        console.log('Iniciando seguimiento GPS...');
         
-        // Iniciar seguimiento continuo
-        watchId = navigator.geolocation.watchPosition(
-          handlePositionUpdate,
-          handlePositionError,
+        document.getElementById('sampling-mode').textContent = "🟡 Buscando GPS...";
+        document.getElementById('tracking-spinner').style.display = 'inline-block';
+        document.getElementById('accuracy').textContent = "-";
+        
+        const options = {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 15000
+        };
+        
+        // Primero obtener posición actual
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // Procesar siempre la primera posición al reanudar
+            if (!isTracking || coordinates.length === 0) {
+              handlePositionUpdate(position);
+            }
+            
+            // Iniciar seguimiento continuo
+            watchId = navigator.geolocation.watchPosition(
+              handlePositionUpdate,
+              handlePositionError,
+              options
+            );
+            
+            console.log('Seguimiento GPS activado');
+            resolve(true);
+          },
+          (error) => {
+            handlePositionError(error);
+            reject(error);
+          },
           options
         );
-        
-        console.log('Seguimiento GPS activado');
-        resolve(true);
-      },
-      (error) => {
-        handlePositionError(error);
-        reject(error);
-      },
-      options
-    );
-  });
-}
+      });
+    }
 
     // Función para detener el seguimiento
-function stopTracking() {
-  if (watchId !== null) {
-    navigator.geolocation.clearWatch(watchId);
-    watchId = null;
-  }
-  lastPositionTime = null;
-  isTracking = false;
-  document.getElementById('sampling-mode').textContent = "🟢 Inactivo";
-  showAlert('Seguimiento detenido', 'info');
-  
-  // No reiniciamos coordinates, totalDistance, etc. para permitir continuar
-}
-
-    // Alternar seguimiento
-async function toggleTracking() {
-  const button = document.getElementById('toggle-tracking');
-  const spinner = document.getElementById('tracking-spinner');
-  
-  if (isTracking) {
-    stopTracking();
-    button.textContent = coordinates.length > 0 ? 'Continuar Seguimiento' : 'Iniciar Seguimiento';
-    button.classList.remove('btn-danger');
-    button.classList.add('btn-primary');
-    spinner.style.display = 'none';
-    return;
-  }
-  
-  // Verificar soporte de geolocalización
-  if (!navigator.geolocation) {
-    showAlert('Geolocalización no soportada en este navegador', 'danger');
-    return;
-  }
-  
-  button.disabled = true;
-  spinner.style.display = 'inline-block';
-  
-  try {
-    // Verificar permisos (mejorado)
-    let permissionGranted = true;
-    if (navigator.permissions && navigator.permissions.query) {
-      const permissionStatus = await navigator.permissions.query({name: 'geolocation'});
-      permissionGranted = permissionStatus.state !== 'denied';
-    }
-    
-    if (!permissionGranted) {
-      showAlert('Permiso de ubicación denegado. Habilítalo en configuración.', 'danger');
-      return;
-    }
-    
-    // Iniciar seguimiento
-    const success = await startTracking();
-    if (success) {
-      isTracking = true;
-      button.textContent = 'Detener Seguimiento';
-      button.classList.remove('btn-primary');
-      button.classList.add('btn-danger');
+    function stopTracking() {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      lastPositionTime = null;
+      isTracking = false;
       
-      // Centrar mapa en última posición si existe
-      if (coordinates.length > 0) {
-        const lastPos = coordinates[coordinates.length-1];
-        map.setView([lastPos.lat, lastPos.lng], map.getZoom());
+      // Actualizar UI
+      document.getElementById('sampling-mode').textContent = "🟢 Inactivo";
+      document.getElementById('tracking-spinner').style.display = 'none';
+      
+      // Solo mostrar alerta si había un seguimiento activo
+      if (watchId !== null) {
+        showAlert('Seguimiento detenido', 'info');
       }
     }
-  } catch (error) {
-    console.error('Error en seguimiento:', error);
-    showAlert(`Error: ${error.message}`, 'danger');
-  } finally {
-    button.disabled = false;
-    if (!isTracking) {
-      spinner.style.display = 'none';
+
+    // Alternar seguimiento
+    async function toggleTracking() {
+      const button = document.getElementById('toggle-tracking');
+      const spinner = document.getElementById('tracking-spinner');
+      
+      if (isTracking) {
+        // Detener seguimiento
+        stopTracking();
+        button.textContent = coordinates.length > 0 ? 'Continuar Seguimiento' : 'Iniciar Seguimiento';
+        button.classList.remove('btn-danger');
+        button.classList.add('btn-primary');
+        spinner.style.display = 'none';
+        return;
+      }
+      
+      // Verificar soporte de geolocalización
+      if (!navigator.geolocation) {
+        showAlert('Geolocalización no soportada en este navegador', 'danger');
+        return;
+      }
+      
+      button.disabled = true;
+      spinner.style.display = 'inline-block';
+      button.classList.add('connecting');
+      
+      try {
+        // Verificar permisos
+        let permissionGranted = true;
+        if (navigator.permissions && navigator.permissions.query) {
+          try {
+            const permissionStatus = await navigator.permissions.query({name: 'geolocation'});
+            permissionGranted = permissionStatus.state === 'granted';
+            if (permissionStatus.state === 'prompt') {
+              // Si está en prompt, esperamos un poco para dar tiempo al usuario
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          } catch (e) {
+            console.warn('Error al verificar permisos:', e);
+          }
+        }
+        
+        if (!permissionGranted) {
+          showAlert('Permiso de ubicación requerido. Por favor habilítalo.', 'danger');
+          return;
+        }
+        
+        // Iniciar seguimiento
+        const success = await startTracking();
+        if (success) {
+          isTracking = true;
+          button.textContent = 'Detener Seguimiento';
+          button.classList.remove('btn-primary', 'connecting');
+          button.classList.add('btn-danger');
+          
+          // Centrar mapa en última posición si existe
+          if (coordinates.length > 0) {
+            const lastPos = coordinates[coordinates.length-1];
+            map.setView([lastPos.lat, lastPos.lng], map.getZoom(), {
+              animate: true,
+              duration: 0.5
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error en seguimiento:', error);
+        showAlert(`Error al iniciar seguimiento: ${error.message}`, 'danger');
+      } finally {
+        button.disabled = false;
+        button.classList.remove('connecting');
+        if (!isTracking) {
+          spinner.style.display = 'none';
+        }
+      }
     }
-  }
-}
+
     // Actualizar información de velocidad
     function updateSpeedInfo(speed) {
       // Convertir m/s a km/h si es necesario
