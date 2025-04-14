@@ -448,7 +448,7 @@ body.dark-mode #routeName::placeholder {
         div.style.position = "absolute";
         div.style.left = "0";
         div.style.bottom = "0";
-        div.innerHTML = " Ver: 1.1.10 ";
+        div.innerHTML = " Ver: 1.6.1 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -648,7 +648,7 @@ function processPosition(position) {
           const weather = data.weather[0].description;
           
           document.getElementById('weatherInfo').textContent = 
-            `${temp} (ST: ${feelsLike})`;
+            `${temp}`;
         }
       } catch (error) {
         console.error('Error obteniendo clima:', error);
