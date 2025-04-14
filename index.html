@@ -633,23 +633,28 @@ function processPosition(position) {
     }).addTo(map);
   }
 }
+    let lastWeatherUpdate = 0;
+const WEATHER_UPDATE_INTERVAL = 10 * 60 * 1000; // 10 minutos en milisegundos
 
     // Función para obtener información del clima
     async function getWeather(lat, lng) {
+        const now = Date.now();
+  
+  // Solo actualizar si ha pasado el tiempo definido
+  if (now - lastWeatherUpdate < WEATHER_UPDATE_INTERVAL) {
+    return;
+  }
       try {
         const response = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&units=metric&lang=es&appid=${weatherApiKey}`
         );
         const data = await response.json();
         
-        if (data.main) {
-          const temp = data.main.temp.toFixed(1);
-          const feelsLike = data.main.feels_like.toFixed(1);
-          const weather = data.weather[0].description;
-          
-          document.getElementById('weatherInfo').textContent = 
-            `${temp}`;
-        }
+    if (data.main) {
+      const temp = data.main.temp.toFixed(1);
+      document.getElementById('weatherInfo').textContent = `${temp}`;
+      lastWeatherUpdate = now; // Actualizar el timestamp de la última consulta
+    }
       } catch (error) {
         console.error('Error obteniendo clima:', error);
         document.getElementById('weatherInfo').textContent = "-";
@@ -909,6 +914,7 @@ function clearHistory() {
   document.getElementById('weatherInfo').textContent = '-';
   document.getElementById('street-name').textContent = '';
   document.getElementById('street-etymology').textContent = '';
+  lastWeatherUpdate = 0; // Resetear para que la próxima actualización sea inmediata
 }
 
     // Función para iniciar un nuevo recorrido (con confirmación)
@@ -1049,16 +1055,18 @@ function loadRoute(index) {
 // Modificar el event listener de visibilitychange
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
+    // Cuando la app pasa a segundo plano
     releaseWakeLock();
     if (watchId) {
       navigator.geolocation.clearWatch(watchId);
       watchId = null;
     }
   } else if (isCapturing) {
+    // Cuando la app vuelve a primer plano
     acquireWakeLock();
     getLocation();
+    lastWeatherUpdate = 0; // <-- Forzar actualización del clima en la próxima posición
   }
- });
 });
   </script>
 </body>
