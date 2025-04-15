@@ -304,30 +304,27 @@
     }
 
     // Función para encontrar barrio
-    function findNeighborhood(lat, lng) {
-      if (!neighborhoodsLayer || neighborhoodsLayer.getLayers().length === 0) {
-        console.log("Capa de barrios no disponible");
-        return;
+function findNeighborhood(lat, lng) {
+  if (!neighborhoodsLayer || !neighborhoodsLayer.getLayers) {
+    console.log("La capa de barrios no está cargada correctamente");
+    return;
+  }
+
+  const point = L.latLng(lat, lng);
+  let foundNeighborhood = null;
+
+  neighborhoodsLayer.eachLayer(layer => {
+    try {
+      if (layer.feature && layer.getBounds && layer.getBounds().contains(point)) {
+        foundNeighborhood = layer.feature.properties.Name;
       }
-
-      const point = L.latLng(lat, lng);
-      let found = false;
-
-      neighborhoodsLayer.eachLayer(layer => {
-        try {
-          if (layer.getBounds().contains(point)) {
-            updateNeighborhoodName(layer.feature.properties.Name);
-            found = true;
-          }
-        } catch (e) {
-          console.error("Error verificando barrio:", e);
-        }
-      });
-
-      if (!found) {
-        console.log("No se encontró barrio para:", lat, lng);
-      }
+    } catch (e) {
+      console.error("Error verificando barrio:", e);
     }
+  });
+
+  updateNeighborhoodName(foundNeighborhood || "Fuera de barrio conocido");
+}
 
     // Función para actualizar nombre de barrio
     function updateNeighborhoodName(name) {
@@ -448,6 +445,10 @@ function processPosition(position) {
   const lng = position.coords.longitude;
   const speed = position.coords.speed;
   const accuracy = position.coords.accuracy;
+    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    console.error("Coordenadas inválidas:", lat, lng);
+    return;
+  }
 
   addCoordinate(lat, lng, speed);
   updateMap(lat, lng);
