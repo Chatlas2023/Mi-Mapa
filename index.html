@@ -313,7 +313,7 @@ body.dark-mode #routeName::placeholder {
 #savedRoutesList li span {
   flex-grow: 1; /* Allow the text to take up available space */
   margin-right: 10px; /* Add some space between the text and the buttons */
-}
+
     }
     #savedRoutesList li button {
         margin-top: 0; /* Remove the default top margin for the buttons */
@@ -1067,6 +1067,7 @@ document.addEventListener('visibilitychange', () => {
     getLocation();
     lastWeatherUpdate = 0; // <-- Forzar actualización del clima en la próxima posición
   }
+ });
 });
   </script>
 </body>
