@@ -612,7 +612,7 @@ function processPosition(position) {
 
   addCoordinate(lat, lng, speed);
   updateMap(lat, lng);
-  updateStatus(`Ubicación: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+  updateStatus(`Lat: ${lat.toFixed(6)} | Long: ${lng.toFixed(6)}`);
   updateSpeed(speed);
   findNeighborhood(lat, lng);
   getWeather(lat, lng);
