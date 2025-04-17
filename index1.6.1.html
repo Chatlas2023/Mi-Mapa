@@ -362,7 +362,7 @@ body.dark-mode #routeName::placeholder {
   <div id="map">
 <div id="speedPanel">
   <div class="speed-row">
-    <span>Vel.:</span>
+    <span>Veloc.:</span>
     <span class="speed-value" id="currentSpeed">0</span>
     <span>km/h</span>
   </div>
@@ -429,6 +429,8 @@ body.dark-mode #routeName::placeholder {
     let routeStartTime = null; // Para guardar el momento de inicio
     let savedSpeeds = []; // Para guardar velocidades cuando la app está en segundo plano
     let streetsData = []; // Para almacenar datos de etimología de calles
+    // Variable global para almacenar el último barrio conocido
+    let lastKnownNeighborhood = 'Buenos Aires';
     const weatherApiKey = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // Clave API de OpenWeatherMap
 
     // Definir el ícono personalizado
@@ -480,7 +482,7 @@ body.dark-mode #routeName::placeholder {
       L.control.version().addTo(map);
 
       // Cargar los barrios desde el archivo GeoJSON
-      fetch('https://raw.githubusercontent.com/Chatlas2023/Mi-Mapa/main/Barrios_GRANDE.geojson')
+      fetch('https://raw.githubusercontent.com/Chatlas2023/Mi-Mapa/main/Barrios_AMBA.geojson')
         .then(response => response.json())
         .then(data => {
           neighborhoodsLayer = L.geoJSON(data, {
@@ -510,29 +512,36 @@ body.dark-mode #routeName::placeholder {
         .catch(error => console.error('Error cargando etimologías de calles:', error));
     }
 
-    // Función para actualizar el nombre del barrio
-    function updateNeighborhoodName(name) {
-      const neighborhoodNameElement = document.getElementById('neighborhoodName');
-      if (neighborhoodNameElement) {
-        neighborhoodNameElement.textContent = `Barrio: ${name}`;
-      }
-    }
+ function updateNeighborhoodName(name) {
+  const neighborhoodNameElement = document.getElementById('neighborhoodName');
+  if (neighborhoodNameElement) {
+    lastKnownNeighborhood = name || 'Buenos Aires'; // Actualiza el último barrio conocido
+    neighborhoodNameElement.textContent = `Barrio: ${lastKnownNeighborhood}`;
+  }
+}
 
-    // Función para encontrar el barrio en el que se encuentra el usuario
-    function findNeighborhood(lat, lng) {
-      if (!neighborhoodsLayer) return;
-      const point = L.latLng(lat, lng);
-      let found = false;
-      neighborhoodsLayer.eachLayer(layer => {
-        if (layer.getBounds().contains(point)) {
-          updateNeighborhoodName(layer.feature.properties.Name);
-          found = true;
-        }
-      });
-      if (!found) {
-        updateNeighborhoodName('Desconocido');
-      }
+// Función para encontrar el barrio en el que se encuentra el usuario
+function findNeighborhood(lat, lng) {
+  if (!neighborhoodsLayer) {
+    updateNeighborhoodName(lastKnownNeighborhood); // Mantener el último conocido
+    return;
+  }
+  
+  const point = L.latLng(lat, lng);
+  let found = false;
+  
+  neighborhoodsLayer.eachLayer(layer => {
+    if (layer.feature && layer.feature.geometry && layer.getBounds().contains(point)) {
+      updateNeighborhoodName(layer.feature.properties.Name);
+      found = true;
     }
+  });
+  
+  if (!found) {
+    // No actualizamos el nombre si no encontramos un barrio nuevo
+    // Así mantiene el último nombre válido que encontró
+  }
+}
 
     // Función para solicitar el Wake Lock
     async function acquireWakeLock() {
