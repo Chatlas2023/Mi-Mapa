@@ -50,12 +50,7 @@ body.dark-mode #samplingMode {
       margin-bottom: 10px;
     }
     #status,
-    #distance {
-      font-size: 14px;
-      font-weight: bold;
-      text-align: center;
-      margin: 0;
-    }
+
     @media (min-width: 601px) and (orientation: landscape) {
       #infoContainer {
         flex-direction: row;
@@ -140,8 +135,8 @@ body.dark-mode #speedPanel {
   /* Esto es clave: desactiva cualquier herencia de filtro */
   filter: none !important;
 }
-body.dark-mode #speedPanel .speed-row span,
-body.dark-mode #speedPanel .speed-value {
+body.dark-mode # .speed-row span,
+body.dark-mode # .speed-value {
   color: white !important;
   text-shadow: none !important;
 }
@@ -151,7 +146,7 @@ body.dark-mode #speedPanel .speed-value {
     body.dark-mode #avgSpeedIndicator {
       border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad promedio */
     }
-#speedPanel {
+# {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -175,16 +170,16 @@ body.dark-mode #speedPanel .speed-value {
   margin: 0 5px;
 }
 
-body.dark-mode #speedPanel {
+body.dark-mode # {
   background: rgba(33, 33, 33, 0.9) !important;
   color: white !important;
 }
 
-body.dark-mode #speedPanel .speed-row span {
+body.dark-mode # .speed-row span {
   color: white !important;
 }
 
-body.dark-mode #speedPanel .speed-value {
+body.dark-mode # .speed-value {
   color: white !important;
 }
     body.dark-mode {
@@ -196,10 +191,6 @@ body.dark-mode #speedPanel .speed-value {
       color: #ffffff;
     }
     body.dark-mode #status,
-    body.dark-mode #distance {
-      color: #ffffff !important;
-    }
-    /* Asegurar que los textos dentro de los indicadores cambien de color */
     body.dark-mode #speedIndicator #speedValue,
     body.dark-mode #speedIndicator #speedUnit,
     body.dark-mode #avgSpeedIndicator #avgSpeedValue,
@@ -371,6 +362,11 @@ body.dark-mode #routeName::placeholder {
     <span class="speed-value" id="averageSpeed">0</span>
     <span>km/h</span>
   </div>
+    <div class="speed-row">
+    <span>Dist.:</span>
+    <span class="speed-value" id="distanceValue">0</span>
+    <span>km</span>
+  </div>
   <div class="speed-row">
     <span>Clima:</span>
     <span class="speed-value" id="weatherInfo">-</span>
@@ -385,7 +381,6 @@ body.dark-mode #routeName::placeholder {
   
   <div id="infoContainer">
     <div id="status">Obteniendo ubicación...</div>
-    <div id="distance">Distancia total recorrida: 0 km</div>
   </div>
   
   <div class="buttons">
@@ -617,7 +612,7 @@ function processPosition(position) {
 
   addCoordinate(lat, lng, speed);
   updateMap(lat, lng);
-  updateStatus(`Ubicación: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+  updateStatus(`Lat: ${lat.toFixed(6)} | Long: ${lng.toFixed(6)}`);
   updateSpeed(speed);
   findNeighborhood(lat, lng);
   getWeather(lat, lng);
@@ -734,6 +729,7 @@ function updateSpeed(speed) {
 
   document.getElementById('currentSpeed').textContent = Math.round(speedKmh);
   document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
+  document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
 }
 
     // Detener o reanudar la captura de coordenadas
@@ -822,7 +818,7 @@ function addCoordinate(lat, lng, speed) {
       coordinates.push({ lat, lng });
       totalDistance += distance / 1000;
       saveCoordinates();
-      updateDistance();
+      document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
     }
   }
 }
@@ -894,14 +890,7 @@ function updateMap(lat, lng) {
         map.setView([lastCoord.lat, lastCoord.lng], 13);
       }
     }
-
-    // Actualizar la distancia total en la interfaz
-    function updateDistance() {
-      document.getElementById('distance').textContent =
-        `Distancia total recorrida: ${totalDistance.toFixed(2)} km`;
-    }
-
-    // Actualizar el estado en la interfaz
+   // Actualizar el estado en la interfaz
     function updateStatus(message) {
       document.getElementById('status').textContent = message;
     }
@@ -916,14 +905,15 @@ function clearHistory() {
   routeStartTime = null;
   polyline.setLatLngs([]);
   saveCoordinates();
-  updateDistance();
-  updateStatus("Historial limpiado.");
+  // Actualiza directamente el panel:
+  document.getElementById('distanceValue').textContent = '0';
   document.getElementById('currentSpeed').textContent = '0';
   document.getElementById('averageSpeed').textContent = '0';
   document.getElementById('weatherInfo').textContent = '-';
   document.getElementById('street-name').textContent = '';
   document.getElementById('street-etymology').textContent = '';
-  lastWeatherUpdate = 0; // Resetear para que la próxima actualización sea inmediata
+  updateStatus("Historial limpiado.");
+  lastWeatherUpdate = 0;
 }
 
     // Función para iniciar un nuevo recorrido (con confirmación)
@@ -1028,12 +1018,14 @@ function loadRoute(index) {
       const lastCoord = coordinates[coordinates.length - 1];
       map.setView([lastCoord.lat, lastCoord.lng], 13);
     }
-    updateDistance();
+    document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
     updateStatus(`Ruta "${route.name}" cargada correctamente.`);
     
     // Actualizar los indicadores de velocidad
     document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
     document.getElementById('currentSpeed').textContent = '0'; // Resetear velocidad actual
+    document.getElementById('distanceValue').textContent = totalDistance.toFixed(1); // <-- Nueva línea
+
   }
 }
     // Función para eliminar una ruta guardada
@@ -1052,7 +1044,7 @@ function loadRoute(index) {
       initMap();
       loadCoordinates();
       loadMapWithSavedCoordinates();
-      updateDistance();
+      document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
       getLocation();
       applyDarkModePreference();
       loadSavedRoutes(); // Cargar las rutas guardadas
