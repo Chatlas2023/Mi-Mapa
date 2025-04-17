@@ -50,12 +50,7 @@ body.dark-mode #samplingMode {
       margin-bottom: 10px;
     }
     #status,
-    #distance {
-      font-size: 14px;
-      font-weight: bold;
-      text-align: center;
-      margin: 0;
-    }
+
     @media (min-width: 601px) and (orientation: landscape) {
       #infoContainer {
         flex-direction: row;
@@ -196,10 +191,6 @@ body.dark-mode # .speed-value {
       color: #ffffff;
     }
     body.dark-mode #status,
-    body.dark-mode #distance {
-      color: #ffffff !important;
-    }
-    /* Asegurar que los textos dentro de los indicadores cambien de color */
     body.dark-mode #speedIndicator #speedValue,
     body.dark-mode #speedIndicator #speedUnit,
     body.dark-mode #avgSpeedIndicator #avgSpeedValue,
@@ -390,7 +381,6 @@ body.dark-mode #routeName::placeholder {
   
   <div id="infoContainer">
     <div id="status">Obteniendo ubicación...</div>
-    <div id="distance">Distancia total recorrida: 0 km</div>
   </div>
   
   <div class="buttons">
@@ -900,14 +890,7 @@ function updateMap(lat, lng) {
         map.setView([lastCoord.lat, lastCoord.lng], 13);
       }
     }
-
-    // Actualizar la distancia total en la interfaz
-    function updateDistance() {
-      document.getElementById('distance').textContent =
-        `Distancia total recorrida: ${totalDistance.toFixed(2)} km`;
-    }
-
-    // Actualizar el estado en la interfaz
+   // Actualizar el estado en la interfaz
     function updateStatus(message) {
       document.getElementById('status').textContent = message;
     }
