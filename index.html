@@ -129,7 +129,7 @@ body.dark-mode #map {
 }
 
 /* Añade estas nuevas reglas para el panel de velocidad en modo oscuro */
-body.dark-mode # {
+body.dark-mode #speedPanel {
   background: rgba(33, 33, 33, 0.95) !important;
   color: white !important;
   /* Esto es clave: desactiva cualquier herencia de filtro */
@@ -818,7 +818,7 @@ function addCoordinate(lat, lng, speed) {
       coordinates.push({ lat, lng });
       totalDistance += distance / 1000;
       saveCoordinates();
-      updateDistance();
+      document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
     }
   }
 }
@@ -905,15 +905,15 @@ function clearHistory() {
   routeStartTime = null;
   polyline.setLatLngs([]);
   saveCoordinates();
-  updateDistance();
-  updateStatus("Historial limpiado.");
+  // Actualiza directamente el panel:
+  document.getElementById('distanceValue').textContent = '0';
   document.getElementById('currentSpeed').textContent = '0';
   document.getElementById('averageSpeed').textContent = '0';
-  document.getElementById('distanceValue').textContent = '0'; // <-- Nueva línea
   document.getElementById('weatherInfo').textContent = '-';
   document.getElementById('street-name').textContent = '';
   document.getElementById('street-etymology').textContent = '';
-  lastWeatherUpdate = 0; // Resetear para que la próxima actualización sea inmediata
+  updateStatus("Historial limpiado.");
+  lastWeatherUpdate = 0;
 }
 
     // Función para iniciar un nuevo recorrido (con confirmación)
@@ -1018,7 +1018,7 @@ function loadRoute(index) {
       const lastCoord = coordinates[coordinates.length - 1];
       map.setView([lastCoord.lat, lastCoord.lng], 13);
     }
-    updateDistance();
+    document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
     updateStatus(`Ruta "${route.name}" cargada correctamente.`);
     
     // Actualizar los indicadores de velocidad
@@ -1044,7 +1044,7 @@ function loadRoute(index) {
       initMap();
       loadCoordinates();
       loadMapWithSavedCoordinates();
-      updateDistance();
+      document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
       getLocation();
       applyDarkModePreference();
       loadSavedRoutes(); // Cargar las rutas guardadas
