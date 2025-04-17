@@ -134,14 +134,14 @@ body.dark-mode #map {
 }
 
 /* Añade estas nuevas reglas para el panel de velocidad en modo oscuro */
-body.dark-mode #speedPanel {
+body.dark-mode # {
   background: rgba(33, 33, 33, 0.95) !important;
   color: white !important;
   /* Esto es clave: desactiva cualquier herencia de filtro */
   filter: none !important;
 }
-body.dark-mode #speedPanel .speed-row span,
-body.dark-mode #speedPanel .speed-value {
+body.dark-mode # .speed-row span,
+body.dark-mode # .speed-value {
   color: white !important;
   text-shadow: none !important;
 }
@@ -151,7 +151,7 @@ body.dark-mode #speedPanel .speed-value {
     body.dark-mode #avgSpeedIndicator {
       border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad promedio */
     }
-#speedPanel {
+# {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -175,16 +175,16 @@ body.dark-mode #speedPanel .speed-value {
   margin: 0 5px;
 }
 
-body.dark-mode #speedPanel {
+body.dark-mode # {
   background: rgba(33, 33, 33, 0.9) !important;
   color: white !important;
 }
 
-body.dark-mode #speedPanel .speed-row span {
+body.dark-mode # .speed-row span {
   color: white !important;
 }
 
-body.dark-mode #speedPanel .speed-value {
+body.dark-mode # .speed-value {
   color: white !important;
 }
     body.dark-mode {
@@ -370,6 +370,11 @@ body.dark-mode #routeName::placeholder {
     <span>Prom.:</span>
     <span class="speed-value" id="averageSpeed">0</span>
     <span>km/h</span>
+  </div>
+    <div class="speed-row">
+    <span>Dist.:</span>
+    <span class="speed-value" id="distanceValue">0</span>
+    <span>km</span>
   </div>
   <div class="speed-row">
     <span>Clima:</span>
@@ -734,6 +739,7 @@ function updateSpeed(speed) {
 
   document.getElementById('currentSpeed').textContent = Math.round(speedKmh);
   document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
+  document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
 }
 
     // Detener o reanudar la captura de coordenadas
@@ -920,6 +926,7 @@ function clearHistory() {
   updateStatus("Historial limpiado.");
   document.getElementById('currentSpeed').textContent = '0';
   document.getElementById('averageSpeed').textContent = '0';
+  document.getElementById('distanceValue').textContent = '0'; // <-- Nueva línea
   document.getElementById('weatherInfo').textContent = '-';
   document.getElementById('street-name').textContent = '';
   document.getElementById('street-etymology').textContent = '';
@@ -1034,6 +1041,8 @@ function loadRoute(index) {
     // Actualizar los indicadores de velocidad
     document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
     document.getElementById('currentSpeed').textContent = '0'; // Resetear velocidad actual
+    document.getElementById('distanceValue').textContent = totalDistance.toFixed(1); // <-- Nueva línea
+
   }
 }
     // Función para eliminar una ruta guardada
