@@ -693,7 +693,18 @@ const WEATHER_UPDATE_INTERVAL = 10 * 60 * 1000; // 10 minutos en milisegundos
         document.getElementById('street-etymology').textContent = "Error al cargar información de la calle.";
       }
     }
-
+async function shortenUrl(longUrl) {
+  try {
+    const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
+    if (response.ok) {
+      return await response.text();
+    }
+    return longUrl; // Si falla, devolver la URL original
+  } catch (error) {
+    console.error('Error acortando URL:', error);
+    return longUrl; // Si hay error, devolver la URL original
+  }
+}
     // Función para actualizar la velocidad en el círculo
 function updateSpeed(speed) {
   const speedKmh = speed ? speed * 3.6 : 0;
@@ -928,28 +939,28 @@ function clearHistory() {
     }
 
     // Función para generar el enlace de Google Maps
-    function generateGoogleMapsLink() {
-      if (coordinates.length === 0) return null;
-      const origin = `${coordinates[0].lat},${coordinates[0].lng}`;
-      const destination = `${coordinates[coordinates.length - 1].lat},${coordinates[coordinates.length - 1].lng}`;
-      let waypoints = '';
-      if (coordinates.length > 2) {
-        waypoints = coordinates.slice(1, -1).map(coord => `${coord.lat},${coord.lng}`).join('|');
-      }
-      return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
-    }
+function generateGoogleMapsLink() {
+  if (coordinates.length === 0) return null;
+  
+  // Simplificamos el enlace usando solo origen y destino
+  const origin = `${coordinates[0].lat},${coordinates[0].lng}`;
+  const destination = `${coordinates[coordinates.length - 1].lat},${coordinates[coordinates.length - 1].lng}`;
+  
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+}
 
     // Función para compartir el enlace por WhatsApp
-    function shareViaWhatsApp() {
-      const link = generateGoogleMapsLink();
-      if (link) {
-        const message = `Aquí está mi recorrido: ${link}`;
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
-      } else {
-        alert("No hay coordenadas para compartir.");
-      }
-    }
+async function shareViaWhatsApp() {
+  const link = generateGoogleMapsLink();
+  if (link) {
+    const shortUrl = await shortenUrl(link);
+    const message = `Aquí está mi recorrido: ${shortUrl}\nDistancia: ${totalDistance.toFixed(2)} km\nVeloc. promedio: ${Math.round(avgSpeed)} km/h`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  } else {
+    alert("No hay coordenadas para compartir.");
+  }
+}
 
     // Función para guardar la ruta con un nombre descriptivo
 function saveRoute() {
@@ -1050,7 +1061,9 @@ function loadRoute(index) {
       loadSavedRoutes(); // Cargar las rutas guardadas
       document.getElementById('clearButton').addEventListener('click', startNewRoute);
       document.getElementById('stopButton').addEventListener('click', toggleCapture);
-      document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
+      document.getElementById('shareButton').addEventListener('click', async () => {
+  await shareViaWhatsApp();
+});
       document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
       document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
 // Modificar el event listener de visibilitychange
