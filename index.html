@@ -25,6 +25,21 @@
       margin-bottom: 5px;
       position: relative;
     }
+    #mapLayers {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 5px;
+  height: 32px;
+  border: 1px solid #ccc;
+  background-color: white;
+  color: black;
+}
+
+body.dark-mode #mapLayers {
+  background-color: #444;
+  color: white;
+  border-color: #555;
+}
     /* Estilo para el modo de muestreo */
 #samplingMode {
   font-size: 16px;            /* Texto más grande */
@@ -391,6 +406,11 @@ body.dark-mode #routeName::placeholder {
     <input type="text" id="routeName" placeholder="Nombre de la ruta">
     <button id="saveRouteButton">Guardar ruta</button>
   </div>
+  <select id="mapLayers">
+  <option value="osm">Estándar</option>
+  <option value="satellite">Satélite</option>
+  <option value="weather">Clima</option>
+  </select>
   
   <div id="street-info-container">
     <div id="street-name"></div>
@@ -426,6 +446,17 @@ body.dark-mode #routeName::placeholder {
     let streetsData = []; // Para almacenar datos de etimología de calles
     // Variable global para almacenar el último barrio conocido
     let lastKnownNeighborhood = 'Buenos Aires';
+
+    // En la sección de variables globales
+let layers = {
+  osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }),
+  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '© Esri'
+  }),
+  weather: null // Se inicializará cuando se seleccione
+};
     const weatherApiKey = "2368e0b9c1a77bad8b4bb745bfe21ecb"; // Clave API de OpenWeatherMap
 
     // Definir el ícono personalizado
@@ -445,7 +476,7 @@ body.dark-mode #routeName::placeholder {
         div.style.position = "absolute";
         div.style.left = "0";
         div.style.bottom = "0";
-        div.innerHTML = " Ver: 1.6.1 ";
+        div.innerHTML = " Ver: 1.6.2 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -468,6 +499,7 @@ body.dark-mode #routeName::placeholder {
       map = L.map('map', {
         zoomControl: false
       }).setView([0, 0], 15);
+        layers.osm.addTo(map);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
@@ -1115,6 +1147,32 @@ function loadRoute(index) {
 });
       document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
       document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
+      document.getElementById("mapLayers").addEventListener("change", function() {
+  let selectedLayer = this.value;
+  
+  // Eliminar todas las capas base
+  map.eachLayer(layer => {
+    if (layer === layers.osm || layer === layers.satellite || layer === layers.weather) {
+      map.removeLayer(layer);
+    }
+  });
+  
+  if (selectedLayer === "weather") {
+    // Cargar capa de clima (usando OpenWeatherMap)
+    layers.weather = L.tileLayer('https://tile.openweathermap.org/map/{layer}/{z}/{x}/{y}.png?appid={apiKey}', {
+      layer: 'temp_new',
+      apiKey: weatherApiKey,
+      attribution: 'Map data © OpenWeatherMap',
+      opacity: 0.7
+    }).addTo(map);
+    
+    // Mantener la capa OSM debajo para referencia
+    layers.osm.addTo(map);
+  } else {
+    // Añadir la capa seleccionada (OSM o Satélite)
+    layers[selectedLayer].addTo(map);
+  }
+});
 // Modificar el event listener de visibilitychange
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
