@@ -420,15 +420,15 @@
     const weatherApiKey = "2368e0b9c1a77bad8b4bb745bfe21ecb";
 
     // Capas del mapa
-    let layers = {
-      osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }),
-      satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '© Esri'
-      }),
-      weather: null
-    };
+let layers = {
+  osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }),
+  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '© Esri'
+  }),
+  windy: null // Se inicializará cuando se seleccione
+};
 
     // Ícono personalizado
     const userIcon = L.icon({
@@ -505,29 +505,30 @@
     }
 
     // Cambiar capas del mapa
-    function changeMapLayer(selectedLayer) {
-      // Eliminar capas base existentes
-      map.eachLayer(layer => {
-        if (layer === layers.osm || layer === layers.satellite || layer === layers.weather) {
-          map.removeLayer(layer);
-        }
-      });
-      
-      if (selectedLayer === "weather") {
-        // Capa de clima usando Windy (alternativa)
-        layers.weather = L.tileLayer('https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid={apiKey}', {
-          apiKey: weatherApiKey,
-          attribution: 'Weather data © OpenWeatherMap',
-          opacity: 0.7
-        }).addTo(map);
-        
-        // Mantener capa OSM debajo para referencia
-        layers.osm.addTo(map);
-      } else {
-        // Capas normales (OSM o Satélite)
-        layers[selectedLayer].addTo(map);
-      }
+function changeMapLayer(selectedLayer) {
+  // Eliminar capas base existentes
+  map.eachLayer(layer => {
+    if (layer === layers.osm || layer === layers.satellite || layer === layers.windy) {
+      map.removeLayer(layer);
     }
+  });
+  
+  if (selectedLayer === "windy") {
+    // Capa de clima usando Windy
+    layers.windy = L.tileLayer('https://tile.windy.com/tiles/windy-web/{z}/{x}/{y}.png', {
+      attribution: 'Weather data © Windy',
+      opacity: 0.7,
+      minZoom: 2,
+      maxZoom: 18
+    }).addTo(map);
+    
+    // Mantener capa OSM debajo para referencia
+    layers.osm.addTo(map);
+  } else {
+    // Capas normales (OSM o Satélite)
+    layers[selectedLayer].addTo(map);
+  }
+}
 
     function updateNeighborhoodName(name) {
       const neighborhoodNameElement = document.getElementById('neighborhoodName');
