@@ -427,7 +427,7 @@ let layers = {
   satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     attribution: '© Esri'
   }),
-  windy: null // Se inicializará cuando se seleccione
+  weather: null // Se inicializará cuando se seleccione
 };
 
     // Ícono personalizado
@@ -508,22 +508,42 @@ let layers = {
 function changeMapLayer(selectedLayer) {
   // Eliminar capas base existentes
   map.eachLayer(layer => {
-    if (layer === layers.osm || layer === layers.satellite || layer === layers.windy) {
+    if (layer === layers.osm || layer === layers.satellite || layer === layers.weather) {
       map.removeLayer(layer);
     }
   });
-  
-  if (selectedLayer === "windy") {
-    // Capa de clima usando Windy
-    layers.windy = L.tileLayer('https://tile.windy.com/tiles/windy-web/{z}/{x}/{y}.png', {
-      attribution: 'Weather data © Windy',
-      opacity: 0.7,
-      minZoom: 2,
-      maxZoom: 18
-    }).addTo(map);
-    
-    // Mantener capa OSM debajo para referencia
-    layers.osm.addTo(map);
+
+  if (selectedLayer === "weather") {
+    // Inicializar el mapa de Windy
+    if (!layers.weather) {
+      const windyOptions = {
+        key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms', // Tu API key de Windy
+        lat: map.getCenter().lat,
+        lon: map.getCenter().lng,
+        zoom: map.getZoom(),
+        overlay: 'temp', // Mostrar temperatura por defecto
+        timeline: false // Deshabilitar la línea de tiempo para integración
+      };
+
+      windyInit(windyOptions, function(windyAPI) {
+        layers.weather = windyAPI.map;
+        windyAPI.map.setView(map.getCenter(), map.getZoom());
+        
+        // Añadir capa OSM debajo para referencia
+        layers.osm.addTo(map);
+        layers.osm.setOpacity(0.7);
+        
+        // Escuchar cambios de vista para sincronizar
+        map.on('moveend', function() {
+          windyAPI.map.setView(map.getCenter(), map.getZoom());
+        });
+      });
+    } else {
+      // Si ya está inicializado, simplemente añadirlo
+      layers.weather.addTo(map);
+      layers.osm.addTo(map);
+      layers.osm.setOpacity(0.7);
+    }
   } else {
     // Capas normales (OSM o Satélite)
     layers[selectedLayer].addTo(map);
@@ -1083,6 +1103,12 @@ function changeMapLayer(selectedLayer) {
     // Inicialización
     document.addEventListener('DOMContentLoaded', () => {
       initMap();
+      if (!document.getElementById('windy-script')) {
+  const windyScript = document.createElement('script');
+  windyScript.id = 'windy-script';
+  windyScript.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
+  document.head.appendChild(windyScript);
+}
       loadCoordinates();
       loadMapWithSavedCoordinates();
       document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
