@@ -508,42 +508,18 @@ let layers = {
 function changeMapLayer(selectedLayer) {
   // Eliminar capas base existentes
   map.eachLayer(layer => {
-    if (layer === layers.osm || layer === layers.satellite || layer === layers.weather) {
+    if (layer === layers.osm || layer === layers.satellite) {
       map.removeLayer(layer);
     }
   });
 
   if (selectedLayer === "weather") {
-    // Inicializar el mapa de Windy
-    if (!layers.weather) {
-      const windyOptions = {
-        key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms', // Tu API key de Windy
-        lat: map.getCenter().lat,
-        lon: map.getCenter().lng,
-        zoom: map.getZoom(),
-        overlay: 'temp', // Mostrar temperatura por defecto
-        timeline: false // Deshabilitar la línea de tiempo para integración
-      };
-
-      windyInit(windyOptions, function(windyAPI) {
-        layers.weather = windyAPI.map;
-        windyAPI.map.setView(map.getCenter(), map.getZoom());
-        
-        // Añadir capa OSM debajo para referencia
-        layers.osm.addTo(map);
-        layers.osm.setOpacity(0.7);
-        
-        // Escuchar cambios de vista para sincronizar
-        map.on('moveend', function() {
-          windyAPI.map.setView(map.getCenter(), map.getZoom());
-        });
-      });
-    } else {
-      // Si ya está inicializado, simplemente añadirlo
-      layers.weather.addTo(map);
-      layers.osm.addTo(map);
-      layers.osm.setOpacity(0.7);
-    }
+    // Abrir mapaWindy.html en una nueva pestaña
+    window.open('mapaWindy.html', '_blank');
+    
+    // Volver a cargar la capa OSM (para que el mapa principal siga funcionando)
+    layers.osm.addTo(map);
+    document.getElementById('mapLayers').value = 'osm'; // Resetear el selector
   } else {
     // Capas normales (OSM o Satélite)
     layers[selectedLayer].addTo(map);
