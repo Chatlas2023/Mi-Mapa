@@ -399,7 +399,8 @@
     // Variables globales
 
     const streetCache = {};
-
+    
+    let wasCapturingBeforeHidden = false; // Para recordar si el rastreo estaba activo
     let map;
     let polyline;
     let coordinates = [];
@@ -807,30 +808,25 @@ async function getStreetInfo(lat, lng) {
       document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
     }
 
-    function toggleCapture() {
-      const stopButton = document.getElementById('stopButton');
-      if (isCapturing) {
-        if (watchId) {
-          navigator.geolocation.clearWatch(watchId);
-          watchId = null;
-        }
-        stopButton.textContent = "Continuar captura";
-        stopButton.classList.add('continue');
-        updateStatus("Captura de coordenadas detenida.");
-        releaseWakeLock();
-        shouldAdjustZoom = false;
-        savedSpeeds = [...speedValues];
-      } else {
-        speedValues = [...savedSpeeds];
-        savedSpeeds = [];
-        getLocation();
-        stopButton.textContent = "Detener captura";
-        stopButton.classList.remove('continue');
-        updateStatus("Captura de coordenadas reanudada.");
-        shouldAdjustZoom = true;
-      }
-      isCapturing = !isCapturing;
+function toggleCapture() {
+  const stopButton = document.getElementById('stopButton');
+  if (isCapturing) {
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
     }
+    stopButton.textContent = "Continuar captura";
+    stopButton.classList.add('continue');
+    updateStatus("Captura pausada (app en segundo plano)");
+    releaseWakeLock();
+  } else {
+    getLocation();
+    stopButton.textContent = "Pausar captura";
+    stopButton.classList.remove('continue');
+    updateStatus("Captura reanudada");
+  }
+  isCapturing = !isCapturing;
+}
 
     function toggleDarkMode() {
       const body = document.body;
@@ -1104,19 +1100,20 @@ async function getStreetInfo(lat, lng) {
         changeMapLayer(this.value);
       });
 
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          releaseWakeLock();
-          if (watchId) {
-            navigator.geolocation.clearWatch(watchId);
-            watchId = null;
-          }
-        } else if (isCapturing) {
-          acquireWakeLock();
-          getLocation();
-          lastWeatherUpdate = 0;
-        }
-      });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    // Pausar automáticamente si estaba activo
+    if (isCapturing) {
+      toggleCapture(); // Pausa el rastreo y actualiza la UI
+      wasCapturingBeforeHidden = true; // Bandera para recordar el estado
+    }
+    releaseWakeLock();
+  } else if (wasCapturingBeforeHidden) {
+    // Reanudar solo si estaba activo antes de minimizar
+    toggleCapture(); // Reanuda el rastreo
+    wasCapturingBeforeHidden = false;
+  }
+});
     });
   </script>
 </body>
