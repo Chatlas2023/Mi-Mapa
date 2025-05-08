@@ -982,17 +982,27 @@ function toggleCapture() {
       return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
     }
 
-    async function shareViaWhatsApp() {
-      const link = generateGoogleMapsLink();
-      if (link) {
-        const shortUrl = await shortenUrl(link);
-        const message = `Aquí está mi recorrido: ${shortUrl}\nDistancia: ${totalDistance.toFixed(2)} km\nVeloc. promedio: ${Math.round(avgSpeed)} km/h`;
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
-      } else {
-        alert("No hay coordenadas para compartir.");
-      }
+async function shareViaWhatsApp() {
+  try {
+    const link = generateGoogleMapsLink();
+    if (!link) {
+      alert("No hay coordenadas para compartir.");
+      return;
     }
+    
+    // Usamos el enlace directamente sin acortar (puedes implementar un acortador si lo necesitas)
+    const message = `🚗 Mi Recorrido GPS 🗺️\n\n🔹 Distancia: ${totalDistance.toFixed(2)} km\n🔸 Veloc. promedio: ${Math.round(avgSpeed)} km/h\n\nVer ruta: ${link}`;
+    
+    // Formato correcto para WhatsApp
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    
+    // Abrir en una nueva pestaña
+    window.open(whatsappUrl, '_blank');
+  } catch (error) {
+    console.error("Error al compartir:", error);
+    alert("Ocurrió un error al intentar compartir la ruta.");
+  }
+}
 
     function saveRoute() {
       const routeName = document.getElementById('routeName').value.trim();
