@@ -478,7 +478,7 @@ let layers = {
       L.control.version().addTo(map);
 
       // Cargar los barrios
-      fetch('https://raw.githubusercontent.com/Chatlas2023/Mi-Mapa/main/Barrios_AMBA.geojson')
+      fetch('https://raw.githubusercontent.com/Chatlas2023/Mi-Mapa/main/Barrios_GRANDE.geojson')
         .then(response => response.json())
         .then(data => {
           neighborhoodsLayer = L.geoJSON(data, {
