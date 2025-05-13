@@ -530,61 +530,67 @@ function changeMapLayer(selectedLayer) {
   }
 }
 
-    function updateNeighborhoodName(name) {
-      const neighborhoodNameElement = document.getElementById('neighborhoodName');
-      if (neighborhoodNameElement) {
-        if (name && name.trim() !== '') {
-          lastKnownNeighborhood = name;
-        }
-        neighborhoodNameElement.textContent = `Barrio: ${lastKnownNeighborhood || 'Cargando...'}`;
-      }
+function updateNeighborhoodName(name) {
+  const neighborhoodNameElement = document.getElementById('neighborhoodName');
+  if (neighborhoodNameElement) {
+    if (name && name.trim() !== '') {
+      lastKnownNeighborhood = name;
+      neighborhoodNameElement.textContent = `Barrio: ${name}`;
+    } else {
+      // Solo usar lastKnownNeighborhood si no tenemos un nombre nuevo
+      neighborhoodNameElement.textContent = `Barrio: ${lastKnownNeighborhood || 'Cargando...'}`;
     }
+  }
+}
 
-    function findNeighborhood(lat, lng) {
-      if (!neighborhoodsLayer) {
-        fetchLocationDetails(lat, lng);
-        return;
-      }
+function findNeighborhood(lat, lng) {
+  if (!neighborhoodsLayer) {
+    fetchLocationDetails(lat, lng);
+    return;
+  }
 
-      const point = L.latLng(lat, lng);
-      let found = false;
+  const point = L.latLng(lat, lng);
+  let found = false;
 
-      neighborhoodsLayer.eachLayer(layer => {
-        if (layer.feature && layer.getBounds().contains(point)) {
-          updateNeighborhoodName(layer.feature.properties.Name);
-          found = true;
-        }
+  neighborhoodsLayer.eachLayer(layer => {
+    if (layer.feature && layer.getBounds().contains(point)) {
+      updateNeighborhoodName(layer.feature.properties.Name);
+      found = true;
+    }
+  });
+
+  if (!found) {
+    // Cambiar esto para que no dependa de lastKnownNeighborhood
+    updateNeighborhoodName("Buscando información...");
+    fetchLocationDetails(lat, lng);
+  }
+}
+
+async function fetchLocationDetails(lat, lng) {
+  const now = Date.now();
+  const delay = Math.max(0, 1000 - (now - lastNominatimCall));
+
+  setTimeout(() => {
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es`)
+      .then(response => response.json())
+      .then(data => {
+        const neighborhood = data.address?.neighbourhood || 
+                           data.address?.suburb || 
+                           data.address?.city_district || 
+                           data.address?.county ||
+                           data.address?.city || // Añadir ciudad como última opción
+                           "Área no especificada"; // Cambiar el mensaje por defecto
+        
+        updateNeighborhoodName(neighborhood);
+      })
+      .catch(error => {
+        console.error("Error con Nominatim:", error);
+        updateNeighborhoodName("Ubicación desconocida");
       });
 
-      if (!found) {
-        fetchLocationDetails(lat, lng);
-      }
-    }
-
-    let lastNominatimCall = 0;
-
-    function fetchLocationDetails(lat, lng) {
-      const now = Date.now();
-      const delay = Math.max(0, 1000 - (now - lastNominatimCall));
-
-      setTimeout(() => {
-        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es`)
-          .then(response => response.json())
-          .then(data => {
-            const neighborhood = data.address?.neighbourhood || 
-                               data.address?.suburb || 
-                               data.address?.city_district || 
-                               data.address?.county;
-            updateNeighborhoodName(neighborhood || "Área no cubierta");
-          })
-          .catch(error => {
-            console.error("Error con Nominatim:", error);
-            updateNeighborhoodName("Ubicación desconocida");
-          });
-
-        lastNominatimCall = Date.now();
-      }, delay);
-    }
+    lastNominatimCall = Date.now();
+  }, delay);
+}
 
     async function getLocationDetails(lat, lng) {
       try {
