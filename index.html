@@ -420,7 +420,7 @@
     let routeStartTime = null;
     let savedSpeeds = [];
     let streetsData = [];
-    let lastKnownNeighborhood = 'Buenos Aires';
+    let lastKnownNeighborhood = 'Cargando...';
     const weatherApiKey = "2368e0b9c1a77bad8b4bb745bfe21ecb";
 
     // Capas del mapa
@@ -490,11 +490,11 @@ let layers = {
                 fillOpacity: 0.1
               };
             },
-            onEachFeature: function(feature, layer) {
-              layer.on('click', function(e) {
-                updateNeighborhoodName(feature.properties.Name);
-              });
-            }
+onEachFeature: function(feature, layer) {
+  layer.on('click', function(e) {
+    updateNeighborhoodName(feature.properties.Name, true); // Marcar como acción del usuario
+  });
+}
           }).addTo(map);
         })
         .catch(error => console.error('Error cargando los barrios:', error));
@@ -530,21 +530,26 @@ function changeMapLayer(selectedLayer) {
   }
 }
 
-function updateNeighborhoodName(name) {
+function updateNeighborhoodName(name, isUserAction = false) {
   const neighborhoodNameElement = document.getElementById('neighborhoodName');
   if (neighborhoodNameElement) {
     if (name && name.trim() !== '') {
       lastKnownNeighborhood = name;
       neighborhoodNameElement.textContent = `Barrio: ${name}`;
+      
+      // Si es una acción del usuario, guardar en localStorage
+      if (isUserAction) {
+        localStorage.setItem('lastNeighborhood', name);
+      }
     } else {
-      // Solo usar lastKnownNeighborhood si no tenemos un nombre nuevo
-      neighborhoodNameElement.textContent = `Barrio: ${lastKnownNeighborhood || 'Cargando...'}`;
+      neighborhoodNameElement.textContent = `Barrio: ${lastKnownNeighborhood}`;
     }
   }
 }
 
 function findNeighborhood(lat, lng) {
   if (!neighborhoodsLayer) {
+    console.log('Capas de barrios no cargadas aún');
     fetchLocationDetails(lat, lng);
     return;
   }
@@ -553,15 +558,15 @@ function findNeighborhood(lat, lng) {
   let found = false;
 
   neighborhoodsLayer.eachLayer(layer => {
-    if (layer.feature && layer.getBounds().contains(point)) {
+    if (layer.feature && layer.feature.geometry && layer.getBounds().contains(point)) {
+      console.log('Barrio encontrado en GeoJSON:', layer.feature.properties.Name);
       updateNeighborhoodName(layer.feature.properties.Name);
       found = true;
     }
   });
 
   if (!found) {
-    // Cambiar esto para que no dependa de lastKnownNeighborhood
-    updateNeighborhoodName("Buscando información...");
+    console.log('Barrio no encontrado en GeoJSON, consultando Nominatim...');
     fetchLocationDetails(lat, lng);
   }
 }
@@ -1115,6 +1120,12 @@ async function shareViaWhatsApp() {
       document.getElementById("mapLayers").addEventListener("change", function() {
         changeMapLayer(this.value);
       });
+        // Cargar el último barrio guardado
+  const savedNeighborhood = localStorage.getItem('lastNeighborhood');
+  if (savedNeighborhood) {
+    lastKnownNeighborhood = savedNeighborhood;
+    document.getElementById('neighborhoodName').textContent = `Barrio: ${lastKnownNeighborhood}`;
+  }
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
