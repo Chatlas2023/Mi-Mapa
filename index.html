@@ -924,7 +924,7 @@ async function getWeather(lat, lng, forceUpdate = false) {
           
           const result = {
             name: streetName,
-            etymology: streetData?.Etimologia || "No hay información etimológica disponible para esta calle."
+            etymology: streetData?.Etimologia || " "
           };
           
           streetCache[cacheKey] = result;
