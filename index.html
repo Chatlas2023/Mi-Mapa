@@ -37,15 +37,6 @@
   max-height: 90vh; /* Máximo */
 }
 
-#map {
-  width: 100%;
-  height: 100%; /* Ocupa todo el contenedor */
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  margin-bottom: 5px;
-  position: relative;
-}
-
 /* Media queries ajustadas */
 @media (max-width: 600px) {
   #mapContainer {
@@ -59,12 +50,9 @@
   }
 }
     #map {
-      width: 100%;
-      flex-grow: 1;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-bottom: 5px;
-      position: relative;
+  width: 100%;
+  height: 100%;
+  position: relative;
     }
     #mapLayers {
       padding: 6px 12px;
@@ -107,6 +95,13 @@
         justify-content: center;
         gap: 20px;
       }
+      #infoContainer, .buttons, #street-info-container, #savedRoutesContainer {
+  margin-top: 0;
+  padding-top: 0;
+}
+      #infoContainer {
+  margin-bottom: 5px;
+}
       #status, #distance {
         font-size: 14px;
       }
@@ -517,8 +512,13 @@ let startY, startHeight;
 function setupResize() {
   const resizeHandle = document.getElementById('resizeHandle');
   const mapContainer = document.getElementById('mapContainer');
-  const body = document.body;
   
+  // Cargar altura guardada si existe
+  const savedHeight = localStorage.getItem('mapHeight');
+  if (savedHeight) {
+    mapContainer.style.height = savedHeight;
+  }
+
   resizeHandle.addEventListener('mousedown', initResize);
   resizeHandle.addEventListener('touchstart', initResize, { passive: false });
   
@@ -532,30 +532,31 @@ function setupResize() {
     document.addEventListener('touchmove', resize, { passive: false });
     document.addEventListener('mouseup', stopResize);
     document.addEventListener('touchend', stopResize);
-     document.body.style.userSelect = 'none';
+    
+    document.body.style.userSelect = 'none';
   }
   
-function resize(e) {
-  if (!isResizing) return;
-  e.preventDefault();
-  
-  const clientY = e.clientY || e.touches[0].clientY;
-  const dy = clientY - startY;
-  const newHeight = startHeight + dy;
-  
-  // Limitar el tamaño mínimo y máximo
-  const minHeight = window.innerHeight * 0.3; // 30% de la pantalla
-  const maxHeight = window.innerHeight * 0.9; // 90% de la pantalla
-  
-  if (newHeight >= minHeight && newHeight <= maxHeight) {
-    mapContainer.style.height = `${newHeight}px`;
-    map.invalidateSize(); // Actualizar el mapa de Leaflet
-  }
-  
-  if (e.cancelable) {
+  function resize(e) {
+    if (!isResizing) return;
     e.preventDefault();
+    
+    const clientY = e.clientY || e.touches[0].clientY;
+    const dy = clientY - startY;
+    let newHeight = startHeight + dy;
+    
+    // Limitar el tamaño mínimo y máximo
+    const minHeight = window.innerHeight * 0.3;
+    const maxHeight = window.innerHeight * 0.9;
+    
+    newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+    
+    mapContainer.style.height = `${newHeight}px`;
+    map.invalidateSize(); // Actualizar el mapa
+    
+    if (e.cancelable) {
+      e.preventDefault();
+    }
   }
-}
   
   function stopResize() {
     isResizing = false;
@@ -563,17 +564,9 @@ function resize(e) {
     document.removeEventListener('touchmove', resize);
     document.removeEventListener('mouseup', stopResize);
     document.removeEventListener('touchend', stopResize);
-       // Restaurar selección de texto
-    document.body.style.userSelect = '';
     
-    // Guardar la altura preferida
+    document.body.style.userSelect = '';
     localStorage.setItem('mapHeight', mapContainer.style.height);
-  }
-  
-  // Cargar altura guardada si existe
-  const savedHeight = localStorage.getItem('mapHeight');
-  if (savedHeight) {
-    mapContainer.style.height = savedHeight;
   }
 }
 
