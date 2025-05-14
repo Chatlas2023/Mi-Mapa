@@ -349,9 +349,48 @@
     opacity: 0.7;
   }
 }
+    /* Nuevos estilos para el redimensionamiento */
+#mapContainer {
+  position: relative;
+  flex-grow: 1;
+  width: 100%;
+  overflow: hidden;
+  touch-action: none; /* Importante para el desplazamiento táctil */
+}
+
+#resizeHandle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 15px;
+  background-color: rgba(0, 0, 0, 0.2);
+  cursor: ns-resize;
+  z-index: 1001;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#resizeHandle::before {
+  content: "";
+  width: 50px;
+  height: 4px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+}
+
+body.dark-mode #resizeHandle {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode #resizeHandle::before {
+  background-color: rgba(255, 255, 255, 0.5);
+}
   </style>
 </head>
 <body>
+<div id="mapContainer">
   <div id="map">
     <div id="speedPanel">
       <div class="speed-row">
@@ -379,6 +418,12 @@
     <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: #e4e8d1; padding: 4px 12px; border-radius: 5px; font-size: 22px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
       Barrio: Cargando...
     </div>
+        <div id="neighborhoodName">
+      Barrio: Cargando...
+    </div>
+  </div>
+  <div id="resizeHandle"></div>
+</div>
   </div>
   
   <div id="infoContainer">
@@ -426,6 +471,64 @@
     let lastKnownNeighborhood = 'Buscando barrio...';
     const weatherApiKey = "2368e0b9c1a77bad8b4bb745bfe21ecb";
     let lastNominatimCall = 0;
+    // Variables para el redimensionamiento
+let isResizing = false;
+let startY, startHeight;
+
+function setupResize() {
+  const resizeHandle = document.getElementById('resizeHandle');
+  const mapContainer = document.getElementById('mapContainer');
+  
+  resizeHandle.addEventListener('mousedown', initResize);
+  resizeHandle.addEventListener('touchstart', initResize, { passive: false });
+  
+  function initResize(e) {
+    e.preventDefault();
+    isResizing = true;
+    startY = e.clientY || e.touches[0].clientY;
+    startHeight = parseInt(document.defaultView.getComputedStyle(mapContainer).height, 10);
+    
+    document.addEventListener('mousemove', resize);
+    document.addEventListener('touchmove', resize, { passive: false });
+    document.addEventListener('mouseup', stopResize);
+    document.addEventListener('touchend', stopResize);
+  }
+  
+  function resize(e) {
+    if (!isResizing) return;
+    e.preventDefault();
+    
+    const clientY = e.clientY || e.touches[0].clientY;
+    const dy = clientY - startY;
+    const newHeight = startHeight + dy;
+    
+    // Limitar el tamaño mínimo y máximo
+    const minHeight = window.innerHeight * 0.3; // 30% de la pantalla
+    const maxHeight = window.innerHeight * 0.9; // 90% de la pantalla
+    
+    if (newHeight >= minHeight && newHeight <= maxHeight) {
+      mapContainer.style.height = `${newHeight}px`;
+      map.invalidateSize(); // Actualizar el mapa de Leaflet
+    }
+  }
+  
+  function stopResize() {
+    isResizing = false;
+    document.removeEventListener('mousemove', resize);
+    document.removeEventListener('touchmove', resize);
+    document.removeEventListener('mouseup', stopResize);
+    document.removeEventListener('touchend', stopResize);
+    
+    // Guardar la altura preferida
+    localStorage.setItem('mapHeight', mapContainer.style.height);
+  }
+  
+  // Cargar altura guardada si existe
+  const savedHeight = localStorage.getItem('mapHeight');
+  if (savedHeight) {
+    mapContainer.style.height = savedHeight;
+  }
+}
 
     // Capas del mapa
     let layers = {
@@ -1060,6 +1163,7 @@ async function getWeather(lat, lng, forceUpdate = false) {
         windyScript.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
         document.head.appendChild(windyScript);
       }
+      setupResize(); // Añade esta línea
       
       loadCoordinates();
       loadMapWithSavedCoordinates();
