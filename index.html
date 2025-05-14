@@ -457,9 +457,7 @@ body.dark-mode #resizeHandle::before {
       </div>
       <div id="samplingMode">Modo: --</div>
     </div>
-    <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: #e4e8d1; padding: 4px 12px; border-radius: 5px; font-size: 22px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
-      Barrio: Cargando...
-    </div>
+
         <div id="neighborhoodName">
       Barrio: Cargando...
     </div>
@@ -537,25 +535,27 @@ function setupResize() {
      document.body.style.userSelect = 'none';
   }
   
-  function resize(e) {
-    if (!isResizing) return;
-    e.preventDefault();
-    
-    const clientY = e.clientY || e.touches[0].clientY;
-    const dy = clientY - startY;
-    const newHeight = startHeight + dy;
-    
-    // Limitar el tamaño mínimo y máximo
-    const minHeight = window.innerHeight * 0.3; // 30% de la pantalla
-    const maxHeight = window.innerHeight * 0.9; // 90% de la pantalla
-    
-    if (newHeight >= minHeight && newHeight <= maxHeight) {
-      mapContainer.style.height = `${newHeight}px`;
-      map.invalidateSize(); // Actualizar el mapa de Leaflet
-        if (e.cancelable) {
-      e.preventDefault();
-    }
+function resize(e) {
+  if (!isResizing) return;
+  e.preventDefault();
+  
+  const clientY = e.clientY || e.touches[0].clientY;
+  const dy = clientY - startY;
+  const newHeight = startHeight + dy;
+  
+  // Limitar el tamaño mínimo y máximo
+  const minHeight = window.innerHeight * 0.3; // 30% de la pantalla
+  const maxHeight = window.innerHeight * 0.9; // 90% de la pantalla
+  
+  if (newHeight >= minHeight && newHeight <= maxHeight) {
+    mapContainer.style.height = `${newHeight}px`;
+    map.invalidateSize(); // Actualizar el mapa de Leaflet
   }
+  
+  if (e.cancelable) {
+    e.preventDefault();
+  }
+}
   
   function stopResize() {
     isResizing = false;
@@ -616,22 +616,49 @@ function setupResize() {
     // Inicializar el mapa
 function initMap() {
   try {
-    map = L.map('map', { zoomControl: false }).setView([0, 0], 15);
-    layers.osm.addTo(map);
-    polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
-    L.control.version().addTo(map);
-        // Agregar evento de clic al mapa
-    map.on('click', function(e) {
-      if (!isCapturing) { // Solo funciona cuando la captura está pausada
-        handleMapClick(e.latlng);
-      }
-    });
-     
-    // Cargar etimologías de calles
-    fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
-      .then(response => response.json())
-      .then(data => streetsData = data)
-      .catch(error => console.error('Error cargando etimologías:', error));
+    // Primero intenta obtener la ubicación actual
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          // Inicializa el mapa con la ubicación actual
+          map = L.map('map', { zoomControl: false }).setView([lat, lng], 15);
+          layers.osm.addTo(map);
+          polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
+          L.control.version().addTo(map);
+          
+          // Agrega el marcador del usuario
+          userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
+          
+          // Resto de la inicialización...
+          map.on('click', function(e) {
+            if (!isCapturing) {
+              handleMapClick(e.latlng);
+            }
+          });
+          
+          // Cargar etimologías de calles
+          fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
+            .then(response => response.json())
+            .then(data => streetsData = data)
+            .catch(error => console.error('Error cargando etimologías:', error));
+        },
+        (error) => {
+          console.error("Error al obtener ubicación inicial:", error);
+          // Si falla, usa una ubicación por defecto (ej: Buenos Aires)
+          map = L.map('map', { zoomControl: false }).setView([-34.6037, -58.3816], 13);
+          layers.osm.addTo(map);
+          updateStatus("Error al obtener ubicación. Usando ubicación por defecto.");
+        }
+      );
+    } else {
+      // Navegador no soporta geolocalización
+      map = L.map('map', { zoomControl: false }).setView([-34.6037, -58.3816], 13);
+      layers.osm.addTo(map);
+      updateStatus("Tu navegador no soporta geolocalización. Usando ubicación por defecto.");
+    }
   } catch (error) {
     console.error('Error inicializando mapa:', error);
     updateStatus('Error al cargar el mapa');
@@ -1204,13 +1231,14 @@ async function getWeather(lat, lng, forceUpdate = false) {
     // Inicialización
     document.addEventListener('DOMContentLoaded', () => {
       initMap();
+      setupResize(); // Añade esta línea
       if (!document.getElementById('windy-script')) {
         const windyScript = document.createElement('script');
         windyScript.id = 'windy-script';
         windyScript.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
         document.head.appendChild(windyScript);
       }
-      setupResize(); // Añade esta línea
+      
       
       loadCoordinates();
       loadMapWithSavedCoordinates();
