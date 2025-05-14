@@ -490,6 +490,7 @@ body.dark-mode .swipe-indicator:hover {
     const weatherApiKey = "2368e0b9c1a77bad8b4bb745bfe21ecb";
     let lastNominatimCall = 0;
     let startY, isFullscreen = false, touchStartY;
+    let wasCapturingBeforeHidden = false;
 
 
     // Capas del mapa
@@ -1222,17 +1223,25 @@ function setupSwipeGestures() {
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
+    // Guardar el estado actual antes de hacer cambios
+    wasCapturingBeforeHidden = isCapturing;
+    
+    // Si estaba capturando, pausar
     if (isCapturing) {
-      toggleCapture();
-      wasCapturingBeforeHidden = true;
+      toggleCapture(); // Esto cambiará isCapturing a false
     }
+    
     // Salir de pantalla completa cuando la app se oculta
     if (isFullscreen) {
       toggleFullscreen();
     }
     releaseWakeLock();
-  } else if (wasCapturingBeforeHidden) {
-    toggleCapture();
+  } else {
+    // Solo reanudar si estaba capturando antes de ocultarse
+    // Y no si el usuario había pausado manualmente
+    if (wasCapturingBeforeHidden && !isCapturing) {
+      toggleCapture(); // Esto cambiará isCapturing a true
+    }
     wasCapturingBeforeHidden = false;
   }
 });
