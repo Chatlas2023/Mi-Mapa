@@ -334,6 +334,21 @@
     body.dark-mode #street-etymology {
       color: #bbb;
     }
+    /* Agregar al final de la sección de estilos */
+.leaflet-marker-icon.temp-marker {
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
   </style>
 </head>
 <body>
@@ -455,6 +470,12 @@ function initMap() {
     layers.osm.addTo(map);
     polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
     L.control.version().addTo(map);
+        // Agregar evento de clic al mapa
+    map.on('click', function(e) {
+      if (!isCapturing) { // Solo funciona cuando la captura está pausada
+        handleMapClick(e.latlng);
+      }
+    });
      
     // Cargar etimologías de calles
     fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
@@ -466,20 +487,55 @@ function initMap() {
     updateStatus('Error al cargar el mapa');
   }
 }
+function handleMapClick(latlng) {
+  // Crear un marcador temporal en el punto clickeado
+  if (window.tempMarker) {
+    map.removeLayer(window.tempMarker);
+  }
+window.tempMarker = L.marker(latlng, {
+  icon: L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+  }),
+  className: 'temp-marker' // Añade esta línea
+}).addTo(map);
+  
+  // Obtener información de la ubicación clickeada
+  findNeighborhood(latlng.lat, latlng.lng);
+  getWeather(latlng.lat, latlng.lng);
+  getStreetInfo(latlng.lat, latlng.lng);
+  
+  // Mostrar información en el estado
+  updateStatus(`Click en: Lat ${latlng.lat.toFixed(6)}, Lng ${latlng.lng.toFixed(6)}`);
+  
+  // Opcional: Centrar el mapa en la ubicación clickeada
+  map.setView(latlng, map.getZoom());
+}
 
+    
     // Actualizar nombre del barrio
-    function updateNeighborhoodName(name, isUserAction = false) {
-      const element = document.getElementById('neighborhoodName');
-      if (!element) return;
-      
-      if (name && name.trim() !== '') {
-        lastKnownNeighborhood = name;
-        element.textContent = `Barrio: ${name}`;
-        if (isUserAction) localStorage.setItem('lastNeighborhood', name);
-      } else {
-        element.textContent = `Barrio: ${lastKnownNeighborhood}`;
-      }
+function updateNeighborhoodName(name, isUserAction = false) {
+  const element = document.getElementById('neighborhoodName');
+  if (!element) return;
+  
+  if (name && name.trim() !== '') {
+    lastKnownNeighborhood = name;
+    element.textContent = `Barrio: ${name}`;
+    if (isUserAction) {
+      localStorage.setItem('lastNeighborhood', name);
     }
+  } else {
+    element.textContent = `Barrio: ${lastKnownNeighborhood}`;
+  }
+  
+  // Mover el elemento para que no cubra el marcador temporal
+  if (window.tempMarker) {
+    element.style.bottom = '60px'; // Ajusta según sea necesario
+  } else {
+    element.style.bottom = '15px';
+  }
+}
     // Obtener detalles de ubicación
 async function fetchLocationDetails(lat, lng) {
   const now = Date.now();
@@ -713,25 +769,31 @@ async function fetchLocationDetails(lat, lng) {
       document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
     }
 
-    function toggleCapture() {
-      const stopButton = document.getElementById('stopButton');
-      if (isCapturing) {
-        if (watchId) {
-          navigator.geolocation.clearWatch(watchId);
-          watchId = null;
-        }
-        stopButton.textContent = "Continuar captura";
-        stopButton.classList.add('continue');
-        updateStatus("Captura pausada (app en segundo plano)");
-        releaseWakeLock();
-      } else {
-        getLocation();
-        stopButton.textContent = "Pausar captura";
-        stopButton.classList.remove('continue');
-        updateStatus("Captura reanudada");
-      }
-      isCapturing = !isCapturing;
+function toggleCapture() {
+  const stopButton = document.getElementById('stopButton');
+  if (isCapturing) {
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
     }
+    stopButton.textContent = "Continuar captura";
+    stopButton.classList.add('continue');
+    updateStatus("Captura pausada - Haz clic en el mapa para obtener información");
+    releaseWakeLock();
+  } else {
+    // Eliminar marcador temporal si existe
+    if (window.tempMarker) {
+      map.removeLayer(window.tempMarker);
+      window.tempMarker = null;
+      document.getElementById('neighborhoodName').style.bottom = '15px';
+    }
+    getLocation();
+    stopButton.textContent = "Pausar captura";
+    stopButton.classList.remove('continue');
+    updateStatus("Captura reanudada");
+  }
+  isCapturing = !isCapturing;
+}
 
     function toggleDarkMode() {
       const body = document.body;
