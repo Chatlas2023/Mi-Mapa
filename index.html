@@ -677,21 +677,31 @@ body.dark-mode .swipe-indicator:hover {
     }
 
     // Geolocalización
-function getLocation() {
+    function getLocation() {
       if (navigator.geolocation) {
         acquireWakeLock();
-        navigator.geolocation.watchPosition(
+        watchId = navigator.geolocation.watchPosition(
           (position) => {
-            processPosition(position);
+            const now = Date.now();
+            const speedKmh = position.coords.speed ? position.coords.speed * 3.6 : 0;
+            
+            const minInterval = speedKmh < 5 ? 15000 : 
+                              speedKmh < 20 ? 7000 : 
+                              3000;
+
+            if (!lastPositionTime || now - lastPositionTime >= minInterval) {
+              processPosition(position);
+              lastPositionTime = now;
+            }
           },
           (error) => {
             console.error("Error al obtener la ubicación:", error);
             updateStatus("Error al obtener la ubicación.");
           },
-          {
+          { 
             enableHighAccuracy: true,
             maximumAge: 60000,
-            timeout: 20000,
+            timeout: 20000
           }
         );
       } else {
@@ -1107,71 +1117,73 @@ function getLocation() {
         loadSavedRoutes();
       }
     }
-    function toggleFullscreen() {
-  const map = document.getElementById('map');
-  isFullscreen = !isFullscreen;
-  
-  if (isFullscreen) {
-    map.classList.add('fullscreen');
-    document.getElementById('swipeIndicator').style.display = 'none';
-    // Invalidate size para que Leaflet recalcule las dimensiones
-    setTimeout(() => map._leaflet_map.invalidateSize(), 300);
-  } else {
-    map.classList.remove('fullscreen');
-    document.getElementById('swipeIndicator').style.display = 'block';
-    setTimeout(() => map._leaflet_map.invalidateSize(), 300);
-  }
-}
 
-function setupSwipeGestures() {
-  const mapElement = document.getElementById('map');
-  const swipeIndicator = document.getElementById('swipeIndicator');
-  
-  // Click en el indicador
-  swipeIndicator.addEventListener('click', toggleFullscreen);
-  
-  // Touch events para gesto de deslizar
-  mapElement.addEventListener('touchstart', (e) => {
-    touchStartY = e.touches[0].clientY;
-    startY = mapElement.getBoundingClientRect().bottom;
-  });
-  
-  mapElement.addEventListener('touchmove', (e) => {
-    if (isFullscreen) return;
-    
-    const touchY = e.touches[0].clientY;
-    const screenHeight = window.innerHeight;
-    
-    // Solo activar si el toque comienza en el 10% inferior
-    if (touchStartY > screenHeight * 0.9) {
-      const deltaY = touchY - touchStartY;
+    function toggleFullscreen() {
+      const map = document.getElementById('map');
+      isFullscreen = !isFullscreen;
       
-      // Mover el mapa hacia arriba siguiendo el dedo
-      if (deltaY < 0) {
-        e.preventDefault();
-        const newHeight = screenHeight - touchY;
-        mapElement.style.height = `${newHeight}px`;
-        map._leaflet_map.invalidateSize();
+      if (isFullscreen) {
+        map.classList.add('fullscreen');
+        document.getElementById('swipeIndicator').style.display = 'none';
+        // Invalidate size para que Leaflet recalcule las dimensiones
+        setTimeout(() => map._leaflet_map.invalidateSize(), 300);
+      } else {
+        map.classList.remove('fullscreen');
+        document.getElementById('swipeIndicator').style.display = 'block';
+        setTimeout(() => map._leaflet_map.invalidateSize(), 300);
       }
     }
-  });
-  
-  mapElement.addEventListener('touchend', (e) => {
-    if (isFullscreen) return;
-    
-    const touchY = e.changedTouches[0].clientY;
-    const screenHeight = window.innerHeight;
-    const deltaY = touchStartY - touchY;
-    
-    // Si el gesto fue significativo, alternar pantalla completa
-    if (deltaY > 50 && touchStartY > screenHeight * 0.9) {
-      toggleFullscreen();
-    } else {
-      // Restaurar altura original si no se completó el gesto
-      mapElement.style.height = '';
-      map._leaflet_map.invalidateSize();
+
+    function setupSwipeGestures() {
+      const mapElement = document.getElementById('map');
+      const swipeIndicator = document.getElementById('swipeIndicator');
+      
+      // Click en el indicador
+      swipeIndicator.addEventListener('click', toggleFullscreen);
+      
+      // Touch events para gesto de deslizar
+      mapElement.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+        startY = mapElement.getBoundingClientRect().bottom;
+      });
+      
+      mapElement.addEventListener('touchmove', (e) => {
+        if (isFullscreen) return;
+        
+        const touchY = e.touches[0].clientY;
+        const screenHeight = window.innerHeight;
+        
+        // Solo activar si el toque comienza en el 10% inferior
+        if (touchStartY > screenHeight * 0.9) {
+          const deltaY = touchY - touchStartY;
+          
+          // Mover el mapa hacia arriba siguiendo el dedo
+          if (deltaY < 0) {
+            e.preventDefault();
+            const newHeight = screenHeight - touchY;
+            mapElement.style.height = `${newHeight}px`;
+            map._leaflet_map.invalidateSize();
+          }
+        }
+      });
+      
+      mapElement.addEventListener('touchend', (e) => {
+        if (isFullscreen) return;
+        
+        const touchY = e.changedTouches[0].clientY;
+        const screenHeight = window.innerHeight;
+        const deltaY = touchStartY - touchY;
+        
+        // Si el gesto fue significativo, alternar pantalla completa
+        if (deltaY > 50 && touchStartY > screenHeight * 0.9) {
+          toggleFullscreen();
+        } else {
+          // Restaurar altura original si no se completó el gesto
+          mapElement.style.height = '';
+          map._leaflet_map.invalidateSize();
+        }
+      });
     }
-  });
 
     // Inicialización
     document.addEventListener('DOMContentLoaded', () => {
@@ -1182,11 +1194,11 @@ function setupSwipeGestures() {
         windyScript.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
         document.head.appendChild(windyScript);
       }
-        // Asignar el mapa a una variable accesible globalmente
-  document.getElementById('map')._leaflet_map = map;
-  
-  // Configurar gestos después de que el mapa esté inicializado
-  setTimeout(setupSwipeGestures, 500);
+      // Asignar el mapa a una variable accesible globalmente
+      document.getElementById('map')._leaflet_map = map;
+      
+      // Configurar gestos después de que el mapa esté inicializado
+      setTimeout(setupSwipeGestures, 500);
       
       loadCoordinates();
       loadMapWithSavedCoordinates();
@@ -1212,30 +1224,31 @@ function setupSwipeGestures() {
         changeMapLayer(this.value);
       });
 
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') {
-    // Guardar el estado actual antes de hacer cambios
-    wasCapturingBeforeHidden = isCapturing;
-    
-    // Si estaba capturando, pausar
-    if (isCapturing) {
-      toggleCapture(); // Esto cambiará isCapturing a false
-    }
-    
-    // Salir de pantalla completa cuando la app se oculta
-    if (isFullscreen) {
-      toggleFullscreen();
-    }
-    releaseWakeLock();
-  } else {
-    // Solo reanudar si estaba capturando antes de ocultarse
-    // Y no si el usuario había pausado manualmente
-    if (wasCapturingBeforeHidden && !isCapturing) {
-      toggleCapture(); // Esto cambiará isCapturing a true
-    }
-    wasCapturingBeforeHidden = false;
-  }
-});
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          // Guardar el estado actual antes de hacer cambios
+          wasCapturingBeforeHidden = isCapturing;
+          
+          // Si estaba capturando, pausar
+          if (isCapturing) {
+            toggleCapture(); // Esto cambiará isCapturing a false
+          }
+          
+          // Salir de pantalla completa cuando la app se oculta
+          if (isFullscreen) {
+            toggleFullscreen();
+          }
+          releaseWakeLock();
+        } else {
+          // Solo reanudar si estaba capturando antes de ocultarse
+          // Y no si el usuario había pausado manualmente
+          if (wasCapturingBeforeHidden && !isCapturing) {
+            toggleCapture(); // Esto cambiará isCapturing a true
+          }
+          wasCapturingBeforeHidden = false;
+        }
+      });
+    });
   </script>
 </body>
 </html>
