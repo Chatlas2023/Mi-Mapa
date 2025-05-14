@@ -604,118 +604,94 @@ function setupResize() {
 
     // Inicializar el mapa
 // Inicializar el mapa - Versión corregida
-function initMap() {
-  try {
-    // Primero crea el mapa con una ubicación por defecto
-    map = L.map('map', { zoomControl: false }).setView([-34.6037, -58.3816], 13); // Buenos Aires como fallback
-    
-    // Añade la capa base inmediatamente
-    layers.osm.addTo(map);
-    
-    // Inicializa la polilínea
-    polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
-    
-    // Añade el control de versión
-    L.control.version().addTo(map);
-    
-    // Configura el evento de clic
-    map.on('click', function(e) {
-      if (!isCapturing) {
-        handleMapClick(e.latlng);
-      }
-    });
-    
-    // Intenta obtener la ubicación actual
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          
-          // Centra el mapa en la ubicación real
-          map.setView([lat, lng], 15);
-          
-          // Añade el marcador del usuario
-          userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
-          
-          // Actualiza el estado
-          updateStatus(`Ubicación obtenida: Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}`);
-        },
-        (error) => {
-          console.error("Error al obtener ubicación:", error);
-          updateStatus("No se pudo obtener la ubicación. Usando ubicación por defecto.");
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    } else {
-      updateStatus("Geolocalización no soportada. Usando ubicación por defecto.");
-    }
-    
-    // Carga las etimologías de calles
-    fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
-      .then(response => response.json())
-      .then(data => streetsData = data)
-      .catch(error => console.error('Error cargando etimologías:', error));
+  function initMap() {
+    try {
+      // Mapa con ubicación por defecto (Buenos Aires)
+      map = L.map('map', { zoomControl: false }).setView([-34.6037, -58.3816], 13);
       
-  } catch (error) {
-    console.error('Error inicializando mapa:', error);
-    updateStatus('Error crítico al cargar el mapa');
-  }
-}
-
-// Modificación en la función getLocation()
-function getLocation() {
-  if (!navigator.geolocation) {
-    updateStatus("Tu navegador no soporta geolocalización.");
-    return;
-  }
-
-  // Limpia cualquier watcher anterior
-  if (watchId) {
-    navigator.geolocation.clearWatch(watchId);
-  }
-
-  acquireWakeLock();
-  
-  watchId = navigator.geolocation.watchPosition(
-    (position) => {
-      const now = Date.now();
-      const speedKmh = position.coords.speed ? position.coords.speed * 3.6 : 0;
+      // Capa base
+      layers.osm.addTo(map);
       
-      const minInterval = speedKmh < 5 ? 15000 : 
-                        speedKmh < 20 ? 7000 : 
-                        3000;
-
-      if (!lastPositionTime || now - lastPositionTime >= minInterval) {
-        processPosition(position);
-        lastPositionTime = now;
+      // Polilínea
+      polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
+      
+      // Control de versión
+      L.control.version().addTo(map);
+      
+      // Evento de clic
+      map.on('click', function(e) {
+        if (!isCapturing) {
+          handleMapClick(e.latlng);
+        }
+      });
+      
+      // Intenta obtener ubicación
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            map.setView([lat, lng], 15);
+            userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
+            updateStatus(`Ubicación obtenida: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+            getLocation(); // Inicia el seguimiento continuo
+          },
+          (error) => {
+            console.error("Error al obtener ubicación:", error);
+            updateStatus("Usando ubicación por defecto. Error: " + error.message);
+            // Muestra el mapa aunque falle la geolocalización
+            map.setView([-34.6037, -58.3816], 13);
+          }
+        );
+      } else {
+        updateStatus("Geolocalización no soportada. Usando ubicación por defecto.");
+        map.setView([-34.6037, -58.3816], 13);
       }
-    },
-    (error) => {
-      console.error("Error al obtener la ubicación:", error);
-      let errorMessage = "Error al obtener la ubicación: ";
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-          errorMessage += "Permiso denegado por el usuario.";
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMessage += "La información de ubicación no está disponible.";
-          break;
-        case error.TIMEOUT:
-          errorMessage += "La solicitud de ubicación ha expirado.";
-          break;
-        default:
-          errorMessage += "Error desconocido.";
-      }
-      updateStatus(errorMessage);
-    },
-    { 
-      enableHighAccuracy: true,
-      maximumAge: 10000,
-      timeout: 15000
+      
+    } catch (error) {
+      console.error('Error inicializando mapa:', error);
+      updateStatus('Error al cargar el mapa');
     }
-  );
-}
+  }
+
+  // Función getLocation corregida
+  function getLocation() {
+    if (!navigator.geolocation) {
+      updateStatus("Geolocalización no soportada");
+      return;
+    }
+
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+    }
+
+    acquireWakeLock();
+    
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const now = Date.now();
+        const speedKmh = position.coords.speed ? position.coords.speed * 3.6 : 0;
+        
+        const minInterval = speedKmh < 5 ? 15000 : 
+                          speedKmh < 20 ? 7000 : 
+                          3000;
+
+        if (!lastPositionTime || now - lastPositionTime >= minInterval) {
+          processPosition(position);
+          lastPositionTime = now;
+        }
+      },
+      (error) => {
+        console.error("Error de geolocalización:", error);
+        updateStatus("Error obteniendo ubicación: " + error.message);
+      },
+      { 
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 15000
+      }
+    );
+  }
       } else {
         updateStatus("Tu navegador no soporta geolocalización.");
       }
@@ -1132,6 +1108,11 @@ async function getWeather(lat, lng, forceUpdate = false) {
 
     // Inicialización
     document.addEventListener('DOMContentLoaded', () => {
+          // Verificar si Leaflet está cargado
+    if (typeof L === 'undefined') {
+      updateStatus("Error: No se pudo cargar Leaflet. Recarga la página.");
+      return;
+    }
       initMap();
       setupResize(); // Añade esta línea
       if (!document.getElementById('windy-script')) {
@@ -1143,11 +1124,13 @@ async function getWeather(lat, lng, forceUpdate = false) {
       
       
       loadCoordinates();
+          if (coordinates.length > 0) {
+      loadMapWithSavedCoordinates();
+    }
       loadMapWithSavedCoordinates();
       document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
-      getLocation();
-      applyDarkModePreference();
-      loadSavedRoutes();
+    applyDarkModePreference();
+    loadSavedRoutes();
       
       // Cargar último barrio guardado
       const savedNeighborhood = localStorage.getItem('lastNeighborhood');
