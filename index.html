@@ -733,6 +733,13 @@ function getLocation() {
       const lng = position.coords.longitude;
       const speed = position.coords.speed;
       const accuracy = position.coords.accuracy;
+        // Verificar que las coordenadas sean válidas
+  if (!lat || !lng) {
+    updateStatus("Coordenadas inválidas recibidas");
+    return;
+  }
+
+  updateStatus(`Lat: ${lat.toFixed(6)} | Long: ${lng.toFixed(6)} | Precisión: ${Math.round(accuracy)}m`);
 
       addCoordinate(lat, lng, speed);
       updateMap(lat, lng);
