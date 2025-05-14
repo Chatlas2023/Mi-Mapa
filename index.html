@@ -399,7 +399,7 @@
     // Variables globales
     const streetCache = {};
     let wasCapturingBeforeHidden = false;
-    let map, polyline, neighborhoodsLayer, userMarker, precisionCircle;
+    let map, polyline, userMarker, precisionCircle;
     let coordinates = [];
     let totalDistance = 0;
     const MAX_COORDINATES = 1000;
@@ -449,18 +449,23 @@
     };
 
     // Inicializar el mapa
-    function initMap() {
-      map = L.map('map', { zoomControl: false }).setView([0, 0], 15);
-      layers.osm.addTo(map);
-      polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
-      L.control.version().addTo(map);
-       
-      // Cargar etimologías de calles
-      fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
-        .then(response => response.json())
-        .then(data => streetsData = data)
-        .catch(error => console.error('Error cargando etimologías:', error));
-    }
+function initMap() {
+  try {
+    map = L.map('map', { zoomControl: false }).setView([0, 0], 15);
+    layers.osm.addTo(map);
+    polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
+    L.control.version().addTo(map);
+     
+    // Cargar etimologías de calles
+    fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
+      .then(response => response.json())
+      .then(data => streetsData = data)
+      .catch(error => console.error('Error cargando etimologías:', error));
+  } catch (error) {
+    console.error('Error inicializando mapa:', error);
+    updateStatus('Error al cargar el mapa');
+  }
+}
 
     // Actualizar nombre del barrio
     function updateNeighborhoodName(name, isUserAction = false) {
@@ -475,20 +480,6 @@
         element.textContent = `Barrio: ${lastKnownNeighborhood}`;
       }
     }
-
-      const point = L.latLng(lat, lng);
-      let found = false;
-
-      neighborhoodsLayer.eachLayer(layer => {
-        if (layer.feature && layer.feature.properties && layer.getBounds().contains(point)) {
-          updateNeighborhoodName(layer.feature.properties.Name);
-          found = true;
-        }
-      });
-
-      if (!found) fetchLocationDetails(lat, lng);
-    }
-
     // Obtener detalles de ubicación
 async function fetchLocationDetails(lat, lng) {
   const now = Date.now();
@@ -518,6 +509,9 @@ async function fetchLocationDetails(lat, lng) {
     console.error("Error con Nominatim:", error);
     updateNeighborhoodName("Ubicación desconocida");
   }
+}
+    function findNeighborhood(lat, lng) {
+  fetchLocationDetails(lat, lng);
 }
 
     // Cambiar capas del mapa
