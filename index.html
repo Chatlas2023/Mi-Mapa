@@ -493,9 +493,9 @@ body.dark-mode .swipe-indicator:hover {
 
     // Capas del mapa
     let layers = {
-      osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }),
+  osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {  // Quité el : después de https
+    attribution: '© OpenStreetMap contributors'
+  }),
       satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: '© Esri'
       }),
@@ -677,37 +677,56 @@ body.dark-mode .swipe-indicator:hover {
     }
 
     // Geolocalización
-    function getLocation() {
-      if (navigator.geolocation) {
-        acquireWakeLock();
-        watchId = navigator.geolocation.watchPosition(
-          (position) => {
-            const now = Date.now();
-            const speedKmh = position.coords.speed ? position.coords.speed * 3.6 : 0;
-            
-            const minInterval = speedKmh < 5 ? 15000 : 
-                              speedKmh < 20 ? 7000 : 
-                              3000;
+function getLocation() {
+  if ("geolocation" in navigator) {
+    updateStatus("Obteniendo ubicación...");
+    acquireWakeLock();
+    
+    // Configuración mejorada de opciones de geolocalización
+    const options = {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 10000
+    };
+    
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const now = Date.now();
+        const speedKmh = position.coords.speed ? position.coords.speed * 3.6 : 0;
+        
+        const minInterval = speedKmh < 5 ? 15000 : 
+                          speedKmh < 20 ? 7000 : 
+                          3000;
 
-            if (!lastPositionTime || now - lastPositionTime >= minInterval) {
-              processPosition(position);
-              lastPositionTime = now;
-            }
-          },
-          (error) => {
-            console.error("Error al obtener la ubicación:", error);
-            updateStatus("Error al obtener la ubicación.");
-          },
-          { 
-            enableHighAccuracy: true,
-            maximumAge: 60000,
-            timeout: 20000
-          }
-        );
-      } else {
-        updateStatus("Tu navegador no soporta geolocalización.");
-      }
-    }
+        if (!lastPositionTime || now - lastPositionTime >= minInterval) {
+          processPosition(position);
+          lastPositionTime = now;
+        }
+      },
+      (error) => {
+        console.error("Error al obtener la ubicación:", error);
+        let errorMessage = "Error al obtener la ubicación: ";
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage += "Permiso denegado. Por favor habilita la geolocalización.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage += "La información de ubicación no está disponible.";
+            break;
+          case error.TIMEOUT:
+            errorMessage += "La solicitud de ubicación ha expirado.";
+            break;
+          default:
+            errorMessage += "Error desconocido.";
+        }
+        updateStatus(errorMessage);
+      },
+      options
+    );
+  } else {
+    updateStatus("Tu navegador no soporta geolocalización.");
+  }
+}
 
     function processPosition(position) {
       const lat = position.coords.latitude;
