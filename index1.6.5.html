@@ -1,0 +1,25 @@
+function handleMapClick(latlng) {
+  // Crear un marcador temporal en el punto clickeado
+  if (window.tempMarker) {
+    map.removeLayer(window.tempMarker);
+  }
+  window.tempMarker = L.marker(latlng, {
+    icon: L.icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41]
+    }),
+    className: 'temp-marker'
+  }).addTo(map);
+  
+  // Obtener información de la ubicación clickeada
+  findNeighborhood(latlng.lat, latlng.lng);
+  getWeather(latlng.lat, latlng.lng, true); // <-- Aquí el cambio importante (forceUpdate = true)
+  getStreetInfo(latlng.lat, latlng.lng);
+  
+  // Mostrar información en el estado
+  updateStatus(`Click en: Lat ${latlng.lat.toFixed(6)}, Lng ${latlng.lng.toFixed(6)}`);
+  
+  // Opcional: Centrar el mapa en la ubicación clickeada
+  map.setView(latlng, map.getZoom());
+}
