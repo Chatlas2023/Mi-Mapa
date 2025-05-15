@@ -6,24 +6,57 @@
   <title>Mi Mapa - GPS</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 85vh;
-      background-color: white;
-      color: black;
-    }
-    #map {
-      width: 100%;
-      flex-grow: 1;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-bottom: 5px;
-      position: relative;
-    }
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden; /* Evita el scroll general */
+  background-color: white;
+  color: black;
+}
+
+#map {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+    #controls-container {
+  position: fixed;
+  bottom: -250px; /* Inicialmente oculto */
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border-top: 1px solid #ccc;
+  padding: 15px;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  transition: bottom 0.3s ease;
+  z-index: 1000;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+body.dark-mode #controls-container {
+  background-color: #121212;
+  border-top-color: #333;
+}
+
+.controls-visible {
+  bottom: 0 !important;
+}
+
+/* Elimina los márgenes y ajusta los estilos de los controles */
+#infoContainer, .buttons, #street-info-container, #savedRoutesContainer {
+  margin: 0;
+  padding: 8px;
+}
+
+#savedRoutesContainer {
+  max-height: 150px;
+}
     #mapLayers {
       padding: 6px 12px;
       font-size: 12px;
@@ -381,9 +414,10 @@
     </div>
   </div>
   
-  <div id="infoContainer">
-    <div id="status">Obteniendo ubicación...</div>
-  </div>
+  <div id="controls-container">
+    <div id="infoContainer">
+      <div id="status">Obteniendo ubicación...</div>
+    </div>
   
   <div class="buttons">
     <button id="clearButton">Limpiar historial</button>
@@ -1097,7 +1131,37 @@ async function getWeather(lat, lng, forceUpdate = false) {
           wasCapturingBeforeHidden = false;
         }
       });
+        const controlsContainer = document.getElementById('controls-container');
+  const toggleButton = document.getElementById('toggleControls');
+  let controlsVisible = false;
+
+  // Función para alternar controles
+  function toggleControls() {
+    controlsVisible = !controlsVisible;
+    controlsContainer.classList.toggle('controls-visible', controlsVisible);
+    toggleButton.textContent = controlsVisible ? '×' : '☰';
+  }
+
+  toggleButton.addEventListener('click', toggleControls);
+
+  // También puedes permitir el gesto de deslizar hacia arriba
+  let startY;
+  controlsContainer.addEventListener('touchstart', (e) => {
+    startY = e.touches[0].clientY;
+  });
+
+  controlsContainer.addEventListener('touchmove', (e) => {
+    const y = e.touches[0].clientY;
+    const diff = startY - y;
+    
+    if (diff > 10 && !controlsVisible) {
+      toggleControls();
+    } else if (diff < -10 && controlsVisible) {
+      toggleControls();
+    }
     });
   </script>
+      <!-- Agrega un botón para mostrar/ocultar controles -->
+  <button id="toggleControls" style="position: fixed; bottom: 10px; right: 10px; z-index: 1001; padding: 8px; border-radius: 50%; background: #007bff; color: white; border: none; width: 40px; height: 40px;">☰</button>
 </body>
 </html>
