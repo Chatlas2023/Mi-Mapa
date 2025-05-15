@@ -12,45 +12,18 @@
       padding: 0;
       display: flex;
       flex-direction: column;
+      height: 85vh;
       background-color: white;
       color: black;
     }
-    body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh; /* Cambiado a min-height */
-  background-color: white;
-  color: black;
-}
-
-#mapContainer {
-  position: relative;
-  width: 100%;
-  height: 60vh;
-  min-height: 300vh;
-  max-height: 90vh;
-}
-
-/* Media queries ajustadas */
-@media (max-width: 600px) {
-  #mapContainer {
-    height: 45vh;
-  }
-}
-
-@media (min-width: 601px) {
-  #mapContainer {
-    height: 55vh;
-  }
-}
-#map {
-  width: 100%;
-  height: 100%;
-  background-color: #f0f0f0; /* Color de fondo mientras carga */
-}
+    #map {
+      width: 100%;
+      flex-grow: 1;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 5px;
+      position: relative;
+    }
     #mapLayers {
       padding: 6px 12px;
       font-size: 12px;
@@ -92,13 +65,6 @@
         justify-content: center;
         gap: 20px;
       }
-      #infoContainer, .buttons, #street-info-container, #savedRoutesContainer {
-  margin-top: 0;
-  padding-top: 0;
-}
-      #infoContainer {
-  margin-bottom: 5px;
-}
       #status, #distance {
         font-size: 14px;
       }
@@ -383,48 +349,9 @@
     opacity: 0.7;
   }
 }
-    /* Nuevos estilos para el redimensionamiento */
-#mapContainer {
-  position: relative;
-  flex-grow: 1;
-  width: 100%;
-  overflow: hidden;
-  touch-action: none; /* Importante para el desplazamiento táctil */
-}
-
-#resizeHandle {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 15px;
-  background-color: rgba(0, 0, 0, 0.2);
-  cursor: ns-resize;
-  z-index: 1001;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-#resizeHandle::before {
-  content: "";
-  width: 50px;
-  height: 4px;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 2px;
-}
-
-body.dark-mode #resizeHandle {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-body.dark-mode #resizeHandle::before {
-  background-color: rgba(255, 255, 255, 0.5);
-}
   </style>
 </head>
 <body>
-<div id="mapContainer">
   <div id="map">
     <div id="speedPanel">
       <div class="speed-row">
@@ -449,13 +376,10 @@ body.dark-mode #resizeHandle::before {
       </div>
       <div id="samplingMode">Modo: --</div>
     </div>
-
-        <div id="neighborhoodName">
+    <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: #e4e8d1; padding: 4px 12px; border-radius: 5px; font-size: 22px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
       Barrio: Cargando...
     </div>
   </div>
-  <div id="resizeHandle"></div>
-</div>
   
   <div id="infoContainer">
     <div id="status">Obteniendo ubicación...</div>
@@ -502,70 +426,6 @@ body.dark-mode #resizeHandle::before {
     let lastKnownNeighborhood = 'Buscando barrio...';
     const weatherApiKey = "2368e0b9c1a77bad8b4bb745bfe21ecb";
     let lastNominatimCall = 0;
-    // Variables para el redimensionamiento
-let isResizing = false;
-let startY, startHeight;
-
-function setupResize() {
-  const resizeHandle = document.getElementById('resizeHandle');
-  const mapContainer = document.getElementById('mapContainer');
-  
-  // Cargar altura guardada si existe
-  const savedHeight = localStorage.getItem('mapHeight');
-  if (savedHeight) {
-    mapContainer.style.height = savedHeight;
-  }
-
-  resizeHandle.addEventListener('mousedown', initResize);
-  resizeHandle.addEventListener('touchstart', initResize, { passive: false });
-  
-  function initResize(e) {
-    e.preventDefault();
-    isResizing = true;
-    startY = e.clientY || e.touches[0].clientY;
-    startHeight = parseInt(document.defaultView.getComputedStyle(mapContainer).height, 10);
-    
-    document.addEventListener('mousemove', resize);
-    document.addEventListener('touchmove', resize, { passive: false });
-    document.addEventListener('mouseup', stopResize);
-    document.addEventListener('touchend', stopResize);
-    
-    document.body.style.userSelect = 'none';
-  }
-  
-  function resize(e) {
-    if (!isResizing) return;
-    e.preventDefault();
-    
-    const clientY = e.clientY || e.touches[0].clientY;
-    const dy = clientY - startY;
-    let newHeight = startHeight + dy;
-    
-    // Limitar el tamaño mínimo y máximo
-    const minHeight = window.innerHeight * 0.3;
-    const maxHeight = window.innerHeight * 0.9;
-    
-    newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
-    
-    mapContainer.style.height = `${newHeight}px`;
-    map.invalidateSize(); // Actualizar el mapa
-    
-    if (e.cancelable) {
-      e.preventDefault();
-    }
-  }
-  
-  function stopResize() {
-    isResizing = false;
-    document.removeEventListener('mousemove', resize);
-    document.removeEventListener('touchmove', resize);
-    document.removeEventListener('mouseup', stopResize);
-    document.removeEventListener('touchend', stopResize);
-    
-    document.body.style.userSelect = '';
-    localStorage.setItem('mapHeight', mapContainer.style.height);
-  }
-}
 
     // Capas del mapa
     let layers = {
@@ -590,7 +450,7 @@ function setupResize() {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.6 ";
+        div.innerHTML = " Ver: 1.6.5 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -604,123 +464,216 @@ function setupResize() {
     };
 
     // Inicializar el mapa
-// Inicializar el mapa - Versión corregida
-  function initMap() {
-      map = L.map('map', { zoomControl: false }).setView([-34.6037, -58.3816], 13);
-  
-  // Espera un breve momento y luego fuerza el redimensionamiento
-  setTimeout(() => {
-    map.invalidateSize();
-  }, 100);
-    try {
-      // Mapa con ubicación por defecto (Buenos Aires)
-      map = L.map('map', { zoomControl: false }).setView([-34.6037, -58.3816], 13);
-      
-      // Capa base
-      layers.osm.addTo(map);
-      
-      // Polilínea
-      polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
-      
-      // Control de versión
-      L.control.version().addTo(map);
-      
-      // Evento de clic
-      map.on('click', function(e) {
-        if (!isCapturing) {
-          handleMapClick(e.latlng);
-        }
-      });
-      
-      // Intenta obtener ubicación
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            map.setView([lat, lng], 15);
-            userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
-            updateStatus(`Ubicación obtenida: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
-            getLocation(); // Inicia el seguimiento continuo
-          },
-          (error) => {
-            console.error("Error al obtener ubicación:", error);
-            updateStatus("Usando ubicación por defecto. Error: " + error.message);
-            // Muestra el mapa aunque falle la geolocalización
-            map.setView([-34.6037, -58.3816], 13);
-          }
-        );
-      } else {
-        updateStatus("Geolocalización no soportada. Usando ubicación por defecto.");
-        map.setView([-34.6037, -58.3816], 13);
+function initMap() {
+  try {
+    map = L.map('map', { zoomControl: false }).setView([0, 0], 15);
+    layers.osm.addTo(map);
+    polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
+    L.control.version().addTo(map);
+        // Agregar evento de clic al mapa
+    map.on('click', function(e) {
+      if (!isCapturing) { // Solo funciona cuando la captura está pausada
+        handleMapClick(e.latlng);
       }
-      
-    } catch (error) {
-      console.error('Error inicializando mapa:', error);
-      updateStatus('Error al cargar el mapa');
-    }
+    });
+     
+    // Cargar etimologías de calles
+    fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
+      .then(response => response.json())
+      .then(data => streetsData = data)
+      .catch(error => console.error('Error cargando etimologías:', error));
+  } catch (error) {
+    console.error('Error inicializando mapa:', error);
+    updateStatus('Error al cargar el mapa');
   }
+}
+function handleMapClick(latlng) {
+  // Crear un marcador temporal en el punto clickeado
+  if (window.tempMarker) {
+    map.removeLayer(window.tempMarker);
+  }
+  window.tempMarker = L.marker(latlng, {
+    icon: L.icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41]
+    }),
+    className: 'temp-marker'
+  }).addTo(map);
+  
+  // Obtener información de la ubicación clickeada
+  findNeighborhood(latlng.lat, latlng.lng);
+  getWeather(latlng.lat, latlng.lng, true); // <-- Aquí el cambio importante (forceUpdate = true)
+  getStreetInfo(latlng.lat, latlng.lng);
+  
+  // Mostrar información en el estado
+  updateStatus(`Click en: Lat ${latlng.lat.toFixed(6)}, Lng ${latlng.lng.toFixed(6)}`);
+  
+  // Opcional: Centrar el mapa en la ubicación clickeada
+  map.setView(latlng, map.getZoom());
+}
 
-  // Función getLocation corregida
-function getLocation() {
-  if (!navigator.geolocation) {
-    updateStatus("Tu navegador no soporta geolocalización.");
-    map.setView([-34.6037, -58.3816], 13); // Fallback a Buenos Aires
+    
+    // Actualizar nombre del barrio
+function updateNeighborhoodName(name, isUserAction = false) {
+  const element = document.getElementById('neighborhoodName');
+  if (!element) return;
+  
+  if (name && name.trim() !== '') {
+    lastKnownNeighborhood = name;
+    element.textContent = `Barrio: ${name}`;
+    if (isUserAction) {
+      localStorage.setItem('lastNeighborhood', name);
+    }
+  } else {
+    element.textContent = `Barrio: ${lastKnownNeighborhood}`;
+  }
+  
+  // Mover el elemento para que no cubra el marcador temporal
+  if (window.tempMarker) {
+    element.style.bottom = '60px'; // Ajusta según sea necesario
+  } else {
+    element.style.bottom = '15px';
+  }
+}
+    // Obtener detalles de ubicación
+async function fetchLocationDetails(lat, lng) {
+  const now = Date.now();
+  if (now - lastNominatimCall < 1000) {
+    setTimeout(() => fetchLocationDetails(lat, lng), 1000 - (now - lastNominatimCall));
     return;
   }
 
-  updateStatus("Solicitando permisos de ubicación...");
-  
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      // Éxito al obtener ubicación
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es`
+    );
+    const data = await response.json();
+    
+    const neighborhood = data.address?.neighbourhood || 
+                       data.address?.suburb || 
+                       data.address?.city_district || 
+                       data.address?.county ||
+                       data.address?.city ||
+                       data.address?.town ||
+                       data.address?.village ||
+                       "Área no especificada";
+    
+    updateNeighborhoodName(neighborhood);
+    lastNominatimCall = Date.now();
+  } catch (error) {
+    console.error("Error con Nominatim:", error);
+    updateNeighborhoodName("Ubicación desconocida");
+  }
+}
+    function findNeighborhood(lat, lng) {
+  fetchLocationDetails(lat, lng);
+}
+
+    // Cambiar capas del mapa
+    function changeMapLayer(selectedLayer) {
+      map.eachLayer(layer => {
+        if (layer === layers.osm || layer === layers.satellite) {
+          map.removeLayer(layer);
+        }
+      });
+
+      if (selectedLayer === "weather") {
+        window.open('mapaWindy.html', '_blank');
+        layers.osm.addTo(map);
+        document.getElementById('mapLayers').value = 'osm';
+      } else {
+        layers[selectedLayer].addTo(map);
+      }
+    }
+
+    // Wake Lock
+    async function acquireWakeLock() {
+      try {
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock activo');
+        wakeLockSentinel.addEventListener('release', () => {
+          console.log('Wake Lock fue liberado por el sistema!');
+          wakeLockSentinel = null;
+        });
+      } catch (err) {
+        console.error(`Error al solicitar Wake Lock: ${err.name}, ${err.message}`);
+      }
+    }
+
+    async function releaseWakeLock() {
+      if (wakeLockSentinel) {
+        await wakeLockSentinel.release();
+        wakeLockSentinel = null;
+        console.log('Wake Lock liberado');
+      }
+    }
+
+    // Geolocalización
+    function getLocation() {
+      if (navigator.geolocation) {
+        acquireWakeLock();
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const now = Date.now();
+            const speedKmh = position.coords.speed ? position.coords.speed * 3.6 : 0;
+            
+            const minInterval = speedKmh < 5 ? 15000 : 
+                              speedKmh < 20 ? 7000 : 
+                              3000;
+
+            if (!lastPositionTime || now - lastPositionTime >= minInterval) {
+              processPosition(position);
+              lastPositionTime = now;
+            }
+          },
+          (error) => {
+            console.error("Error al obtener la ubicación:", error);
+            updateStatus("Error al obtener la ubicación.");
+          },
+          { 
+            enableHighAccuracy: true,
+            maximumAge: 60000,
+            timeout: 20000
+          }
+        );
+      } else {
+        updateStatus("Tu navegador no soporta geolocalización.");
+      }
+    }
+
+    function processPosition(position) {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
-      map.setView([lat, lng], 15);
-      userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
-      updateStatus(`Ubicación obtenida: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
-      
-      // Iniciar seguimiento continuo
-      startContinuousTracking();
-    },
-    (error) => {
-      console.error("Error de geolocalización:", error);
-      let errorMsg = "Error al obtener ubicación: ";
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-          errorMsg += "Permiso denegado. Por favor habilita la geolocalización en tu navegador.";
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMsg += "La información de ubicación no está disponible.";
-          break;
-        case error.TIMEOUT:
-          errorMsg += "La solicitud de ubicación ha expirado.";
-          break;
-        default:
-          errorMsg += "Error desconocido.";
+      const speed = position.coords.speed;
+      const accuracy = position.coords.accuracy;
+
+      addCoordinate(lat, lng, speed);
+      updateMap(lat, lng);
+      updateStatus(`Lat: ${lat.toFixed(6)} | Long: ${lng.toFixed(6)}`);
+      updateSpeed(speed);
+      findNeighborhood(lat, lng);
+      getWeather(lat, lng);
+      getStreetInfo(lat, lng);
+
+      if (!userMarker) {
+        userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
+      } else {
+        userMarker.setLatLng([lat, lng]);
       }
-      updateStatus(errorMsg);
-      map.setView([-34.6037, -58.3816], 13); // Fallback a Buenos Aires
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
-}
 
-function startContinuousTracking() {
-  if (watchId) {
-    navigator.geolocation.clearWatch(watchId);
-  }
-
-  watchId = navigator.geolocation.watchPosition(
-    (position) => {
-      processPosition(position);
-    },
-    (error) => {
-      console.error("Error en seguimiento continuo:", error);
-    },
-    { enableHighAccuracy: true, maximumAge: 10000 }
-  );
-}
+      if (precisionCircle) {
+        precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
+      } else {
+        precisionCircle = L.circle([lat, lng], {
+          color: 'cyan',
+          weight: 2,
+          fillColor: 'cyan',
+          fillOpacity: 0.1,
+          radius: accuracy
+        }).addTo(map);
+      }
+    }
 
     function addCoordinate(lat, lng, speed) {
       if (coordinates.length >= MAX_COORDINATES) {
@@ -1100,13 +1053,7 @@ async function getWeather(lat, lng, forceUpdate = false) {
 
     // Inicialización
     document.addEventListener('DOMContentLoaded', () => {
-                // Verificar si Leaflet está cargado
-    if (typeof L === 'undefined') {
-      updateStatus("Error: No se pudo cargar Leaflet. Recarga la página.");
-      return;
-    }
       initMap();
-      setupResize(); // Añade esta línea
       if (!document.getElementById('windy-script')) {
         const windyScript = document.createElement('script');
         windyScript.id = 'windy-script';
@@ -1114,15 +1061,12 @@ async function getWeather(lat, lng, forceUpdate = false) {
         document.head.appendChild(windyScript);
       }
       
-      
       loadCoordinates();
-          if (coordinates.length > 0) {
-      loadMapWithSavedCoordinates();
-    }
       loadMapWithSavedCoordinates();
       document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
-    applyDarkModePreference();
-    loadSavedRoutes();
+      getLocation();
+      applyDarkModePreference();
+      loadSavedRoutes();
       
       // Cargar último barrio guardado
       const savedNeighborhood = localStorage.getItem('lastNeighborhood');
@@ -1152,7 +1096,6 @@ async function getWeather(lat, lng, forceUpdate = false) {
           toggleCapture();
           wasCapturingBeforeHidden = false;
         }
-         setupResize(); // Asegúrate de que esto se llame
       });
     });
   </script>
