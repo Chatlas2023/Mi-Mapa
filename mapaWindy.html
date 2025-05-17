@@ -7,22 +7,38 @@
     <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
     <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
     <style>
-        #windy { width: 100%; height: 640px; }
+        #windy { 
+            width: 100%; 
+            height: 640px; 
+        }
         .btn {
-            padding: 7px 15px;
+            padding: 10px 15px;
             font-size: 14px;
             font-weight: bold;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background 0.3s ease;
-            width: 180px;
+            transition: all 0.3s ease;
+            width: 160px;
             margin: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .btn-temp { background-color: #ff6b6b; color: white; }
-        .btn-rain { background-color: #4d96ff; color: white; }
-        .btn-lightning { background-color: #ffd93d; color: black; }
-        .btn-back { background-color: #6c757d; color: white; }
+        .btn-temp { 
+            background-color: #ff6b6b; 
+            color: white; 
+        }
+        .btn-rain { 
+            background-color: #4d96ff; 
+            color: white; 
+        }
+        .btn-lightning { 
+            background-color: #ffd93d; 
+            color: black; 
+        }
+        .btn-back { 
+            background-color: #6c757d; 
+            color: white; 
+        }
         .loading {
             display: flex;
             justify-content: center;
@@ -35,23 +51,40 @@
         }
         .controls {
             text-align: center;
-            margin: 10px 0;
-            display: none; /* Oculto inicialmente */
+            margin: 10px auto;
+            max-width: 600px;
+            display: none;
+        }
+        .button-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn:active {
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
     <div id="loading" class="loading">
-        Cargando mapa V3.0
+        Cargando mapa V3.3
     </div>
     <div id="windy" style="display: none;"></div>
     
-    <!-- Controles simplificados (sin viento) -->
+    <!-- Controles organizados en 2 filas -->
     <div id="controls" class="controls">
-        <button onclick="changeOverlay('temp')" class="btn btn-temp">Temperatura</button>
-        <button onclick="changeOverlay('rain')" class="btn btn-rain">Lluvia</button>
-        <button onclick="changeOverlay('lightning')" class="btn btn-lightning">Tormentas</button>
-        <button onclick="window.location.href='index.html';" class="btn btn-back">Volver</button>
+        <div class="button-row">
+            <button onclick="changeOverlay('temp')" class="btn btn-temp">Temperatura</button>
+            <button onclick="changeOverlay('rain')" class="btn btn-rain">Lluvia</button>
+        </div>
+        <div class="button-row">
+            <button onclick="changeOverlay('lightning')" class="btn btn-lightning">Tormentas</button>
+            <button onclick="window.location.href='index.html';" class="btn btn-back">Volver</button>
+        </div>
     </div>
 
     <script>
@@ -69,13 +102,16 @@
             windyInit(options, function(api) {
                 windyAPI = api;
                 
-                // Forzar redibujado del mapa
-                setTimeout(() => {
-                    api.map.invalidateSize();
+                // Configuración adicional para asegurar la actualización
+                api.on('ready', () => {
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('windy').style.display = 'block';
                     document.getElementById('controls').style.display = 'block';
-                }, 300);
+                    api.map.invalidateSize();
+                    
+                    // Solución definitiva para el cambio de capas
+                    window.windyMapAPI = api;
+                });
             });
         }
 
@@ -83,16 +119,19 @@
         function changeOverlay(overlay) {
             if (windyAPI) {
                 windyAPI.map.setOverlay(overlay);
-                // Actualizar el mapa inmediatamente
-                windyAPI.map.fire('resize');
-                console.log("Capa activa:", overlay);
+                // Forzar actualización del mapa
+                setTimeout(() => {
+                    windyAPI.map.invalidateSize();
+                }, 100);
             }
         }
 
-        // Carga inicial
-        const lat = parseFloat(sessionStorage.getItem('latitude')) || 0;
-        const lon = parseFloat(sessionStorage.getItem('longitude')) || 0;
-        initializeMap(lat, lon);
+        // Carga inicial mejorada
+        document.addEventListener('DOMContentLoaded', () => {
+            const lat = parseFloat(sessionStorage.getItem('latitude')) || 0;
+            const lon = parseFloat(sessionStorage.getItem('longitude')) || 0;
+            initializeMap(lat, lon);
+        });
     </script>
 </body>
 </html>
