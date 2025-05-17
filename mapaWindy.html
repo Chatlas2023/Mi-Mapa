@@ -9,7 +9,8 @@
     <style>
         #windy { 
             width: 100%; 
-            height: 640px; 
+            height: 640px;
+            display: none;
         }
         .btn {
             padding: 10px 15px;
@@ -23,24 +24,9 @@
             margin: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .btn-temp { 
-            background-color: #ff6b6b; 
-            color: white; 
-        }
-        .btn-rain { 
-            background-color: #4d96ff; 
-            color: white; 
-        }
-        .btn-lightning { 
-            background-color: #ffd93d; 
-            color: black; 
-        }
-        .btn-back { 
-            background-color: #6c757d; 
-            color: white; 
-        }
         .loading {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             width: 100%;
@@ -49,104 +35,146 @@
             font-size: 20px;
             color: #333;
         }
-        .controls {
-            text-align: center;
-            margin: 10px auto;
-            max-width: 600px;
-            display: none;
-        }
-        .button-row {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 5px;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        /* Animación de puntos suspensivos */
-        .loading-text {
+        .loading-dots {
+            display: inline-block;
             position: relative;
+            width: 80px;
+            height: 20px;
+            text-align: center;
         }
-        .loading-text::after {
-            content: '...';
-            position: absolute;
-            animation: dots 1.5s infinite steps(3, end);
+        .loading-dots span {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #333;
+            margin: 0 3px;
+            opacity: 0;
+            animation: loadingFade 1.4s infinite ease-in-out;
         }
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
+        .loading-dots span:nth-child(1) {
+            animation-delay: 0s;
+        }
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes loadingFade {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            display: none;
         }
     </style>
 </head>
 <body>
     <div id="loading" class="loading">
-        <span class="loading-text">Cargando mapa</span>
-    </div>
-    <div id="windy" style="display: none;"></div>
-    
-    <!-- Controles organizados en 2 filas -->
-    <div id="controls" class="controls">
-        <div class="button-row">
-            <button onclick="changeOverlay('temp')" class="btn btn-temp">Temperatura</button>
-            <button onclick="changeOverlay('rain')" class="btn btn-rain">Lluvia</button>
+        <div>Cargando mapa V3.4</div>
+        <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
-        <div class="button-row">
-            <button onclick="changeOverlay('lightning')" class="btn btn-lightning">Tormentas</button>
-            <button onclick="window.location.href='index.html';" class="btn btn-back">Volver</button>
+        <div id="error-message" class="error-message"></div>
+    </div>
+    <div id="windy"></div>
+    
+    <div id="controls" style="display: none; text-align: center; margin: 10px auto;">
+        <div style="display: flex; justify-content: center; margin-bottom: 5px;">
+            <button onclick="changeOverlay('temp')" class="btn" style="background-color: #ff6b6b; color: white;">Temperatura</button>
+            <button onclick="changeOverlay('rain')" class="btn" style="background-color: #4d96ff; color: white;">Lluvia</button>
+        </div>
+        <div style="display: flex; justify-content: center;">
+            <button onclick="changeOverlay('lightning')" class="btn" style="background-color: #ffd93d; color: black;">Tormentas</button>
+            <button onclick="window.location.href='index.html';" class="btn" style="background-color: #6c757d; color: white;">Volver</button>
         </div>
     </div>
 
     <script>
         let windyAPI;
+        let loadTimeout;
+        const MAX_LOAD_TIME = 15000; // 15 segundos máximo de espera
+
+        function showError(message) {
+            document.getElementById('error-message').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+            document.querySelector('.loading-dots').style.display = 'none';
+        }
 
         function initializeMap(lat, lon) {
+            // Configuración de timeout
+            loadTimeout = setTimeout(() => {
+                showError("El mapa está tardando demasiado en cargar. Por favor, recarga la página.");
+            }, MAX_LOAD_TIME);
+
             const options = {
                 key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms',
                 lat: lat || 0,
                 lon: lon || 0,
                 zoom: 5,
-                overlay: 'temp', // Capa inicial
+                overlay: 'temp',
+                timestamp: Date.now() // Evitar caché
             };
 
-            windyInit(options, function(api) {
-                windyAPI = api;
-                
-                // Configuración adicional para asegurar la actualización
-                api.on('ready', () => {
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('windy').style.display = 'block';
-                    document.getElementById('controls').style.display = 'block';
-                    api.map.invalidateSize();
+            try {
+                windyInit(options, function(api) {
+                    clearTimeout(loadTimeout);
+                    windyAPI = api;
                     
-                    // Solución definitiva para el cambio de capas
-                    window.windyMapAPI = api;
+                    api.on('ready', () => {
+                        document.getElementById('loading').style.display = 'none';
+                        document.getElementById('windy').style.display = 'block';
+                        document.getElementById('controls').style.display = 'block';
+                        
+                        // Forzar redimensionamiento inicial
+                        setTimeout(() => {
+                            api.map.invalidateSize();
+                        }, 300);
+                    });
+                }, function(err) {
+                    clearTimeout(loadTimeout);
+                    showError("Error al cargar el mapa: " + (err.message || "Verifica tu conexión a internet"));
+                    console.error("Windy init error:", err);
                 });
-            });
-        }
-
-        // Función mejorada para cambiar capas
-        function changeOverlay(overlay) {
-            if (windyAPI) {
-                windyAPI.map.setOverlay(overlay);
-                // Forzar actualización del mapa
-                setTimeout(() => {
-                    windyAPI.map.invalidateSize();
-                }, 100);
+            } catch (e) {
+                clearTimeout(loadTimeout);
+                showError("Error crítico: " + e.message);
+                console.error("Exception:", e);
             }
         }
 
-        // Carga inicial mejorada
-        document.addEventListener('DOMContentLoaded', () => {
-            const lat = parseFloat(sessionStorage.getItem('latitude')) || 0;
-            const lon = parseFloat(sessionStorage.getItem('longitude')) || 0;
-            initializeMap(lat, lon);
-        });
+        function changeOverlay(overlay) {
+            if (windyAPI) {
+                windyAPI.map.setOverlay(overlay);
+                // Doble actualización para asegurar el cambio
+                setTimeout(() => {
+                    windyAPI.map.invalidateSize();
+                }, 50);
+                setTimeout(() => {
+                    windyAPI.map.invalidateSize();
+                }, 200);
+            }
+        }
+
+        // Verificar conexión antes de cargar
+        if (!navigator.onLine) {
+            showError("No hay conexión a internet. Conéctate para cargar el mapa.");
+        } else {
+            document.addEventListener('DOMContentLoaded', () => {
+                try {
+                    const lat = parseFloat(sessionStorage.getItem('latitude')) || 0;
+                    const lon = parseFloat(sessionStorage.getItem('longitude')) || 0;
+                    initializeMap(lat, lon);
+                } catch (e) {
+                    showError("Error al obtener ubicación: " + e.message);
+                }
+            });
+        }
     </script>
 </body>
 </html>
