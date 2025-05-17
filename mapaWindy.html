@@ -50,7 +50,7 @@
 </head>
 <body>
     <div id="loading" class="loading">
-        <span class="loading-text">Cargando mapa V2.0...</span>
+        <span class="loading-text">Cargando mapa V2.1...</span>
     </div>
     <div id="windy" style="display: none;"></div>
     <div style="margin: 10px; text-align: center;">
@@ -59,60 +59,73 @@
         <button onclick="changeOverlay('temp')" class="btn btn-center">Temperatura</button>
         <button onclick="window.location.href='index.html';" class="btn btn-center">Volver al Mapa Principal</button>
     </div>
-    <script>
-        let windyAPI; // Variable global para acceder a la API
+<script>
+    let windyAPI;
+    let mapLoaded = false;
 
-        function initializeMap(lat, lon) {
-            const options = {
-                key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms', // Tu API key
-                lat: lat || 0, // Usa la latitud proporcionada o 0°
-                lon: lon || 0, // Usa la longitud proporcionada o 0°
-                zoom: 5, // Nivel de zoom inicial
-                overlay: 'rain', // Muestra la lluvia por defecto
-                timeline: true, // Habilita la barra de avance
-            };
+    function initializeMap(lat, lon) {
+        const options = {
+            key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms',
+            lat: lat || 0,
+            lon: lon || 0,
+            zoom: 5,
+            overlay: 'rain',
+            timestamp: Date.now(), // Evita caché
+        };
 
-            windyInit(options, function(api) {
-                windyAPI = api; // Guardamos la API en la variable global
-                const { map, overlays } = api;
-                console.log('Windy API inicializada:', api);
+        // Intentar cargar Windy con timeout
+        const loadTimeout = setTimeout(() => {
+            if (!mapLoaded) {
+                console.error("Tiempo de espera agotado al cargar Windy");
+                document.getElementById('loading-text').textContent = "Error al cargar el mapa. Recargue la página.";
+            }
+        }, 10000); // 10 segundos de timeout
 
-                // Oculta el mensaje de carga y muestra el mapa
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('windy').style.display = 'block';
-
-                // Redimensiona el mapa para que ocupe todo el espacio disponible
-                map.invalidateSize();
+        windyInit(options, function(api) {
+            clearTimeout(loadTimeout);
+            windyAPI = api;
+            mapLoaded = true;
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('windy').style.display = 'block';
+            
+            api.map.on('load', () => {
+                console.log("Mapa completamente cargado");
+                api.map.invalidateSize();
             });
-        }
+        }, (err) => {
+            console.error("Error al cargar Windy:", err);
+            document.getElementById('loading-text').textContent = "Error al cargar el mapa: " + err.message;
+        });
+    }
 
-        // Función para cambiar la capa mostrada
-        function changeOverlay(overlay) {
-            if (!windyAPI) return;
-            windyAPI.map.setOverlay(overlay); // Cambia la capa activa
+    function changeOverlay(overlay) {
+        if (!windyAPI) {
+            console.warn("Windy API no está disponible");
+            return;
         }
+        windyAPI.map.setOverlay(overlay);
+    }
 
-        // Recuperar la ubicación almacenada en sessionStorage
+    // Verificar si hay conexión a internet antes de cargar
+    if (!navigator.onLine) {
+        document.getElementById('loading-text').textContent = "Se requiere conexión a internet";
+    } else {
         const lat = parseFloat(sessionStorage.getItem('latitude'));
         const lon = parseFloat(sessionStorage.getItem('longitude'));
-
+        
         if (!isNaN(lat) && !isNaN(lon)) {
-            // Usar la ubicación almacenada
             initializeMap(lat, lon);
         } else {
-            // Si no hay ubicación almacenada, obtener una nueva
-            function getLocation() {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => initializeMap(position.coords.latitude, position.coords.longitude),
-                        () => initializeMap(0, 0) // En caso de error, usar 0°, 0°
-                    );
-                } else {
-                    initializeMap(0, 0); // Si no hay soporte para geolocalización, usar 0°, 0°
+            navigator.geolocation?.getCurrentPosition(
+                (pos) => initializeMap(pos.coords.latitude, pos.coords.longitude),
+                (err) => {
+                    console.warn("Geolocalización fallida:", err);
+                    initializeMap(0, 0);
                 }
-            }
-            getLocation();
+            ) || initializeMap(0, 0); // Fallback si no hay geolocalización
         }
-    </script>
+    }
+</script>
 </body>
 </html>
