@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa Windy Interactivo</title>
     <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
     <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
     <style>
-        #windy { 
-            width: 100%; 
+        #windy {
+            width: 100%;
             height: 640px;
-            display: none;
+            display: none; /* Oculto inicialmente */
         }
         .btn {
             padding: 10px 15px;
@@ -83,7 +84,7 @@
         <div id="error-message" class="error-message"></div>
     </div>
     <div id="windy"></div>
-    
+
     <div id="controls" style="display: none; text-align: center; margin: 10px auto;">
         <div style="display: flex; justify-content: center; margin-bottom: 5px;">
             <button onclick="changeOverlay('temp')" class="btn" style="background-color: #ff6b6b; color: white;">Temperatura</button>
@@ -104,6 +105,7 @@
             document.getElementById('error-message').style.display = 'block';
             document.getElementById('error-message').textContent = message;
             document.querySelector('.loading-dots').style.display = 'none';
+            document.getElementById('loading').style.backgroundColor = '#ffe0e0'; // Cambiar color de fondo en error
         }
 
         function initializeMap(lat, lon) {
@@ -113,7 +115,7 @@
             }, MAX_LOAD_TIME);
 
             const options = {
-                key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms',
+                key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms', // ¡VERIFICA ESTA CLAVE!
                 lat: lat || 0,
                 lon: lon || 0,
                 zoom: 5,
@@ -125,36 +127,35 @@
                 windyInit(options, function(api) {
                     clearTimeout(loadTimeout);
                     windyAPI = api;
-                    
+
                     api.on('ready', () => {
+                        console.log("Windy mapa inicializado correctamente."); // Mensaje de éxito
                         document.getElementById('loading').style.display = 'none';
                         document.getElementById('windy').style.display = 'block';
                         document.getElementById('controls').style.display = 'block';
-                        
-                        // Forzar redimensionamiento inicial
+
+                        // Forzar redimensionamiento inicial (un solo intento debería ser suficiente)
                         setTimeout(() => {
                             api.map.invalidateSize();
                         }, 300);
                     });
                 }, function(err) {
                     clearTimeout(loadTimeout);
-                    showError("Error al cargar el mapa: " + (err.message || "Verifica tu conexión a internet"));
+                    const errorMessage = err && err.message ? err.message : "Error desconocido al cargar el mapa.";
+                    showError("Error al cargar el mapa: " + errorMessage + ". Verifica tu conexión a internet y la clave de la API.");
                     console.error("Windy init error:", err);
                 });
             } catch (e) {
                 clearTimeout(loadTimeout);
-                showError("Error crítico: " + e.message);
-                console.error("Exception:", e);
+                showError("Error crítico durante la inicialización: " + e.message);
+                console.error("Excepción:", e);
             }
         }
 
         function changeOverlay(overlay) {
             if (windyAPI) {
                 windyAPI.map.setOverlay(overlay);
-                // Doble actualización para asegurar el cambio
-                setTimeout(() => {
-                    windyAPI.map.invalidateSize();
-                }, 50);
+                // Un solo invalidateSize debería ser suficiente después de cambiar la capa
                 setTimeout(() => {
                     windyAPI.map.invalidateSize();
                 }, 200);
@@ -167,8 +168,8 @@
         } else {
             document.addEventListener('DOMContentLoaded', () => {
                 try {
-                    const lat = parseFloat(sessionStorage.getItem('latitude')) || 0;
-                    const lon = parseFloat(sessionStorage.getItem('longitude')) || 0;
+                    const lat = parseFloat(sessionStorage.getItem('latitude')) || -34.6037; // Buenos Aires como fallback
+                    const lon = parseFloat(sessionStorage.getItem('longitude')) || -58.3816; // Buenos Aires como fallback
                     initializeMap(lat, lon);
                 } catch (e) {
                     showError("Error al obtener ubicación: " + e.message);
