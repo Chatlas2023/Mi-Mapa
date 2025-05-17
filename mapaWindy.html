@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Windy con Controles</title>
+    <title>Mapa Windy Interactivo</title>
     <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
     <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
     <style>
@@ -19,13 +19,10 @@
             width: 180px;
             margin: 5px;
         }
-        .btn-center {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-center:hover {
-            background-color: #0056b3;
-        }
+        .btn-temp { background-color: #ff6b6b; color: white; }
+        .btn-rain { background-color: #4d96ff; color: white; }
+        .btn-lightning { background-color: #ffd93d; color: black; }
+        .btn-back { background-color: #6c757d; color: white; }
         .loading {
             display: flex;
             justify-content: center;
@@ -36,40 +33,29 @@
             font-size: 20px;
             color: #333;
         }
-        .loading-text {
-            color: white;
-            background-color: red;
-            padding: 10px;
-            animation: blink 1s infinite;
-        }
-        @keyframes blink {
-            0% { background-color: red; }
-            50% { background-color: darkred; }
-            100% { background-color: red; }
-        }
         .controls {
             text-align: center;
             margin: 10px 0;
+            display: none; /* Oculto inicialmente */
         }
     </style>
 </head>
 <body>
     <div id="loading" class="loading">
-        <span class="loading-text">Cargando mapa V2.3</span>
+        Cargando mapa V3.0
     </div>
     <div id="windy" style="display: none;"></div>
     
-    <!-- Controles para cambiar capas (inicialmente ocultos) -->
-    <div id="controls" class="controls" style="display: none;">
-        <button onclick="changeOverlay('temp')" class="btn btn-center">Temperatura</button>
-        <button onclick="changeOverlay('wind')" class="btn btn-center">Viento</button>
-        <button onclick="changeOverlay('rain')" class="btn btn-center">Lluvia</button>
-        <button onclick="changeOverlay('lightning')" class="btn btn-center">Tormentas</button>
-        <button onclick="window.location.href='index.html';" class="btn btn-center">Volver</button>
+    <!-- Controles simplificados (sin viento) -->
+    <div id="controls" class="controls">
+        <button onclick="changeOverlay('temp')" class="btn btn-temp">Temperatura</button>
+        <button onclick="changeOverlay('rain')" class="btn btn-rain">Lluvia</button>
+        <button onclick="changeOverlay('lightning')" class="btn btn-lightning">Tormentas</button>
+        <button onclick="window.location.href='index.html';" class="btn btn-back">Volver</button>
     </div>
 
     <script>
-        let windyAPI; // Variable global para acceder a la API
+        let windyAPI;
 
         function initializeMap(lat, lon) {
             const options = {
@@ -77,47 +63,36 @@
                 lat: lat || 0,
                 lon: lon || 0,
                 zoom: 5,
-                overlay: 'temp', // Capa inicial: temperatura
-                timeline: true,
+                overlay: 'temp', // Capa inicial
             };
 
             windyInit(options, function(api) {
                 windyAPI = api;
-                console.log('Windy API lista');
-
-                // Mostrar mapa y controles
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('windy').style.display = 'block';
-                document.getElementById('controls').style.display = 'block';
-
-                api.map.invalidateSize();
+                
+                // Forzar redibujado del mapa
+                setTimeout(() => {
+                    api.map.invalidateSize();
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('windy').style.display = 'block';
+                    document.getElementById('controls').style.display = 'block';
+                }, 300);
             });
         }
 
-        // Función para cambiar capas
+        // Función mejorada para cambiar capas
         function changeOverlay(overlay) {
             if (windyAPI) {
                 windyAPI.map.setOverlay(overlay);
-                console.log("Mostrando capa:", overlay);
+                // Actualizar el mapa inmediatamente
+                windyAPI.map.fire('resize');
+                console.log("Capa activa:", overlay);
             }
         }
 
-        // Cargar ubicación
-        const lat = parseFloat(sessionStorage.getItem('latitude'));
-        const lon = parseFloat(sessionStorage.getItem('longitude'));
-
-        if (!isNaN(lat) && !isNaN(lon)) {
-            initializeMap(lat, lon);
-        } else {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => initializeMap(pos.coords.latitude, pos.coords.longitude),
-                    () => initializeMap(0, 0)
-                );
-            } else {
-                initializeMap(0, 0);
-            }
-        }
+        // Carga inicial
+        const lat = parseFloat(sessionStorage.getItem('latitude')) || 0;
+        const lon = parseFloat(sessionStorage.getItem('longitude')) || 0;
+        initializeMap(lat, lon);
     </script>
 </body>
 </html>
