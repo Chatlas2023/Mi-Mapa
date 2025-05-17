@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prueba Windy Forecast Map</title>
+    <title>Mapa Windy con Controles</title>
     <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
     <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
     <style>
@@ -17,6 +17,7 @@
             cursor: pointer;
             transition: background 0.3s ease;
             width: 180px;
+            margin: 5px;
         }
         .btn-center {
             background-color: #007bff;
@@ -46,59 +47,77 @@
             50% { background-color: darkred; }
             100% { background-color: red; }
         }
+        .controls {
+            text-align: center;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
     <div id="loading" class="loading">
-        <span class="loading-text">Cargando mapa V2.2</span>
+        <span class="loading-text">Cargando mapa V2.3</span>
     </div>
     <div id="windy" style="display: none;"></div>
+    
+    <!-- Controles para cambiar capas (inicialmente ocultos) -->
+    <div id="controls" class="controls" style="display: none;">
+        <button onclick="changeOverlay('temp')" class="btn btn-center">Temperatura</button>
+        <button onclick="changeOverlay('wind')" class="btn btn-center">Viento</button>
+        <button onclick="changeOverlay('rain')" class="btn btn-center">Lluvia</button>
+        <button onclick="changeOverlay('lightning')" class="btn btn-center">Tormentas</button>
+        <button onclick="window.location.href='index.html';" class="btn btn-center">Volver</button>
+    </div>
+
     <script>
+        let windyAPI; // Variable global para acceder a la API
+
         function initializeMap(lat, lon) {
             const options = {
-                key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms', // Tu API key
-                lat: lat || 0, // Usa la latitud proporcionada o 0°
-                lon: lon || 0, // Usa la longitud proporcionada o 0°
-                zoom: 5, // Nivel de zoom inicial
-                overlay: 'temp', // Muestra la temperatura en lugar del viento
-                timeline: true, // Habilita la barra de avance
+                key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms',
+                lat: lat || 0,
+                lon: lon || 0,
+                zoom: 5,
+                overlay: 'temp', // Capa inicial: temperatura
+                timeline: true,
             };
 
-            windyInit(options, function(windyAPI) {
-                const { map, overlays } = windyAPI;
-                console.log('Windy API inicializada:', windyAPI);
+            windyInit(options, function(api) {
+                windyAPI = api;
+                console.log('Windy API lista');
 
-                // Oculta el mensaje de carga y muestra el mapa
+                // Mostrar mapa y controles
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('windy').style.display = 'block';
+                document.getElementById('controls').style.display = 'block';
 
-                // Redimensiona el mapa para que ocupe todo el espacio disponible
-                map.invalidateSize();
+                api.map.invalidateSize();
             });
         }
 
-        // Recuperar la ubicación almacenada en sessionStorage
+        // Función para cambiar capas
+        function changeOverlay(overlay) {
+            if (windyAPI) {
+                windyAPI.map.setOverlay(overlay);
+                console.log("Mostrando capa:", overlay);
+            }
+        }
+
+        // Cargar ubicación
         const lat = parseFloat(sessionStorage.getItem('latitude'));
         const lon = parseFloat(sessionStorage.getItem('longitude'));
 
         if (!isNaN(lat) && !isNaN(lon)) {
-            // Usar la ubicación almacenada
             initializeMap(lat, lon);
         } else {
-            // Si no hay ubicación almacenada, obtener una nueva
-            function getLocation() {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => initializeMap(position.coords.latitude, position.coords.longitude),
-                        () => initializeMap(0, 0) // En caso de error, usar 0°, 0°
-                    );
-                } else {
-                    initializeMap(0, 0); // Si no hay soporte para geolocalización, usar 0°, 0°
-                }
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => initializeMap(pos.coords.latitude, pos.coords.longitude),
+                    () => initializeMap(0, 0)
+                );
+            } else {
+                initializeMap(0, 0);
             }
-            getLocation();
         }
     </script>
-    <button onclick="window.location.href='index.html';" class="btn btn-center">Volver al Mapa Principal</button>
 </body>
 </html>
