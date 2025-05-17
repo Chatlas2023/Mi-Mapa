@@ -3,31 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Windy Interactivo</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <title>Prueba Windy Forecast Map</title>
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
     <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
     <style>
-        #windy { 
-            width: 100%; 
-            height: 640px;
-            display: none;
-        }
+        #windy { width: 100%; height: 640px; }
         .btn {
-            padding: 10px 15px;
+            padding: 7px 15px;
             font-size: 14px;
             font-weight: bold;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            width: 160px;
-            margin: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background 0.3s ease;
+            width: 180px;
+        }
+        .btn-center {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-center:hover {
+            background-color: #0056b3;
         }
         .loading {
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             width: 100%;
@@ -36,181 +35,70 @@
             font-size: 20px;
             color: #333;
         }
-        .loading-dots {
-            display: inline-block;
-            position: relative;
-            width: 80px;
-            height: 20px;
-            text-align: center;
+        .loading-text {
+            color: white;
+            background-color: red;
+            padding: 10px;
+            animation: blink 1s infinite;
         }
-        .loading-dots span {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #333;
-            margin: 0 3px;
-            opacity: 0;
-            animation: loadingFade 1.4s infinite ease-in-out;
-        }
-        .loading-dots span:nth-child(1) {
-            animation-delay: 0s;
-        }
-        .loading-dots span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        .loading-dots span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        @keyframes loadingFade {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
-        }
-        .error-message {
-            color: red;
-            margin-top: 10px;
-            display: none;
+        @keyframes blink {
+            0% { background-color: red; }
+            50% { background-color: darkred; }
+            100% { background-color: red; }
         }
     </style>
 </head>
 <body>
     <div id="loading" class="loading">
-        <div>Cargando mapa V3.6</div>
-        <div class="loading-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <div id="error-message" class="error-message"></div>
+        <span class="loading-text">Cargando el mapa...</span>
     </div>
-    <div id="windy"></div>
-    
-    <div id="controls" style="display: none; text-align: center; margin: 10px auto;">
-        <div style="display: flex; justify-content: center; margin-bottom: 5px;">
-            <button onclick="changeOverlay('temp')" class="btn" style="background-color: #ff6b6b; color: white;">Temperatura</button>
-            <button onclick="changeOverlay('rain')" class="btn" style="background-color: #4d96ff; color: white;">Lluvia</button>
-        </div>
-        <div style="display: flex; justify-content: center;">
-            <button onclick="changeOverlay('wind')" class="btn" style="background-color: #a5d8ff; color: black;">Viento</button>
-            <button onclick="changeOverlay('clouds')" class="btn" style="background-color: #e9ecef; color: black;">Nubes</button>
-        </div>
-        <div style="display: flex; justify-content: center; margin-top: 5px;">
-            <button onclick="changeOverlay('lightning')" class="btn" style="background-color: #ffd93d; color: black;">Tormentas</button>
-            <button onclick="window.location.href='index.html';" class="btn" style="background-color: #6c757d; color: white;">Volver</button>
-        </div>
-    </div>
-
+    <div id="windy" style="display: none;"></div>
     <script>
-        let windyAPI;
-        let loadTimeout;
-        const MAX_LOAD_TIME = 15000; // 15 segundos máximo de espera
-
-        function showError(message) {
-            const errorElement = document.getElementById('error-message');
-            errorElement.style.display = 'block';
-            errorElement.textContent = message;
-            document.querySelector('.loading-dots').style.display = 'none';
-            
-            // Mostrar botón de reintento
-            const retryBtn = document.createElement('button');
-            retryBtn.textContent = 'Reintentar';
-            retryBtn.className = 'btn';
-            retryBtn.style.backgroundColor = '#28a745';
-            retryBtn.style.color = 'white';
-            retryBtn.style.marginTop = '10px';
-            retryBtn.onclick = function() {
-                window.location.reload();
-            };
-            errorElement.appendChild(document.createElement('br'));
-            errorElement.appendChild(retryBtn);
-        }
-
         function initializeMap(lat, lon) {
-            // Configuración de timeout
-            loadTimeout = setTimeout(() => {
-                showError("El mapa está tardando demasiado en cargar. Por favor, recarga la página.");
-            }, MAX_LOAD_TIME);
-
-            // Verificar si la API de Windy está cargada
-            if (typeof windyInit === 'undefined') {
-                showError("No se pudo cargar la API de Windy. Verifica tu conexión a internet.");
-                return;
-            }
-
             const options = {
-                key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms',
-                lat: lat || 40.0, // Valor por defecto si no hay coordenadas
-                lon: lon || -3.0, // Valor por defecto si no hay coordenadas
-                zoom: 5,
-                overlay: 'temp'
+                key: 'dxDS5A1vfB7PTIRIhqPQ0COHnn9BWNms', // Tu API key
+                lat: lat || 0, // Usa la latitud proporcionada o 0°
+                lon: lon || 0, // Usa la longitud proporcionada o 0°
+                zoom: 5, // Nivel de zoom inicial
+                overlay: 'temp', // Muestra la temperatura en lugar del viento
+                timeline: true, // Habilita la barra de avance
             };
 
-            try {
-                windyInit(options, function(api) {
-                    clearTimeout(loadTimeout);
-                    windyAPI = api;
-                    
-                    api.on('ready', () => {
-                        document.getElementById('loading').style.display = 'none';
-                        document.getElementById('windy').style.display = 'block';
-                        document.getElementById('controls').style.display = 'block';
-                        
-                        // Forzar redimensionamiento y centrado del mapa
-                        setTimeout(() => {
-                            api.map.invalidateSize();
-                            if (lat && lon) {
-                                api.map.setView([lat, lon], 5);
-                            }
-                        }, 100);
-                    });
-                    
-                    api.on('error', (err) => {
-                        clearTimeout(loadTimeout);
-                        showError("Error en el mapa: " + (err.message || "Error desconocido"));
-                    });
-                });
-            } catch (e) {
-                clearTimeout(loadTimeout);
-                showError("Error crítico: " + e.message);
-                console.error("Exception:", e);
-            }
-        }
+            windyInit(options, function(windyAPI) {
+                const { map, overlays } = windyAPI;
+                console.log('Windy API inicializada:', windyAPI);
 
-        function changeOverlay(overlay) {
-            if (windyAPI) {
-                windyAPI.map.setOverlay(overlay);
-                // Redimensionar después del cambio
-                setTimeout(() => {
-                    windyAPI.map.invalidateSize();
-                }, 100);
-            }
-        }
+                // Oculta el mensaje de carga y muestra el mapa
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('windy').style.display = 'block';
 
-        // Verificar conexión antes de cargar
-        if (!navigator.onLine) {
-            showError("No hay conexión a internet. Conéctate para cargar el mapa.");
-        } else {
-            // Esperar a que todo el DOM esté listo
-            document.addEventListener('DOMContentLoaded', () => {
-                try {
-                    // Intentar obtener ubicación guardada o usar valores por defecto
-                    const lat = parseFloat(sessionStorage.getItem('latitude')) || 40.0;
-                    const lon = parseFloat(sessionStorage.getItem('longitude')) || -3.0;
-                    
-                    // Verificar si las coordenadas son válidas
-                    if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-                        console.warn("Coordenadas inválidas, usando valores por defecto");
-                        initializeMap(40.0, -3.0);
-                    } else {
-                        initializeMap(lat, lon);
-                    }
-                } catch (e) {
-                    showError("Error al obtener ubicación: " + e.message);
-                    // Inicializar con valores por defecto
-                    initializeMap(40.0, -3.0);
-                }
+                // Redimensiona el mapa para que ocupe todo el espacio disponible
+                map.invalidateSize();
             });
         }
+
+        // Recuperar la ubicación almacenada en sessionStorage
+        const lat = parseFloat(sessionStorage.getItem('latitude'));
+        const lon = parseFloat(sessionStorage.getItem('longitude'));
+
+        if (!isNaN(lat) && !isNaN(lon)) {
+            // Usar la ubicación almacenada
+            initializeMap(lat, lon);
+        } else {
+            // Si no hay ubicación almacenada, obtener una nueva
+            function getLocation() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => initializeMap(position.coords.latitude, position.coords.longitude),
+                        () => initializeMap(0, 0) // En caso de error, usar 0°, 0°
+                    );
+                } else {
+                    initializeMap(0, 0); // Si no hay soporte para geolocalización, usar 0°, 0°
+                }
+            }
+            getLocation();
+        }
     </script>
+    <button onclick="window.location.href='index.html';" class="btn btn-center">Volver al Mapa Principal</button>
 </body>
 </html>
