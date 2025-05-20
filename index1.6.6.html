@@ -399,6 +399,11 @@ body.dark-mode #saveLocation:hover {
         <span class="speed-value" id="distanceValue">0</span>
         <span>km</span>
       </div>
+        <div class="speed-row">
+    <span>Altitud:</span>
+    <span class="speed-value" id="altitudeValue">0</span>
+    <span>m</span>
+  </div>
       <div class="speed-row">
         <span>Clima:</span>
         <span class="speed-value" id="weatherInfo">-</span>
@@ -688,6 +693,7 @@ async function fetchLocationDetails(lat, lng) {
       const lng = position.coords.longitude;
       const speed = position.coords.speed;
       const accuracy = position.coords.accuracy;
+      const altitude = position.coords.altitude || 0;
       
       // Actualizar las coordenadas actuales
       currentLat = lat;
@@ -697,6 +703,7 @@ async function fetchLocationDetails(lat, lng) {
       updateMap(lat, lng);
       updateStatus(`Lat: ${lat.toFixed(6)} | Long: ${lng.toFixed(6)}`);
       updateSpeed(speed);
+       document.getElementById('altitudeValue').textContent = Math.round(altitude);
       findNeighborhood(lat, lng);
       getWeather(lat, lng);
       getStreetInfo(lat, lng);
@@ -908,6 +915,7 @@ stopButton.classList.remove('continue');
       document.getElementById('distanceValue').textContent = '0';
       document.getElementById('currentSpeed').textContent = '0';
       document.getElementById('averageSpeed').textContent = '0';
+      document.getElementById('altitudeValue').textContent = '0';
       document.getElementById('weatherInfo').textContent = '-';
       document.getElementById('street-name').textContent = '';
       document.getElementById('street-etymology').textContent = '';
