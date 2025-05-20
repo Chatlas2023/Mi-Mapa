@@ -19,3 +19,5 @@ El mapa8 incluye versionado visible en el mapa y corrige el error al querer hace
 1.5.01 Combina dos aplicaciones - No funciona
 1.6.1 Primer versión funcional de aplicaciones combinadas
 1.6.3 Aplicaciones combinadas más los 3 niveles de mapas y caché de nombres de calles
+1.6.5 Versión estable sin uso de Barrios_AMBA, usa el barrio de OSM
+
