@@ -69,14 +69,29 @@
         font-size: 14px;
       }
     }
-    .buttons {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      padding: 0 10px;
-      margin-bottom: 10px;
-    }
+/* Nuevos estilos para la reorganización de botones */
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  margin-bottom: 10px;
+}
+
+/* Ajustes para los elementos individuales */
+#routeName, #mapLayers {
+  width: 100%;
+  max-width: 300px;
+}
     button {
       padding: 6px 12px;
       font-size: 12px;
@@ -349,56 +364,12 @@
     opacity: 0.7;
   }
 }
-
-/* Estilos para los puntos guardados */
 #saveLocation {
-    position: fixed;
-    right: 10px;
-    bottom: 44px;
-    width: 100px;
-    height: 37px;
-    font-size: 14px;
     background-color: #28a745;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    z-index: 1000;
 }
 
 #saveLocation:hover {
     background-color: #218838;
-}
-
-.custom-icon {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.custom-icon img {
-    width: 50px;
-    height: 50px;
-}
-
-.custom-icon div {
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 14px;
-    font-weight: bold;
-    color: black;
-    background: white;
-    padding: 2px 5px;
-    border-radius: 3px;
-    border: 1px solid #ccc;
 }
 
 body.dark-mode #saveLocation {
@@ -444,19 +415,28 @@ body.dark-mode #saveLocation:hover {
     <div id="status">Obteniendo ubicación...</div>
   </div>
   
-  <div class="buttons">
+<div class="buttons">
+  <div class="button-row">
     <button id="clearButton">Limpiar historial</button>
     <button id="stopButton">Pausar captura</button>
-    <button id="shareButton">Enviar ruta WApp</button>
     <button id="darkModeButton">Modo oscuro</button>
-    <input type="text" id="routeName" placeholder="Nombre de la ruta">
+  </div>
+  
+  <div class="button-row">
+    <button id="shareButton">Enviar ruta WApp</button>
     <button id="saveRouteButton">Guardar ruta</button>
+    <button id="saveLocation">Guardar ubicación</button>
+  </div>
+  
+  <div class="button-row"> 
+    <input type="text" id="routeName" placeholder="Nombre de la ruta">
     <select id="mapLayers">
       <option value="osm">Estándar</option>
       <option value="satellite">Satélite</option>
       <option value="weather">Clima</option>
     </select>
   </div>
+</div>
   
   <div id="street-info-container">
     <div id="street-name"></div>
@@ -467,9 +447,6 @@ body.dark-mode #saveLocation:hover {
     <h3>Rutas Guardadas</h3>
     <ul id="savedRoutesList"></ul>
   </div>
-  
-  <!-- Botón para guardar ubicación -->
-  <button id="saveLocation">Guardar Ubicación</button>
   
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
@@ -856,8 +833,8 @@ function toggleCapture() {
       document.getElementById('neighborhoodName').style.bottom = '15px';
     }
     getLocation();
-    stopButton.textContent = "Pausar captura";
-    stopButton.classList.remove('continue');
+stopButton.textContent = "Pausar captura";
+stopButton.classList.remove('continue');
     updateStatus("Captura reanudada");
   }
   isCapturing = !isCapturing;
@@ -865,7 +842,7 @@ function toggleCapture() {
 
     function toggleDarkMode() {
       const body = document.body;
-      const darkModeButton = document.getElementById('darkModeButton');
+      const darkMode = document.getElementById('darkMode');
       const speedPanel = document.getElementById('speedPanel');
       
       body.classList.toggle('dark-mode');
@@ -876,16 +853,16 @@ function toggleCapture() {
       speedPanel.style.display = '';
       
       localStorage.setItem('darkMode', isDarkMode);
-      darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
+      darkMode.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
     }
 
     function applyDarkModePreference() {
       const isDarkMode = localStorage.getItem('darkMode') === 'true';
       const body = document.body;
-      const darkModeButton = document.getElementById('darkModeButton');
+      const darkMode = document.getElementById('darkMode');
       if (isDarkMode) {
         body.classList.add('dark-mode');
-        darkModeButton.textContent = 'Modo claro';
+        darkMode.textContent = 'Modo claro';
       } else {
         body.classList.remove('dark-mode');
         darkModeButton.textContent = 'Modo oscuro';
