@@ -833,8 +833,8 @@ function toggleCapture() {
       document.getElementById('neighborhoodName').style.bottom = '15px';
     }
     getLocation();
-    stop.textContent = "Pausar captura";
-    stop.classList.remove('continue');
+stopButton.textContent = "Pausar captura";
+stopButton.classList.remove('continue');
     updateStatus("Captura reanudada");
   }
   isCapturing = !isCapturing;
