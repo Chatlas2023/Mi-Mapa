@@ -197,10 +197,26 @@
       background-color: #121212;
       color: #ffffff !important;
     }
-    body.dark-mode .buttons button:not(#clearButton):not(#stopButton):not(#shareButton):not(#darkModeButton):not(#saveRouteButton) {
-      background-color: #444 !important;
-      color: #ffffff;
-    }
+body.dark-mode .buttons button:not(#stopButton):not(#darkModeButton) {
+  background-color: #444 !important;
+  color: #ffffff;
+}
+    #clearButton {
+  background-color: #ff9800;
+}
+#shareButton {
+  background-color: #4caf50;
+}
+#saveRouteButton {
+  background-color: #2196f3;
+}
+#saveLocation {
+  background-color: #9c27b0; /* Color morado para el botón de ubicación */
+}
+    #clearButton:hover { background-color: #e68a00; }
+#shareButton:hover { background-color: #3e8e41; }
+#saveRouteButton:hover { background-color: #0b7dda; }
+#saveLocation:hover { background-color: #7b1fa2; }
     body.dark-mode #status,
     body.dark-mode #speedIndicator #speedValue,
     body.dark-mode #speedIndicator #speedUnit,
