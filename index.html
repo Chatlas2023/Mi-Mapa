@@ -344,6 +344,19 @@
     border-color: #555 !important;
     filter: none !important;
 }
+    /* Estilo para los botones del popup de ubicación guardada */
+.leaflet-popup-content button {
+  background-color: #add8e6 !important;
+  color: black !important;
+  border: 1px solid #87CEEB !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+}
+
+.leaflet-popup-content button:hover {
+  background-color: #87CEEB !important;
+}
   </style>
 </head>
 <body>
@@ -461,7 +474,7 @@
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.7 ";
+        div.innerHTML = " Ver: 1.6.8 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
