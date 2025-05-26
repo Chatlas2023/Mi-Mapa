@@ -226,15 +226,19 @@
       color: #ffffff !important;
     }
     #savedRoutesContainer {
-      margin: 5px 10px 10px 10px; 
-      padding: 1px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background-color: #e6f7ff;
-      max-height: 80px;
-      overflow-x: auto;
-      white-space: nowrap;
-    }
+  margin: 5px 10px 10px 10px; 
+  padding: 1px;
+  border: 1px solid #87CEEB; /* Borde celeste */
+  border-radius: 8px;
+  background-color: #e6f7ff; /* Fondo celeste muy claro */
+  max-height: 80px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+    body.dark-mode #savedRoutesContainer {
+  background-color: #1a3a4a; /* Azul oscuro para modo oscuro */
+  border-color: #2a5a6a;
+}
     #savedRoutesContainer h3 {
       margin-top: 5px;
       margin-bottom: 5px;
@@ -261,9 +265,26 @@
       margin-right: 10px;
     }
     #savedRoutesList li button {
-      margin-top: 0;
-      margin-left: 5px;
+  background-color: #add8e6 !important; /* Celeste claro */
+  color: black !important;
+  border: 1px solid #87CEEB !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s;
     }
+    #savedRoutesList li button:hover {
+  background-color: #87CEEB !important; /* Celeste un poco más oscuro al pasar el mouse */
+}
+    body.dark-mode #savedRoutesList li button {
+  background-color: #2a7a9a !important;
+  color: white !important;
+  border-color: #1a5a7a !important;
+}
+
+body.dark-mode #savedRoutesList li button:hover {
+  background-color: #3a8aaa !important;
+}
     #routeName {
       max-width: calc(150px - 9px);
       font-size: 14px;
