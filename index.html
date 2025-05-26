@@ -1109,20 +1109,20 @@ function saveRoute() {
       const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
       savedLocations.forEach((loc, index) => {
         const puntoNumero = index + 1;
-        const customIcon = L.divIcon({
-          className: 'custom-icon',
-          html: `
-            <div style="position: relative;">
-              <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-              <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-                ${puntoNumero}
-              </div>
-            </div>
-          `,
-          iconSize: [50, 50],
-          iconAnchor: [25, 50],
-          popupAnchor: [-50, -50]
-        });
+const customIcon = L.divIcon({
+  className: 'custom-icon',
+  html: `
+    <div style="position: relative;">
+      <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+      <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+        ${puntoNumero}
+      </div>
+    </div>
+  `,
+  iconSize: [50, 50],
+  iconAnchor: [25, 50],
+  popupAnchor: [25, -40] // Cambiado de [-50, -50] a [25, -40]
+});
 
         const newMarker = L.marker([loc.lat, loc.lon], {
           title: loc.nombre,
@@ -1159,20 +1159,20 @@ function saveRoute() {
       savedMarkers.forEach((m, i) => {
         const puntoNumero = i + 1;
 
-        const customIcon = L.divIcon({
-          className: 'custom-icon',
-          html: `
-            <div style="position: relative;">
-              <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-              <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-                ${puntoNumero}
-              </div>
-            </div>
-          `,
-          iconSize: [50, 50],
-          iconAnchor: [25, 50],
-          popupAnchor: [-50, -50]
-        });
+const customIcon = L.divIcon({
+  className: 'custom-icon',
+  html: `
+    <div style="position: relative;">
+      <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+      <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+        ${puntoNumero}
+      </div>
+    </div>
+  `,
+  iconSize: [50, 50],
+  iconAnchor: [25, 50],
+  popupAnchor: [25, -40] // Cambiado de [-50, -50] a [25, -40]
+});
 
         m.setIcon(customIcon);
 
@@ -1195,20 +1195,20 @@ function saveRoute() {
     function guardarUbicacion() {
       if (currentLat && currentLon) {
         const puntoNumero = savedMarkers.length + 1;
-        const customIcon = L.divIcon({
-          className: 'custom-icon',
-          html: `
-            <div style="position: relative;">
-              <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-              <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-                ${puntoNumero}
-              </div>
-            </div>
-          `,
-          iconSize: [50, 50],
-          iconAnchor: [25, 50],
-          popupAnchor: [-50, -50]
-        });
+const customIcon = L.divIcon({
+  className: 'custom-icon',
+  html: `
+    <div style="position: relative;">
+      <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+      <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+        ${puntoNumero}
+      </div>
+    </div>
+  `,
+  iconSize: [50, 50],
+  iconAnchor: [25, 50],
+  popupAnchor: [25, -40] // Cambiado de [-50, -50] a [25, -40]
+});
 
         const newMarker = L.marker([currentLat, currentLon], {
           title: "Punto",
