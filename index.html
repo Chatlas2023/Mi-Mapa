@@ -378,18 +378,6 @@ body.dark-mode #savedRoutesList li button:hover {
 .leaflet-popup-content button:hover {
   background-color: #87CEEB !important;
 }
-    /* Agrega esto al final de tu sección de estilos */
-.leaflet-popup {
-  margin-left: 10px !important; /* Ajusta este valor según necesites */
-}
-
-.leaflet-popup-content-wrapper {
-  max-width: 250px; /* Controla el ancho máximo del popup */
-}
-
-.leaflet-popup-tip-container {
-  left: 10px !important; /* Alinea la punta del popup con el contenido */
-}
   </style>
 </head>
 <body>
@@ -506,7 +494,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.10 ";
+        div.innerHTML = " Ver: 1.6.9 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -1133,7 +1121,7 @@ const customIcon = L.divIcon({
   `,
   iconSize: [50, 50],
   iconAnchor: [25, 50],
-  popupAnchor: [-25, -40] // Cambiado de [-50, -50] a [25, -40]
+  popupAnchor: [25, -40] // Cambiado de [-50, -50] a [25, -40]
 });
 
         const newMarker = L.marker([loc.lat, loc.lon], {
