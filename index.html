@@ -494,7 +494,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.11 ";
+        div.innerHTML = " Ver: 1.6.12 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -1121,7 +1121,7 @@ const customIcon = L.divIcon({
   `,
   iconSize: [50, 50],
   iconAnchor: [25, 50],
-  popupAnchor: [40, -40] // Cambiado de [-50, -50] a [25, -40]
+  popupAnchor: [-10, -40] // Cambiado de [-50, -50] a [25, -40]
 });
 
         const newMarker = L.marker([loc.lat, loc.lon], {
