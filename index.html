@@ -1156,17 +1156,17 @@ const customIcon = L.divIcon({
           icon: customIcon
         }).addTo(map);
 
-        const popupContent = `
-          <div style="white-space: nowrap;">
-            <label for="nombrePunto">Nombre:</label>
-            <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
-            <div>Latitud: ${loc.lat.toFixed(6)}</div>
-            <div>Longitud: ${loc.lon.toFixed(6)}</div><br>
-            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-            <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon})" style="margin-left: 5px;">Compartir Punto</button>
-          </div>
-        `;
+const popupContent = `
+  <div style="white-space: nowrap;">
+    <label for="nombrePunto">Nombre:</label>
+    <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
+    <div>Latitud: ${currentLat.toFixed(6)}</div>
+    <div>Longitud: ${currentLon.toFixed(6)}</div><br>
+    <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Guardar Nombre</button>
+    <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
+    <button onclick="compartirCoordenadas(${currentLat}, ${currentLon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
+  </div>
+`;
 
         newMarker.bindPopup(popupContent);
         savedMarkers.push(newMarker);
@@ -1235,17 +1235,17 @@ const newMarker = L.marker([currentLat, currentLon], {
 
         savedMarkers.push(newMarker);
 
-        const popupContent = `
-          <div style="white-space: nowrap;">
-            <label for="nombrePunto">Nombre:</label>
-            <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
-            <div>Latitud: ${currentLat.toFixed(6)}</div>
-            <div>Longitud: ${currentLon.toFixed(6)}</div><br>
-            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Guardar Nombre</button>
-            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-            <button onclick="compartirCoordenadas(${currentLat}, ${currentLon})" style="margin-left: 5px;">Compartir Punto</button>
-          </div>
-        `;
+const popupContent = `
+  <div style="white-space: nowrap;">
+    <label for="nombrePunto">Nombre:</label>
+    <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
+    <div>Latitud: ${latLng.lat.toFixed(6)}</div>
+    <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
+    <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+    <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
+    <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
+  </div>
+`;
 
         newMarker.bindPopup(popupContent).openPopup();
         actualizarLocalStoragePuntos();
@@ -1263,17 +1263,17 @@ const newMarker = L.marker([currentLat, currentLon], {
       });
       if (marker) {
         const latLng = marker.getLatLng();
-        const popupContent = `
-          <div style="white-space: nowrap;">
-            <label for="nombrePunto">Nombre:</label>
-            <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
-            <div>Latitud: ${latLng.lat.toFixed(6)}</div>
-            <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
-            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-            <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng})" style="margin-left: 5px;">Compartir Punto</button>
-          </div>
-        `;
+const popupContent = `
+  <div style="white-space: nowrap;">
+    <label for="nombrePunto">Nombre:</label>
+    <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
+    <div>Latitud: ${loc.lat.toFixed(6)}</div>
+    <div>Longitud: ${loc.lon.toFixed(6)}</div><br>
+    <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+    <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
+    <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
+  </div>
+`;
         marker.setPopupContent(popupContent);
         actualizarLocalStoragePuntos();
       }
@@ -1292,23 +1292,15 @@ const newMarker = L.marker([currentLat, currentLon], {
       }
     };
 
-    window.compartirCoordenadas = function(lat, lon) {
-      const link = `https://www.google.com/maps?q=${lat},${lon}`;
-      const linkInput = document.createElement("input");
-      linkInput.type = "text";
-      linkInput.value = link;
-      linkInput.style.position = "fixed";
-      linkInput.style.top = "50%";
-      linkInput.style.left = "50%";
-      linkInput.style.transform = "translate(-50%, -50%)";
-      linkInput.style.zIndex = 1000;
-      document.body.appendChild(linkInput);
-      linkInput.select();
-      linkInput.setSelectionRange(0, 99999);
-      document.execCommand("copy");
-      document.body.removeChild(linkInput);
-      alert("Enlace copiado al portapapeles: " + link);
-    };
+window.compartirCoordenadas = function(lat, lon, nombrePunto = "") {
+  const googleMapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+  const nombre = nombrePunto || `Ubicación (${lat.toFixed(6)}, ${lon.toFixed(6)})`;
+  
+  const mensaje = `📍 *${nombre}* 📍\n\n🔹 *Coordenadas:* ${lat.toFixed(6)}, ${lon.toFixed(6)}\n\n🌍 Ver en Google Maps: ${googleMapsLink}`;
+  
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`;
+  window.open(whatsappUrl, '_blank');
+};
 
     // Inicialización
     document.addEventListener('DOMContentLoaded', () => {
