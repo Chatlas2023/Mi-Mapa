@@ -510,7 +510,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.18 ";
+        div.innerHTML = " Ver: 1.6.19 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -1210,49 +1210,49 @@ const customIcon = L.icon({
       });
     }
 
-    function guardarUbicacion() {
-      if (currentLat && currentLon) {
-        const puntoNumero = savedMarkers.length + 1;
-const customIcon = L.divIcon({
-  className: 'custom-icon',
-  html: `
-    <div style="position: relative;">
-      <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-      <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-        ${puntoNumero}
+function guardarUbicacion() {
+  if (currentLat && currentLon) {
+    const puntoNumero = savedMarkers.length + 1;
+    const customIcon = L.divIcon({
+      className: 'custom-icon',
+      html: `
+        <div style="position: relative;">
+          <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
+          <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
+            ${puntoNumero}
+          </div>
+        </div>
+      `,
+      iconSize: [50, 50],
+      iconAnchor: [25, 50],
+      popupAnchor: [-60, -40]
+    });
+
+    const newMarker = L.marker([currentLat, currentLon], {
+      title: "Punto",
+      icon: customIcon
+    }).addTo(map).setDataNumber(puntoNumero);
+
+    savedMarkers.push(newMarker);
+
+    const popupContent = `
+      <div style="white-space: nowrap;">
+        <label for="nombrePunto">Nombre:</label>
+        <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
+        <div>Latitud: ${currentLat.toFixed(6)}</div>
+        <div>Longitud: ${currentLon.toFixed(6)}</div><br>
+        <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Guardar Nombre</button>
+        <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
+        <button onclick="compartirCoordenadas(${currentLat}, ${currentLon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
       </div>
-    </div>
-  `,
-  iconSize: [50, 50],
-  iconAnchor: [25, 50],
-  popupAnchor: [-60, -40] // Cambiado de [-50, -50] a [25, -40]
-});
+    `;
 
-const newMarker = L.marker([currentLat, currentLon], {
-  title: "Punto",
-  icon: customIcon
-}).addTo(map).setDataNumber(puntoNumero); // Añade el número
-
-        savedMarkers.push(newMarker);
-
-const popupContent = `
-  <div style="white-space: nowrap;">
-    <label for="nombrePunto">Nombre:</label>
-    <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
-    <div>Latitud: ${latLng.lat.toFixed(6)}</div>
-    <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
-    <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-    <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-    <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
-  </div>
-`;
-
-        newMarker.bindPopup(popupContent).openPopup();
-        actualizarLocalStoragePuntos();
-      } else {
-        alert("No se ha obtenido la ubicación actual.");
-      }
-    }
+    newMarker.bindPopup(popupContent).openPopup();
+    actualizarLocalStoragePuntos();
+  } else {
+    alert("No se ha obtenido la ubicación actual.");
+  }
+}
 
     window.cambiarNombre = function(button) {
       const input = button.parentElement.querySelector('#nombrePunto');
