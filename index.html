@@ -804,7 +804,7 @@ body.dark-mode #savedRoutesList li button:hover {
         else if (speedKmh < 20) mode = "🟡 Normal (7s)";
         else mode = "🔴 Precisión (3s)";
         
-        document.getElementById('samplingMode').textContent = `Modo: ${mode}`;
+        document.getElementById('samplingMode').textContent = `${mode}`;
       }
       
       if (coordinates.length > 1 && routeStartTime) {
