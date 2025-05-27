@@ -378,6 +378,22 @@ body.dark-mode #savedRoutesList li button:hover {
 .leaflet-popup-content button:hover {
   background-color: #87CEEB !important;
 }
+    /* Agrega esto en tu sección <style> */
+.numbered-marker::after {
+  content: attr(data-number);
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  font-weight: bold;
+  color: black;
+  background: white;
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid #ccc;
+  z-index: 1000;
+}
   </style>
 </head>
 <body>
@@ -494,7 +510,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.12 ";
+        div.innerHTML = " Ver: 1.6.13 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -531,6 +547,17 @@ body.dark-mode #savedRoutesList li button:hover {
         updateStatus('Error al cargar el mapa');
       }
     }
+    L.Marker.include({
+  setDataNumber: function(number) {
+    if (this.options.icon) {
+      this.options.icon.options.number = number;
+      if (this._icon) {
+        this._icon.setAttribute('data-number', number);
+      }
+    }
+    return this;
+  }
+});
 
     function handleMapClick(latlng) {
       // Crear un marcador temporal en el punto clickeado
@@ -1158,22 +1185,13 @@ const customIcon = L.divIcon({
     function actualizarNumerosPuntos() {
       savedMarkers.forEach((m, i) => {
         const puntoNumero = i + 1;
-
-const customIcon = L.divIcon({
-  className: 'custom-icon',
-  html: `
-    <div style="position: relative;">
-      <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-      <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-        ${puntoNumero}
-      </div>
-    </div>
-  `,
-  iconSize: [50, 50],
-  iconAnchor: [25, 50],
-  popupAnchor: [25, -40] // Cambiado de [-50, -50] a [25, -40]
+const customIcon = L.icon({
+  iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
+  iconSize: [40, 40],           // Tamaño de la imagen (ajusta según necesites)
+  iconAnchor: [20, 40],          // Punto de anclaje del icono (centro inferior)
+  popupAnchor: [0, -40],         // Ajuste del popup (arriba del icono)
+  className: 'numbered-marker'   // Clase CSS opcional para estilos adicionales
 });
-
         m.setIcon(customIcon);
 
         const popupContent = `
@@ -1210,10 +1228,10 @@ const customIcon = L.divIcon({
   popupAnchor: [25, -40] // Cambiado de [-50, -50] a [25, -40]
 });
 
-        const newMarker = L.marker([currentLat, currentLon], {
-          title: "Punto",
-          icon: customIcon
-        }).addTo(map);
+const newMarker = L.marker([currentLat, currentLon], {
+  title: "Punto",
+  icon: customIcon
+}).addTo(map).setDataNumber(puntoNumero); // Añade el número
 
         savedMarkers.push(newMarker);
 
