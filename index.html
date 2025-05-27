@@ -1254,30 +1254,30 @@ function guardarUbicacion() {
   }
 }
 
-    window.cambiarNombre = function(button) {
-      const input = button.parentElement.querySelector('#nombrePunto');
-      const newName = input.value;
-      const marker = savedMarkers.find(marker => {
-        const popupContent = marker.getPopup()._content;
-        return popupContent.includes(button.parentElement.innerHTML.trim());
-      });
-      if (marker) {
-        const latLng = marker.getLatLng();
-const popupContent = `
-  <div style="white-space: nowrap;">
-    <label for="nombrePunto">Nombre:</label>
-    <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
-    <div>Latitud: ${loc.lat.toFixed(6)}</div>
-    <div>Longitud: ${loc.lon.toFixed(6)}</div><br>
-    <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-    <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-    <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
-  </div>
-`;
-        marker.setPopupContent(popupContent);
-        actualizarLocalStoragePuntos();
-      }
-    };
+window.cambiarNombre = function(button) {
+  const input = button.parentElement.querySelector('#nombrePunto');
+  const newName = input.value;
+  const marker = savedMarkers.find(marker => {
+    const popupContent = marker.getPopup()._content;
+    return popupContent.includes(button.parentElement.innerHTML.trim());
+  });
+  if (marker) {
+    const latLng = marker.getLatLng();
+    const popupContent = `
+      <div style="white-space: nowrap;">
+        <label for="nombrePunto">Nombre:</label>
+        <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
+        <div>Latitud: ${latLng.lat.toFixed(6)}</div>
+        <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
+        <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+        <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
+        <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
+      </div>
+    `;
+    marker.setPopupContent(popupContent);
+    actualizarLocalStoragePuntos();
+  }
+};
 
     window.eliminarPunto = function(button) {
       const marker = savedMarkers.find(marker => {
