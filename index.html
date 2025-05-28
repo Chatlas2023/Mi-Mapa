@@ -50,7 +50,9 @@
   border: 1px solid #ccc;
   background-color: #f7faca;
   color: black;
-  margin-left: auto; /* Esto empuja el selector a la derecha */
+  margin-left: auto;
+  width: auto; /* Cambia esto de '100%' a 'auto' */
+  min-width: unset; /* Elimina el min-width anterior */
 }
     body.dark-mode #mapLayers {
       background-color: #444;
