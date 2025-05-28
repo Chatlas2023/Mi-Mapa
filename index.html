@@ -543,9 +543,9 @@ document.addEventListener('DOMContentLoaded', () => {
 <div class="buttons">
   <div class="button-row">
     <div class="left-buttons">
-      <button id="clearButton">Borrar ruta</button>
+      <button id="clearButton">Borrar</button>
       <button id="stopButton">Pausar</button>
-      <button id="darkModeButton">Modo oscuro</button>
+      <button id="darkModeButton">Noche</button>
     </div>
     <div class="right-buttons">
       <select id="mapLayers">
@@ -993,7 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
       speedPanel.style.display = '';
       
       localStorage.setItem('darkMode', isDarkMode);
-      darkMode.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
+      darkMode.textContent = isDarkMode ? 'Modo día' : 'Modo noche';
     }
 
     function applyDarkModePreference() {
@@ -1005,7 +1005,7 @@ document.addEventListener('DOMContentLoaded', () => {
         darkMode.textContent = 'Modo claro';
       } else {
         body.classList.remove('dark-mode');
-        darkModeButton.textContent = 'Modo oscuro';
+        darkModeButton.textContent = 'Noche';
       }
     }
 
