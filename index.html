@@ -235,9 +235,33 @@
   overflow-x: auto;
   white-space: nowrap;
 }
-    body.dark-mode #savedRoutesContainer {
-  background-color: #1a3a4a !important; /* Azul oscuro para modo oscuro */
+/* Modo oscuro para el contenedor de rutas guardadas */
+body.dark-mode #savedRoutesContainer {
+  background-color: #1a3a4a; /* Azul oscuro para modo oscuro */
   border-color: #2a5a6a;
+}
+
+/* Modo oscuro para los elementos de la lista */
+body.dark-mode #savedRoutesList li {
+  background-color: #2a3a4a !important; /* Fondo oscuro para los items */
+  border-color: #3a5a6a !important; /* Borde más claro */
+  color: white !important; /* Texto blanco */
+}
+
+/* Modo oscuro para los botones dentro de la lista */
+body.dark-mode #savedRoutesList li button {
+  background-color: #3a5a7a !important;
+  color: white !important;
+  border-color: #2a4a6a !important;
+}
+
+body.dark-mode #savedRoutesList li button:hover {
+  background-color: #4a6a8a !important;
+}
+
+/* Modo oscuro para el título */
+body.dark-mode #savedRoutesContainer h3 {
+  color: white !important;
 }
     #savedRoutesContainer h3 {
       margin-top: 5px;
