@@ -437,8 +437,8 @@ body.dark-mode #savedRoutesList li button:hover {
   
   <div class="buttons">
     <div class="button-row">
-      <button id="clearButton">Limpiar historial</button>
-      <button id="stopButton">Pausar la captura</button>
+      <button id="clearButton">Borrar ruta</button>
+      <button id="stopButton">Pausar</button>
       <button id="darkModeButton">Modo oscuro</button>
     </div>
     
@@ -510,7 +510,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.19 ";
+        div.innerHTML = " Ver: 1.6.20 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
