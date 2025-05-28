@@ -139,17 +139,22 @@
     }
 
     /* Estilos base para todos los botones */
-    button {
-      padding: 6px 12px;
-      font-size: 12px;
-      cursor: pointer;
-      border: none;
-      border-radius: 5px;
-      color: white;
-      flex: 1;
-      max-width: 150px;
-      transition: background-color 0.3s;
-    }
+button {
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  flex: 1;
+  max-width: 150px;
+  transition: background-color 0.3s;
+  height: 28px;        /* Nueva propiedad */
+  line-height: 1;      /* Nueva propiedad */
+  display: flex;       /* Nueva propiedad */
+  align-items: center; /* Centra el texto verticalmente */
+  justify-content: center; /* Centra el texto horizontalmente */
+}
 
     /* Estilos específicos para cada botón */
     #clearButton {
@@ -419,16 +424,14 @@ body.dark-mode #savedRoutesList li button:hover {
         font-size: 14px;
         white-space: nowrap;
       }
-      #mapLayers {
-        font-size: 14px;
-        height: 37px;
-        padding: 4px 16px;
-      }
-      #mapLayers {
- 
-  width: auto;       /* Ocupa todo el espacio disponible */
+#mapLayers {
+  padding: 3px 4px;   /* Reducido desde 6px 4px */
+  font-size: 12px;
+  border-radius: 5px;
+  height: 28px;       /* Reducido desde 25px */
+  /* ... mantén el resto de propiedades ... */
 }
-    }
+
     @media (min-width: 601px) {
       #map {
         height: calc(55vh - 37.8px);
