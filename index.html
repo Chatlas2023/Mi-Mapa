@@ -1265,17 +1265,19 @@ function cargarPuntosGuardados() {
       icon: customIcon
     }).addTo(map);
 
-    const popupContent = `
-      <div style="white-space: nowrap;">
-        <label for="nombrePunto">Nombre:</label>
-        <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
-        <div>Latitud: ${loc.lat.toFixed(6)}</div>
-        <div>Longitud: ${loc.lon.toFixed(6)}</div><br>
-        <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-        <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-        <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir por Whatsapp</button>
-      </div>
-    `;
+const popupContent = `
+  <div style="white-space: nowrap;">
+    <label for="nombrePunto">Nombre:</label>
+    <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
+    <div>Latitud: ${currentLat.toFixed(6)}</div>
+    <div>Longitud: ${currentLon.toFixed(6)}</div><br>
+    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+      <button onclick="cambiarNombre(this)" style="margin-left: 0;">Nombrar</button>
+      <button onclick="eliminarPunto(this)">Quitar</button>
+    </div>
+    <button onclick="compartirCoordenadas(${currentLat}, ${currentLon}, document.getElementById('nombrePunto').value)" style="width: 100%;">Compartir por Whatsapp</button>
+  </div>
+`;
 
     newMarker.bindPopup(popupContent);
     savedMarkers.push(newMarker);
@@ -1303,17 +1305,35 @@ const customIcon = L.icon({
 });
         m.setIcon(customIcon);
 
-        const popupContent = `
-          <div style="white-space: nowrap;">
-            <label for="nombrePunto">Nombre:</label>
-            <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
-            <div>Latitud: ${m.getLatLng().lat.toFixed(6)}</div>
-            <div>Longitud: ${m.getLatLng().lng.toFixed(6)}</div><br>
-            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-            <button onclick="compartirCoordenadas(${m.getLatLng().lat}, ${m.getLatLng().lng})" style="margin-left: 5px;">Compartir por Whatsapp</button>
-          </div>
-        `;
+// En cargarPuntosGuardados
+const popupContent = `
+  <div style="white-space: nowrap;">
+    <label for="nombrePunto">Nombre:</label>
+    <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
+    <div>Latitud: ${loc.lat.toFixed(6)}</div>
+    <div>Longitud: ${loc.lon.toFixed(6)}</div><br>
+    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+      <button onclick="cambiarNombre(this)" style="margin-left: 0;">Cambiar Nombre</button>
+      <button onclick="eliminarPunto(this)">Quitar</button>
+    </div>
+    <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon}, document.getElementById('nombrePunto').value)" style="width: 100%;">Compartir por Whatsapp</button>
+  </div>
+`;
+
+// En cambiarNombre
+const popupContent = `
+  <div style="white-space: nowrap;">
+    <label for="nombrePunto">Nombre:</label>
+    <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
+    <div>Latitud: ${latLng.lat.toFixed(6)}</div>
+    <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
+    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+      <button onclick="cambiarNombre(this)" style="margin-left: 0;">Cambiar Nombre</button>
+      <button onclick="eliminarPunto(this)">Quitar</button>
+    </div>
+    <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="width: 100%;">Compartir por Whatsapp</button>
+  </div>
+`;
 
         m.setPopupContent(popupContent);
       });
@@ -1344,17 +1364,19 @@ function guardarUbicacion() {
 
     savedMarkers.push(newMarker);
 
-    const popupContent = `
-      <div style="white-space: nowrap;">
-        <label for="nombrePunto">Nombre:</label>
-        <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
-        <div>Latitud: ${currentLat.toFixed(6)}</div>
-        <div>Longitud: ${currentLon.toFixed(6)}</div><br>
-        <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Nombrar</button>
-        <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-        <button onclick="compartirCoordenadas(${currentLat}, ${currentLon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir por Whatsapp</button>
-      </div>
-    `;
+const popupContent = `
+  <div style="white-space: nowrap;">
+    <label for="nombrePunto">Nombre:</label>
+    <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
+    <div>Latitud: ${latLng.lat.toFixed(6)}</div>
+    <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
+    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+      <button onclick="cambiarNombre(this)" style="margin-left: 0;">Cambiar Nombre</button>
+      <button onclick="eliminarPunto(this)">Quitar</button>
+    </div>
+    <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="width: 100%;">Compartir por Whatsapp</button>
+  </div>
+`;
 
     newMarker.bindPopup(popupContent).openPopup();
     actualizarLocalStoragePuntos();
