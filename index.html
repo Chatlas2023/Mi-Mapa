@@ -43,7 +43,7 @@
 }
 
 #mapLayers {
-  padding: 6px 12px;
+  padding: 6px 8px; /* Reducir el padding horizontal */
   font-size: 12px;
   border-radius: 5px;
   height: 25px;
@@ -51,8 +51,27 @@
   background-color: #f7faca;
   color: black;
   margin-left: auto;
-  width: fit-content; /* Esto hace que se ajuste al contenido */
-  min-width: unset;
+  width: auto; /* Ajuste automático al contenido */
+  min-width: unset; /* Eliminar cualquier mínimo establecido */
+  max-width: none; /* Eliminar cualquier máximo establecido */
+}
+
+/* Elimina o comenta esta regla si existe */
+/*
+#routeName, #mapLayers {
+  width: 100%;
+  max-width: 300px;
+}
+*/
+
+/* Ajuste específico para móviles */
+@media (max-width: 600px) {
+  #mapLayers {
+    padding: 4px 8px; /* Padding reducido en móviles */
+    font-size: 14px;
+    height: 37px;
+    width: auto; /* Mantener ajuste al contenido */
+  }
 }
     body.dark-mode #mapLayers {
       background-color: #444;
@@ -106,12 +125,7 @@
       padding: 0 10px;
       margin-bottom: 2px;
     }
-    /* Ajustes para los elementos individuales */
-    #routeName, #mapLayers {
-      width: 100%;
-      max-width: 300px;
-    }
-    
+
     /* Estilos base para todos los botones */
     button {
       padding: 6px 12px;
