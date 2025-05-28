@@ -24,67 +24,15 @@
       margin-bottom: 5px;
       position: relative;
     }
-/* Nuevos estilos para la reorganización de botones */
-.button-row {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 5px;
-}
-
-.left-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.right-buttons {
-  display: flex;
-  align-items: center;
-}
-
-#mapLayers {
-  padding: 6px 4px; /* Padding reducido al mínimo */
-  font-size: 12px;
-  border-radius: 5px;
-  height: 20px;
-  border: 1px solid #ccc;
-  background-color: #f7faca;
-  color: black;
-  margin-left: auto;
-  width: auto;
-  min-width: unset;
-  max-width: none;
-  /* Fuerza el ancho mínimo basado en el contenido */
-  width: fit-content;
-  /* Asegura que no herede anchos no deseados */
-  box-sizing: content-box;
-}
-
-/* Eliminar cualquier regla que fuerce un ancho fijo */
-.right-buttons {
-  display: flex;
-  align-items: center;
-  /* Evita que el contenedor afecte el ancho */
-  flex-shrink: 0;
-}
-
-/* Elimina o comenta esta regla si existe */
-/*
-#routeName, #mapLayers {
-  width: 100%;
-  max-width: 300px;
-}
-*/
-
-/* Ajuste específico para móviles */
-@media (max-width: 600px) {
-  #mapLayers {
-    padding: 4px 8px; /* Padding reducido en móviles */
-    font-size: 14px;
-    height: 37px;
-    width: auto; /* Mantener ajuste al contenido */
-  }
-}
+    #mapLayers {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 5px;
+      height: 25px;
+      border: 1px solid #ccc;
+      background-color: #f7faca;
+      color: black;
+    }
     body.dark-mode #mapLayers {
       background-color: #444;
       color: white;
@@ -133,28 +81,28 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 5px;
+      gap: 10px;
       padding: 0 10px;
       margin-bottom: 2px;
     }
-
+    /* Ajustes para los elementos individuales */
+    #routeName, #mapLayers {
+      width: 100%;
+      max-width: 300px;
+    }
+    
     /* Estilos base para todos los botones */
-button {
-  padding: 4px 8px;
-  font-size: 12px;
-  cursor: pointer;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  flex: 1;
-  max-width: 150px;
-  transition: background-color 0.3s;
-  height: 28px;        /* Nueva propiedad */
-  line-height: 1;      /* Nueva propiedad */
-  display: flex;       /* Nueva propiedad */
-  align-items: center; /* Centra el texto verticalmente */
-  justify-content: center; /* Centra el texto horizontalmente */
-}
+    button {
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      flex: 1;
+      max-width: 150px;
+      transition: background-color 0.3s;
+    }
 
     /* Estilos específicos para cada botón */
     #clearButton {
@@ -417,24 +365,22 @@ body.dark-mode #savedRoutesList li button:hover {
         font-size: 14px;
       }
       #map {
-        height: calc(40vh - 37.8px);
+        height: calc(45vh - 37.8px);
       }
       .buttons button {
         padding: 4px 12px;
         font-size: 14px;
         white-space: nowrap;
       }
-#mapLayers {
-  padding: 3px 4px;   /* Reducido desde 6px 4px */
-  font-size: 12px;
-  border-radius: 5px;
-  height: 28px;       /* Reducido desde 25px */
-  /* ... mantén el resto de propiedades ... */
-}
-
+      #mapLayers {
+        font-size: 14px;
+        height: 37px;
+        padding: 4px 8px;
+      }
+    }
     @media (min-width: 601px) {
       #map {
-        height: calc(50vh - 37.8px);
+        height: calc(55vh - 37.8px);
       }
     }
     body.dark-mode #routeName {
@@ -472,36 +418,6 @@ body.dark-mode #savedRoutesList li button:hover {
   border: 1px solid #ccc;
   z-index: 1000;
 }
-    function ajustarAnchoSelector() {
-  const select = document.getElementById('mapLayers');
-  // Crear un elemento temporal para medir
-  const tempSpan = document.createElement('span');
-  tempSpan.style.visibility = 'hidden';
-  tempSpan.style.whiteSpace = 'nowrap';
-  tempSpan.style.position = 'absolute';
-  tempSpan.style.padding = '6px 4px';
-  tempSpan.style.fontSize = '12px';
-  
-  // Encontrar la opción más ancha
-  let maxWidth = 0;
-  Array.from(select.options).forEach(option => {
-    tempSpan.textContent = option.text;
-    document.body.appendChild(tempSpan);
-    const width = tempSpan.offsetWidth;
-    if (width > maxWidth) maxWidth = width;
-    document.body.removeChild(tempSpan);
-  });
-  
-  // Aplicar el ancho con un pequeño margen
-  select.style.width = `${maxWidth + 12}px`; // 12px de margen para el ícono de dropdown
-}
-
-// Llama a la función después de cargar el DOM y cuando cambie el idioma/tamaño de fuente
-document.addEventListener('DOMContentLoaded', () => {
-  ajustarAnchoSelector();
-  // Opcional: reajustar si cambia el tamaño de la fuente
-  window.addEventListener('resize', ajustarAnchoSelector);
-});
   </style>
 </head>
 <body>
@@ -543,28 +459,27 @@ document.addEventListener('DOMContentLoaded', () => {
     <div id="status">Obteniendo ubicación...</div>
   </div>
   
-<div class="buttons">
-  <div class="button-row">
-    <div class="left-buttons">
-      <button id="clearButton">Borrar</button>
+  <div class="buttons">
+    <div class="button-row">
+      <button id="clearButton">Borrar ruta</button>
       <button id="stopButton">Pausar</button>
-      <button id="darkModeButton">Noche</button>
+      <button id="darkModeButton">Modo oscuro</button>
     </div>
-    <div class="right-buttons">
-      <select id="mapLayers">
-        <option value="osm">Estándar</option>
-        <option value="satellite">Satelital</option>
+    
+    <div class="button-row">
+      <button id="shareButton">Enviar ruta WApp</button>
+      <button id="saveRouteButton">Guardar ruta</button>
+      <button id="saveLocation">Guardar ubicación</button>
+    </div>
+    
+    <div class="button-row"> 
+        <select id="mapLayers">
+        <option value="osm">Mapa Estándar</option>
+        <option value="satellite">Imagen Satelital</option>
         <option value="weather">Mapa del Clima</option>
       </select>
     </div>
   </div>
-  
-  <div class="button-row">
-    <button id="shareButton">Enviar ruta WApp</button>
-    <button id="saveRouteButton">Guardar ruta</button>
-    <button id="saveLocation">Guardar ubicación</button>
-  </div>
-</div>
   
   <div id="street-info-container">
     <div id="street-name"></div>
@@ -619,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.23 ";
+        div.innerHTML = " Ver: 1.6.20 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -964,7 +879,7 @@ document.addEventListener('DOMContentLoaded', () => {
           navigator.geolocation.clearWatch(watchId);
           watchId = null;
         }
-        stopButton.textContent = "Continuar";
+        stopButton.textContent = "Continuar captura";
         stopButton.classList.add('continue');
         updateStatus("Captura pausada - Haz clic en el mapa para obtener información");
         releaseWakeLock();
@@ -996,7 +911,7 @@ document.addEventListener('DOMContentLoaded', () => {
       speedPanel.style.display = '';
       
       localStorage.setItem('darkMode', isDarkMode);
-      darkMode.textContent = isDarkMode ? 'Modo día' : 'Modo noche';
+      darkMode.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
     }
 
     function applyDarkModePreference() {
@@ -1008,7 +923,7 @@ document.addEventListener('DOMContentLoaded', () => {
         darkMode.textContent = 'Modo claro';
       } else {
         body.classList.remove('dark-mode');
-        darkModeButton.textContent = 'Noche';
+        darkModeButton.textContent = 'Modo oscuro';
       }
     }
 
@@ -1265,19 +1180,17 @@ function cargarPuntosGuardados() {
       icon: customIcon
     }).addTo(map);
 
-const popupContent = `
-  <div style="white-space: nowrap;">
-    <label for="nombrePunto">Nombre:</label>
-    <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
-    <div>Latitud: ${currentLat.toFixed(6)}</div>
-    <div>Longitud: ${currentLon.toFixed(6)}</div><br>
-    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-      <button onclick="cambiarNombre(this)" style="margin-left: 0;">Nombrar</button>
-      <button onclick="eliminarPunto(this)">Quitar</button>
-    </div>
-    <button onclick="compartirCoordenadas(${currentLat}, ${currentLon}, document.getElementById('nombrePunto').value)" style="width: 100%;">Compartir por Whatsapp</button>
-  </div>
-`;
+    const popupContent = `
+      <div style="white-space: nowrap;">
+        <label for="nombrePunto">Nombre:</label>
+        <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
+        <div>Latitud: ${loc.lat.toFixed(6)}</div>
+        <div>Longitud: ${loc.lon.toFixed(6)}</div><br>
+        <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+        <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
+        <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
+      </div>
+    `;
 
     newMarker.bindPopup(popupContent);
     savedMarkers.push(newMarker);
@@ -1305,35 +1218,17 @@ const customIcon = L.icon({
 });
         m.setIcon(customIcon);
 
-// En cargarPuntosGuardados
-const popupContent = `
-  <div style="white-space: nowrap;">
-    <label for="nombrePunto">Nombre:</label>
-    <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
-    <div>Latitud: ${loc.lat.toFixed(6)}</div>
-    <div>Longitud: ${loc.lon.toFixed(6)}</div><br>
-    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-      <button onclick="cambiarNombre(this)" style="margin-left: 0;">Cambiar Nombre</button>
-      <button onclick="eliminarPunto(this)">Quitar</button>
-    </div>
-    <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon}, document.getElementById('nombrePunto').value)" style="width: 100%;">Compartir por Whatsapp</button>
-  </div>
-`;
-
-// En cambiarNombre
-const popupContent = `
-  <div style="white-space: nowrap;">
-    <label for="nombrePunto">Nombre:</label>
-    <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
-    <div>Latitud: ${latLng.lat.toFixed(6)}</div>
-    <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
-    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-      <button onclick="cambiarNombre(this)" style="margin-left: 0;">Cambiar Nombre</button>
-      <button onclick="eliminarPunto(this)">Quitar</button>
-    </div>
-    <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="width: 100%;">Compartir por Whatsapp</button>
-  </div>
-`;
+        const popupContent = `
+          <div style="white-space: nowrap;">
+            <label for="nombrePunto">Nombre:</label>
+            <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
+            <div>Latitud: ${m.getLatLng().lat.toFixed(6)}</div>
+            <div>Longitud: ${m.getLatLng().lng.toFixed(6)}</div><br>
+            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
+            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
+            <button onclick="compartirCoordenadas(${m.getLatLng().lat}, ${m.getLatLng().lng})" style="margin-left: 5px;">Compartir Punto</button>
+          </div>
+        `;
 
         m.setPopupContent(popupContent);
       });
@@ -1364,19 +1259,17 @@ function guardarUbicacion() {
 
     savedMarkers.push(newMarker);
 
-const popupContent = `
-  <div style="white-space: nowrap;">
-    <label for="nombrePunto">Nombre:</label>
-    <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
-    <div>Latitud: ${latLng.lat.toFixed(6)}</div>
-    <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
-    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-      <button onclick="cambiarNombre(this)" style="margin-left: 0;">Cambiar Nombre</button>
-      <button onclick="eliminarPunto(this)">Quitar</button>
-    </div>
-    <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="width: 100%;">Compartir por Whatsapp</button>
-  </div>
-`;
+    const popupContent = `
+      <div style="white-space: nowrap;">
+        <label for="nombrePunto">Nombre:</label>
+        <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
+        <div>Latitud: ${currentLat.toFixed(6)}</div>
+        <div>Longitud: ${currentLon.toFixed(6)}</div><br>
+        <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Guardar Nombre</button>
+        <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
+        <button onclick="compartirCoordenadas(${currentLat}, ${currentLon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
+      </div>
+    `;
 
     newMarker.bindPopup(popupContent).openPopup();
     actualizarLocalStoragePuntos();
@@ -1402,7 +1295,7 @@ window.cambiarNombre = function(button) {
         <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
         <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
         <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-        <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir por Whatsapp</button>
+        <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
       </div>
     `;
     marker.setPopupContent(popupContent);
