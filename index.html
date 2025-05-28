@@ -43,7 +43,7 @@
 }
 
 #mapLayers {
-  padding: 6px 8px; /* Reducir el padding horizontal */
+  padding: 6px 4px; /* Padding reducido al mínimo */
   font-size: 12px;
   border-radius: 5px;
   height: 25px;
@@ -51,9 +51,21 @@
   background-color: #f7faca;
   color: black;
   margin-left: auto;
-  width: auto; /* Ajuste automático al contenido */
-  min-width: unset; /* Eliminar cualquier mínimo establecido */
-  max-width: none; /* Eliminar cualquier máximo establecido */
+  width: auto;
+  min-width: unset;
+  max-width: none;
+  /* Fuerza el ancho mínimo basado en el contenido */
+  width: fit-content;
+  /* Asegura que no herede anchos no deseados */
+  box-sizing: content-box;
+}
+
+/* Eliminar cualquier regla que fuerce un ancho fijo */
+.right-buttons {
+  display: flex;
+  align-items: center;
+  /* Evita que el contenedor afecte el ancho */
+  flex-shrink: 0;
 }
 
 /* Elimina o comenta esta regla si existe */
@@ -457,6 +469,36 @@ body.dark-mode #savedRoutesList li button:hover {
   border: 1px solid #ccc;
   z-index: 1000;
 }
+    function ajustarAnchoSelector() {
+  const select = document.getElementById('mapLayers');
+  // Crear un elemento temporal para medir
+  const tempSpan = document.createElement('span');
+  tempSpan.style.visibility = 'hidden';
+  tempSpan.style.whiteSpace = 'nowrap';
+  tempSpan.style.position = 'absolute';
+  tempSpan.style.padding = '6px 4px';
+  tempSpan.style.fontSize = '12px';
+  
+  // Encontrar la opción más ancha
+  let maxWidth = 0;
+  Array.from(select.options).forEach(option => {
+    tempSpan.textContent = option.text;
+    document.body.appendChild(tempSpan);
+    const width = tempSpan.offsetWidth;
+    if (width > maxWidth) maxWidth = width;
+    document.body.removeChild(tempSpan);
+  });
+  
+  // Aplicar el ancho con un pequeño margen
+  select.style.width = `${maxWidth + 12}px`; // 12px de margen para el ícono de dropdown
+}
+
+// Llama a la función después de cargar el DOM y cuando cambie el idioma/tamaño de fuente
+document.addEventListener('DOMContentLoaded', () => {
+  ajustarAnchoSelector();
+  // Opcional: reajustar si cambia el tamaño de la fuente
+  window.addEventListener('resize', ajustarAnchoSelector);
+});
   </style>
 </head>
 <body>
