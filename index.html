@@ -559,7 +559,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.23 ";
+        div.innerHTML = " Ver: 1.6.24 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -708,13 +708,14 @@ function toggleMapLayer() {
         }
     });
 
-      if (selectedLayer === "weather") {
-        window.open('mapaWindy.html', '_blank');
-        layers.osm.addTo(map);
-        document.getElementById('mapLayers').value = 'osm';
-      } else {
-        layers[selectedLayer].addTo(map);
-      }
+if (selectedLayer === "weather") {
+    window.open('mapaWindy.html', '_blank');
+    layers.osm.addTo(map);
+    currentLayerIndex = 0; // Resetear al mapa estándar
+    document.getElementById('layerToggleButton').textContent = layerIcons[0];
+} else {
+    layers[selectedLayer].addTo(map);
+}
     }
 
     // Wake Lock
@@ -1387,28 +1388,29 @@ window.compartirCoordenadas = function(lat, lon, nombrePunto = "") {
       }
 
       // Event listeners
-      document.getElementById('clearButton').addEventListener('click', startNewRoute);
-      document.getElementById('stopButton').addEventListener('click', toggleCapture);
-      document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
-      document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
-      document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
+document.getElementById('clearButton').addEventListener('click', startNewRoute);
+document.getElementById('stopButton').addEventListener('click', toggleCapture);
+document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
+document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
+document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
+document.getElementById('saveLocation').addEventListener('click', guardarUbicacion);
+document.getElementById('layerToggleButton').addEventListener('click', function(e) {
+    e.preventDefault();
+    toggleMapLayer();
       });
       document.getElementById("saveLocation").addEventListener("click", guardarUbicacion);
 
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          if (isCapturing) {
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        if (isCapturing) {
             toggleCapture();
             wasCapturingBeforeHidden = true;
-          }
-          releaseWakeLock();
-        } else if (wasCapturingBeforeHidden) {
-          toggleCapture();
-          wasCapturingBeforeHidden = false;
         }
-        document.getElementById('layerToggleButton').addEventListener('click', function(e) {
-    e.preventDefault();
-    toggleMapLayer();
+        releaseWakeLock();
+    } else if (wasCapturingBeforeHidden) {
+        toggleCapture();
+        wasCapturingBeforeHidden = false;
+    }
       });
     });
   </script>
