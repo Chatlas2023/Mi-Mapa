@@ -418,6 +418,51 @@ body.dark-mode #savedRoutesList li button:hover {
   border: 1px solid #ccc;
   z-index: 1000;
 }
+    /* Nuevos estilos para la reorganización de botones */
+.button-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.left-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.right-buttons {
+  display: flex;
+  align-items: center;
+}
+
+#mapLayers {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 5px;
+  height: 25px;
+  border: 1px solid #ccc;
+  background-color: #f7faca;
+  color: black;
+  margin-left: auto; /* Esto empuja el selector a la derecha */
+}
+
+/* Ajustes para móviles */
+@media (max-width: 600px) {
+  .button-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .left-buttons, .right-buttons {
+    width: 100%;
+  }
+  
+  #mapLayers {
+    width: 100%;
+    margin-left: 0;
+  }
+}
   </style>
 </head>
 <body>
@@ -459,27 +504,28 @@ body.dark-mode #savedRoutesList li button:hover {
     <div id="status">Obteniendo ubicación...</div>
   </div>
   
-  <div class="buttons">
-    <div class="button-row">
+<div class="buttons">
+  <div class="button-row">
+    <div class="left-buttons">
       <button id="clearButton">Borrar ruta</button>
       <button id="stopButton">Pausar</button>
       <button id="darkModeButton">Modo oscuro</button>
     </div>
-    
-    <div class="button-row">
-      <button id="shareButton">Enviar ruta WApp</button>
-      <button id="saveRouteButton">Guardar ruta</button>
-      <button id="saveLocation">Guardar ubicación</button>
-    </div>
-    
-    <div class="button-row"> 
-        <select id="mapLayers">
+    <div class="right-buttons">
+      <select id="mapLayers">
         <option value="osm">Mapa Estándar</option>
         <option value="satellite">Imagen Satelital</option>
         <option value="weather">Mapa del Clima</option>
       </select>
     </div>
   </div>
+  
+  <div class="button-row">
+    <button id="shareButton">Enviar ruta WApp</button>
+    <button id="saveRouteButton">Guardar ruta</button>
+    <button id="saveLocation">Guardar ubicación</button>
+  </div>
+</div>
   
   <div id="street-info-container">
     <div id="street-name"></div>
@@ -534,7 +580,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.20 ";
+        div.innerHTML = " Ver: 1.6.21 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
