@@ -24,51 +24,50 @@
       margin-bottom: 5px;
       position: relative;
     }
-    #mapLayers {
-      padding: 6px 12px;
-      font-size: 12px;
-      border-radius: 5px;
-      height: 25px;
-      border: 1px solid #ccc;
-      background-color: #f7faca;
-      color: black;
-    }
-    body.dark-mode #mapLayers {
-      background-color: #444;
-      color: white;
-      border-color: #555;
-    }
-    #samplingMode {
-      font-size: 16px;
-      font-weight: bold;
-      margin-top: 5px;
-      text-align: center;
-      padding: 4px;
-      background-color: rgba(255, 255, 255, 0.85);
-      border-radius: 5px;
-      border: 1px solid #ddd;
-    }
-    body.dark-mode #samplingMode {
-      background-color: rgba(40, 40, 40, 0.9) !important;
-      color: #fff !important;
-      border-color: #555 !important;
-    }
-    #infoContainer {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    @media (min-width: 601px) and (orientation: landscape) {
-      #infoContainer {
-        flex-direction: row;
-        justify-content: center;
-        gap: 20px;
-      }
-      #status, #distance {
-        font-size: 14px;
-      }
-    }
+/* Ensure consistent styling for select and buttons */
+#mapLayers, .button-row button {
+  padding: 6px 12px;
+  font-size: 12px;
+  height: 31px; /* Match button height */
+  box-sizing: border-box;
+  border-radius: 5px;
+  flex: 1; /* Allow elements to grow equally */
+  max-width: 150px; /* Consistent max-width */
+  margin: 0; /* Remove any default margins */
+}
+
+/* Specific styles for mapLayers to match button aesthetics */
+#mapLayers {
+  background-color: #f7faca; /* Match your existing select background */
+  border: 1px solid #ccc;
+  color: black;
+  cursor: pointer;
+}
+
+/* Dark mode for mapLayers */
+body.dark-mode #mapLayers {
+  background-color: #444;
+  color: white;
+  border-color: #555;
+}
+
+/* Adjust button-row for better spacing */
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Consistent spacing between elements */
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+  #mapLayers, .button-row button {
+    padding: 4px 8px;
+    font-size: 14px;
+    height: 37px; /* Match your mobile height */
+  }
+}
     /* Nuevos estilos para la reorganización de botones */
     .button-row {
       display: flex;
@@ -459,27 +458,24 @@ body.dark-mode #savedRoutesList li button:hover {
     <div id="status">Obteniendo ubicación...</div>
   </div>
   
-  <div class="buttons">
-    <div class="button-row">
-      <button id="clearButton">Borrar ruta</button>
-      <button id="stopButton">Pausar</button>
-      <button id="darkModeButton">Modo oscuro</button>
-    </div>
-    
-    <div class="button-row">
-      <button id="shareButton">Enviar ruta WApp</button>
-      <button id="saveRouteButton">Guardar ruta</button>
-      <button id="saveLocation">Guardar ubicación</button>
-    </div>
-    
-    <div class="button-row"> 
-        <select id="mapLayers">
-        <option value="osm">Mapa Estándar</option>
-        <option value="satellite">Imagen Satelital</option>
-        <option value="weather">Mapa del Clima</option>
-      </select>
-    </div>
+<div class="buttons">
+  <div class="button-row">
+    <button id="clearButton">Borrar ruta</button>
+    <button id="stopButton">Pausar</button>
+    <button id="darkModeButton">Modo oscuro</button>
   </div>
+  
+  <div class="button-row">
+    <select id="mapLayers">
+      <option value="osm">Mapa Estándar</option>
+      <option value="satellite">Imagen Satelital</option>
+      <option value="weather">Mapa del Clima</option>
+    </select>
+    <button id="shareButton">Enviar ruta WApp</button>
+    <button id="saveRouteButton">Guardar ruta</button>
+    <button id="saveLocation">Guardar ubicación</button>
+  </div>
+</div>
   
   <div id="street-info-container">
     <div id="street-name"></div>
@@ -534,7 +530,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.20 ";
+        div.innerHTML = " Ver: 1.6.21 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
