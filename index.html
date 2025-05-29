@@ -70,13 +70,15 @@
       }
     }
     /* Nuevos estilos para la reorganización de botones */
-    .button-row {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      margin-bottom: 10px;
-    }
+.button-row {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  margin-bottom: 10px;
+  overflow-x: auto; /* Permite scroll horizontal si no caben */
+  white-space: nowrap; /* Evita que los elementos se rompan en varias líneas */
+  padding-bottom: 5px; /* Espacio para el scroll */
+}
     .buttons {
       display: flex;
       flex-direction: column;
@@ -445,6 +447,7 @@ body.dark-mode #savedRoutesList li button:hover {
   background-color: #f7faca;
   color: black;
   margin-left: auto; /* Esto empuja el selector a la derecha */
+  min-width: 120px; /* Ancho mínimo para que sea legible */
 }
 
 /* Ajustes para móviles */
@@ -457,6 +460,17 @@ body.dark-mode #savedRoutesList li button:hover {
   .left-buttons, .right-buttons {
     width: 100%;
   }
+  .button-row button {
+  flex-shrink: 0; /* Evita que los botones se encojan */
+  white-space: nowrap; /* Evita que el texto se rompa */
+}
+
+/* Modo oscuro para el selector */
+body.dark-mode #mapLayers {
+  background-color: #444;
+  color: white;
+  border-color: #555;
+}
   
   #mapLayers {
     width: 100%;
@@ -506,19 +520,22 @@ body.dark-mode #savedRoutesList li button:hover {
   
 <div class="buttons">
   <div class="button-row">
-    <div class="left-buttons">
-      <button id="clearButton">Borrar ruta</button>
-      <button id="stopButton">Pausar</button>
-      <button id="darkModeButton">Modo oscuro</button>
-    </div>
-    <div class="right-buttons">
-      <select id="mapLayers">
-        <option value="osm">Mapa Estándar</option>
-        <option value="satellite">Imagen Satelital</option>
-        <option value="weather">Mapa del Clima</option>
-      </select>
-    </div>
+    <button id="clearButton">Borrar ruta</button>
+    <button id="stopButton">Pausar</button>
+    <button id="darkModeButton">Modo oscuro</button>
+    <select id="mapLayers">
+      <option value="osm">Mapa Estándar</option>
+      <option value="satellite">Imagen Satelital</option>
+      <option value="weather">Mapa del Clima</option>
+    </select>
   </div>
+  
+  <div class="button-row">
+    <button id="shareButton">Enviar ruta WApp</button>
+    <button id="saveRouteButton">Guardar ruta</button>
+    <button id="saveLocation">Guardar ubicación</button>
+  </div>
+</div>
   
   <div class="button-row">
     <button id="shareButton">Enviar ruta WApp</button>
