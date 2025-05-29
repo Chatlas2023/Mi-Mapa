@@ -23,7 +23,6 @@
       border-radius: 8px;
       margin-bottom: 5px;
       position: relative;
-      height: 58vh; 
     }
     #mapLayers {
       padding: 6px 12px;
@@ -349,30 +348,24 @@ body.dark-mode #savedRoutesList li button:hover {
       background-color: #f7faca; /* Color amarillo claro */
       font-weight: bold;
     }
-#street-info-container {
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.9);
-  border-top: 1px solid #ddd;
-  z-index: 1000;
-  margin: 1px 10px;
-  border-radius: 8px;
-  cursor: pointer; /* Indica que es clickeable */
-  transition: all 0.3s ease; /* Animación suave */
-}
+    #street-info-container {
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      border-top: 1px solid #ddd;
+      max-height: 100px;
+      overflow-y: auto;
+      z-index: 1000;
+      margin: 1px 10px;
+      border-radius: 8px;
+    }
     #street-name {
       font-weight: bold;
       margin-bottom: 5px;
     }
-#street-etymology {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-  font-size: 14px;
-  line-height: 1.4;
-}
-    #street-info-container.expanded #street-etymology {
-  max-height: 200px; /* Altura máxima al expandir */
-}
+    #street-etymology {
+      font-size: 14px;
+      color: #555;
+    }
     body.dark-mode #street-info-container {
       background: rgba(40, 40, 40, 0.9);
       border-top-color: #555;
@@ -400,8 +393,8 @@ body.dark-mode #savedRoutesList li button:hover {
       h1 {
         font-size: 14px;
       }
-        #map {
-    height: calc(50vh - 37.8px); /* Ejemplo: reducido a 50vh */
+      #map {
+        height: calc(45vh - 37.8px);
       }
       .buttons button {
         padding: 4px 12px;
@@ -566,7 +559,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.26 ";
+        div.innerHTML = " Ver: 1.6.24 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
