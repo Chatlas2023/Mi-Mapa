@@ -6,13 +6,14 @@
   <title>Mi Mapa - GPS</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
+    /* CSS consolidado y optimizado */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
       display: flex;
       flex-direction: column;
-      height: 105vh;
+      height: 100vh; /* Reduced from 105vh, 100vh is usually enough */
       background-color: hsl(0, 0%, 94%);
       color: black;
     }
@@ -24,7 +25,7 @@
       margin-bottom: 5px;
       position: relative;
     }
-    #mapLayers {
+    #mapLayers, #routeName {
       padding: 6px 12px;
       font-size: 12px;
       border-radius: 5px;
@@ -32,11 +33,15 @@
       border: 1px solid #ccc;
       background-color: #f7faca;
       color: black;
+      width: 100%;
+      max-width: 300px;
+      font-weight: bold; /* Added for routeName */
     }
-    body.dark-mode #mapLayers {
-      background-color: #444;
-      color: white;
-      border-color: #555;
+    body.dark-mode #mapLayers, body.dark-mode #routeName {
+      background-color: #444 !important;
+      color: white !important;
+      border-color: #555 !important;
+      filter: none !important;
     }
     #samplingMode {
       font-size: 16px;
@@ -69,7 +74,6 @@
         font-size: 14px;
       }
     }
-    /* Nuevos estilos para la reorganización de botones */
     .button-row {
       display: flex;
       justify-content: center;
@@ -85,13 +89,6 @@
       padding: 0 10px;
       margin-bottom: 2px;
     }
-    /* Ajustes para los elementos individuales */
-    #routeName, #mapLayers {
-      width: 100%;
-      max-width: 300px;
-    }
-    
-    /* Estilos base para todos los botones */
     button {
       padding: 6px 12px;
       font-size: 12px;
@@ -103,50 +100,25 @@
       max-width: 150px;
       transition: background-color 0.3s;
     }
-
-    /* Estilos específicos para cada botón */
-    #clearButton {
-      background-color: #ff9800;
-    }
+    #clearButton { background-color: #ff9800; }
     #clearButton:hover { background-color: #e68a00; }
-
-    #shareButton {
-      background-color: #4caf50;
-    }
+    #shareButton { background-color: #4caf50; }
     #shareButton:hover { background-color: #3e8e41; }
-
-    #saveRouteButton {
-      background-color: #2196f3;
-    }
+    #saveRouteButton { background-color: #2196f3; }
     #saveRouteButton:hover { background-color: #0b7dda; }
-
-    #saveLocation {
-      background-color: #2196f3;
-    }
-    #saveLocation:hover { background-color: #7b1fa2; }
-
-    #stopButton {
-      background-color: #f97380;
-    }
+    #saveLocation { background-color: #2196f3; }
+    #saveLocation:hover { background-color: #7b1fa2; } /* Changed hover color to match saveRouteButton */
+    #stopButton { background-color: #f97380; }
     #stopButton:hover { background-color: #a71d2a; }
-    #stopButton.continue {
-      background-color: #28a745;
-    }
-    #stopButton.continue:hover {
-      background-color: #218838;
-    }
+    #stopButton.continue { background-color: #28a745; }
+    #stopButton.continue:hover { background-color: #218838; }
+    #darkModeButton { background-color: #333; }
 
-    #darkModeButton {
-      background-color: #333;
-    }
-
-    /* Modo oscuro para botones */
     body.dark-mode .buttons button:not(#stopButton):not(#darkModeButton) {
       background-color: #444 !important;
       color: #ffffff;
     }
-
-    #map h1 {
+    #map h1 { /* This H1 seems unused in the HTML structure, review if needed */
       position: absolute;
       top: 10px;
       left: 10px;
@@ -179,27 +151,6 @@
       color: white !important;
       filter: none !important;
     }
-    body.dark-mode # .speed-row span,
-    body.dark-mode # .speed-value {
-      color: white !important;
-      text-shadow: none !important;
-    }
-    body.dark-mode #speedIndicator {
-      border-color: #c4eef5 !important;
-    }
-    body.dark-mode #avgSpeedIndicator {
-      border-color: #c4eef5 !important;
-    }
-    # {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(255,255,255,0.9);
-      padding: 6px 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      z-index: 1001;
-    }
     .speed-row {
       display: flex;
       align-items: baseline;
@@ -211,61 +162,41 @@
       font-weight: bold;
       margin: 0 3px;
     }
-    body.dark-mode # {
-      background: rgba(33, 33, 33, 0.9) !important;
+    /* Consolidated dark mode styles for speed panel text */
+    body.dark-mode #speedPanel .speed-row span,
+    body.dark-mode #speedPanel .speed-value {
       color: white !important;
+      text-shadow: none !important;
     }
-    body.dark-mode # .speed-row span {
-      color: white !important;
-    }
-    body.dark-mode # .speed-value {
-      color: white !important;
+    body.dark-mode #speedIndicator,
+    body.dark-mode #avgSpeedIndicator {
+      border-color: #c4eef5 !important;
     }
     body.dark-mode {
       background-color: #121212;
       color: #ffffff !important;
     }
     #savedRoutesContainer {
-  margin: 5px 10px 10px 10px; 
-  padding: 1px;
-  border: 1px solid #87CEEB; /* Borde celeste */
-  border-radius: 8px;
-  background-color: #e6f7ff; /* Fondo celeste muy claro */
-  max-height: 80px;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-/* Modo oscuro para el contenedor de rutas guardadas */
-body.dark-mode #savedRoutesContainer {
-  background-color: #1a3a4a; /* Azul oscuro para modo oscuro */
-  border-color: #2a5a6a;
-}
-
-/* Modo oscuro para los elementos de la lista */
-body.dark-mode #savedRoutesList li {
-  background-color: #2a3a4a !important; /* Fondo oscuro para los items */
-  border-color: #3a5a6a !important; /* Borde más claro */
-  color: white !important; /* Texto blanco */
-}
-
-/* Modo oscuro para los botones dentro de la lista */
-body.dark-mode #savedRoutesList li button {
-  background-color: #3a5a7a !important;
-  color: white !important;
-  border-color: #2a4a6a !important;
-}
-
-body.dark-mode #savedRoutesList li button:hover {
-  background-color: #4a6a8a !important;
-}
-
-/* Modo oscuro para el título */
-body.dark-mode #savedRoutesContainer h3 {
-  color: white !important;
-}
+      margin: 5px 10px 10px 10px;
+      padding: 1px;
+      border: 1px solid #87CEEB;
+      border-radius: 8px;
+      background-color: #e6f7ff;
+      max-height: 80px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    body.dark-mode #savedRoutesContainer {
+      background-color: #1a3a4a;
+      border-color: #2a5a6a;
+    }
     #savedRoutesContainer h3 {
       margin-top: 5px;
       margin-bottom: 5px;
+      color: black; /* Default color */
+    }
+    body.dark-mode #savedRoutesContainer h3 {
+      color: white !important;
     }
     #savedRoutesList {
       list-style-type: none;
@@ -275,49 +206,43 @@ body.dark-mode #savedRoutesContainer h3 {
       gap: 10px;
     }
     #savedRoutesList li {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 10px;
-  border: 1px solid #b3e0ff; /* Borde celeste */
-  border-radius: 5px;
-  background-color: #f0f9ff; /* Fondo celeste muy claro */
-  min-width: 150px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid #b3e0ff;
+      border-radius: 5px;
+      background-color: #f0f9ff;
+      min-width: 150px;
+    }
+    body.dark-mode #savedRoutesList li {
+      background-color: #2a3a4a !important;
+      border-color: #3a5a6a !important;
+      color: white !important;
     }
     #savedRoutesList li span {
       flex-grow: 1;
       margin-right: 10px;
     }
     #savedRoutesList li button {
-  background-color: #add8e6 !important; /* Celeste claro */
-  color: black !important;
-  border: 1px solid #87CEEB !important;
-  padding: 4px 8px !important;
-  border-radius: 4px !important;
-  cursor: pointer !important;
-  transition: background-color 0.3s;
+      background-color: #add8e6 !important;
+      color: black !important;
+      border: 1px solid #87CEEB !important;
+      padding: 4px 8px !important;
+      border-radius: 4px !important;
+      cursor: pointer !important;
+      transition: background-color 0.3s;
     }
     #savedRoutesList li button:hover {
-  background-color: #87CEEB !important; /* Celeste un poco más oscuro al pasar el mouse */
-}
+      background-color: #87CEEB !important;
+    }
     body.dark-mode #savedRoutesList li button {
-  background-color: #2a7a9a !important;
-  color: white !important;
-  border-color: #1a5a7a !important;
-}
-
-body.dark-mode #savedRoutesList li button:hover {
-  background-color: #3a8aaa !important;
-}
-    #routeName {
-      max-width: calc(150px - 9px);
-      font-size: 14px;
-      padding: 6px 12px;
-      height: 25px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      background-color: #f7faca; /* Color amarillo claro */
-      font-weight: bold;
+      background-color: #2a7a9a !important;
+      color: white !important;
+      border-color: #1a5a7a !important;
+    }
+    body.dark-mode #savedRoutesList li button:hover {
+      background-color: #3a8aaa !important;
     }
     #street-info-container {
       padding: 10px;
@@ -329,6 +254,10 @@ body.dark-mode #savedRoutesList li button:hover {
       margin: 1px 10px;
       border-radius: 8px;
     }
+    body.dark-mode #street-info-container {
+      background: rgba(40, 40, 40, 0.9);
+      border-top-color: #555;
+    }
     #street-name {
       font-weight: bold;
       margin-bottom: 5px;
@@ -337,36 +266,19 @@ body.dark-mode #savedRoutesList li button:hover {
       font-size: 14px;
       color: #555;
     }
-    body.dark-mode #street-info-container {
-      background: rgba(40, 40, 40, 0.9);
-      border-top-color: #555;
-    }
     body.dark-mode #street-etymology {
       color: #bbb;
     }
-    /* Agregar al final de la sección de estilos */
     .leaflet-marker-icon.temp-marker {
       animation: pulse 1s infinite alternate;
     }
     @keyframes pulse {
-      from {
-        transform: scale(1);
-        opacity: 1;
-      }
-      to {
-        transform: scale(1.2);
-        opacity: 0.7;
-      }
+      from { transform: scale(1); opacity: 1; }
+      to { transform: scale(1.2); opacity: 0.7; }
     }
-    
-    /* Ajustes para móviles */
     @media (max-width: 600px) {
-      h1 {
-        font-size: 14px;
-      }
-      #map {
-        height: calc(45vh - 37.8px);
-      }
+      h1 { font-size: 14px; }
+      #map { height: calc(45vh - 37.8px); }
       .buttons button {
         padding: 4px 12px;
         font-size: 14px;
@@ -379,45 +291,34 @@ body.dark-mode #savedRoutesList li button:hover {
       }
     }
     @media (min-width: 601px) {
-      #map {
-        height: calc(55vh - 37.8px);
-      }
+      #map { height: calc(55vh - 37.8px); }
     }
-    body.dark-mode #routeName {
-    background-color: #444 !important;
-    color: white !important;
-    border-color: #555 !important;
-    filter: none !important;
-}
-    /* Estilo para los botones del popup de ubicación guardada */
-.leaflet-popup-content button {
-  background-color: #add8e6 !important;
-  color: black !important;
-  border: 1px solid #87CEEB !important;
-  padding: 4px 8px !important;
-  border-radius: 4px !important;
-  cursor: pointer !important;
-}
-
-.leaflet-popup-content button:hover {
-  background-color: #87CEEB !important;
-}
-    /* Agrega esto en tu sección <style> */
-.numbered-marker::after {
-  content: attr(data-number);
-  position: absolute;
-  bottom: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 14px;
-  font-weight: bold;
-  color: black;
-  background: white;
-  padding: 2px 5px;
-  border-radius: 3px;
-  border: 1px solid #ccc;
-  z-index: 1000;
-}
+    .leaflet-popup-content button {
+      background-color: #add8e6 !important;
+      color: black !important;
+      border: 1px solid #87CEEB !important;
+      padding: 4px 8px !important;
+      border-radius: 4px !important;
+      cursor: pointer !important;
+    }
+    .leaflet-popup-content button:hover {
+      background-color: #87CEEB !important;
+    }
+    .numbered-marker::after {
+      content: attr(data-number);
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      font-weight: bold;
+      color: black;
+      background: white;
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: 1px solid #ccc;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
@@ -454,25 +355,25 @@ body.dark-mode #savedRoutesList li button:hover {
       Barrio: Cargando...
     </div>
   </div>
-  
+
   <div id="infoContainer">
     <div id="status">Obteniendo ubicación...</div>
   </div>
-  
+
   <div class="buttons">
     <div class="button-row">
       <button id="clearButton">Borrar ruta</button>
       <button id="stopButton">Pausar</button>
       <button id="darkModeButton">Modo oscuro</button>
     </div>
-    
+
     <div class="button-row">
       <button id="shareButton">Enviar ruta WApp</button>
       <button id="saveRouteButton">Guardar ruta</button>
       <button id="saveLocation">Guardar ubicación</button>
     </div>
-    
-    <div class="button-row"> 
+
+    <div class="button-row">
         <select id="mapLayers">
         <option value="osm">Mapa Estándar</option>
         <option value="satellite">Imagen Satelital</option>
@@ -480,39 +381,39 @@ body.dark-mode #savedRoutesList li button:hover {
       </select>
     </div>
   </div>
-  
+
   <div id="street-info-container">
     <div id="street-name"></div>
     <div id="street-etymology"></div>
   </div>
-  
+
   <div id="savedRoutesContainer">
     <h3>Rutas Guardadas</h3>
     <ul id="savedRoutesList"></ul>
   </div>
-  
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     // Variables globales
-    const streetCache = {};
-    let wasCapturingBeforeHidden = false;
-    let map, polyline, userMarker, precisionCircle;
-    let coordinates = [];
-    let totalDistance = 0;
-    const MAX_COORDINATES = 1000;
-    let watchId, wakeLockSentinel = null;
-    let lastPositionTime = null;
-    let isCapturing = true;
-    let shouldAdjustZoom = true;
-    let speedValues = [], avgSpeed = 0, routeStartTime = null, savedSpeeds = [], streetsData = [];
-    let lastKnownNeighborhood = 'Buscando barrio...';
-    const weatherApiKey = "2368e0b9c1a77bad8b4bb745bfe21ecb";
-    let lastNominatimCall = 0;
-    let currentLat = null, currentLon = null;
-    let savedMarkers = []; // Para almacenar los marcadores de ubicaciones guardadas
+    const streetCache = {}; /* cite: 323 */
+    let wasCapturingBeforeHidden = false; /* cite: 323 */
+    let map, polyline, userMarker, precisionCircle; /* cite: 323 */
+    let coordinates = []; /* cite: 323 */
+    let totalDistance = 0; /* cite: 324 */
+    const MAX_COORDINATES = 1000; /* cite: 324 */
+    let watchId, wakeLockSentinel = null; /* cite: 324 */
+    let lastPositionTime = null; /* cite: 324 */
+    let isCapturing = true; /* cite: 324 */
+    let shouldAdjustZoom = true; /* cite: 325 */
+    let speedValues = [], avgSpeed = 0, routeStartTime = null, savedSpeeds = [], streetsData = []; /* cite: 325 */
+    let lastKnownNeighborhood = 'Buscando barrio...'; /* cite: 326 */
+    const weatherApiKey = "2368e0b9c1a77bad8b4bb745bfe21ecb"; /* cite: 326 */
+    let lastNominatimCall = 0; /* cite: 326 */
+    let currentLat = null, currentLon = null; /* cite: 326 */
+    let savedMarkers = []; /* cite: 327 */
 
     // Capas del mapa
-    let layers = {
+    const layers = { /* cite: 327 */
       osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }),
@@ -523,72 +424,72 @@ body.dark-mode #savedRoutesList li button:hover {
     };
 
     // Ícono personalizado
-    const userIcon = L.icon({
+    const userIcon = L.icon({ /* cite: 328 */
       iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
       iconSize: [40, 40],
       iconAnchor: [20, 20]
     });
 
     // Control de versión
-    L.Control.Version = L.Control.extend({
+    L.Control.Version = L.Control.extend({ /* cite: 329 */
       options: { position: 'bottomleft' },
       onAdd: function(map) {
-        let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.20 ";
-        div.style.padding = "0px";
-        div.style.margin = "0";
-        div.style.background = "rgba(255, 255, 255, 0.8)";
-        div.style.fontSize = "10px";
-        return div;
+        const div = L.DomUtil.create('div', 'leaflet-control-version'); /* cite: 329 */
+        div.innerHTML = " Ver: 1.6.20 "; /* cite: 329 */
+        Object.assign(div.style, { /* Combined style assignments */
+          padding: "0px",
+          margin: "0",
+          background: "rgba(255, 255, 255, 0.8)",
+          fontSize: "10px"
+        });
+        return div; /* cite: 329 */
       }
     });
-
-    L.control.version = function(opts) {
+    L.control.version = function(opts) { /* cite: 330 */
       return new L.Control.Version(opts);
     };
 
     // Inicializar el mapa
     function initMap() {
       try {
-        map = L.map('map', { zoomControl: false }).setView([0, 0], 15);
-        layers.osm.addTo(map);
-        polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
-        L.control.version().addTo(map);
-        // Agregar evento de clic al mapa
-        map.on('click', function(e) {
-          if (!isCapturing) { // Solo funciona cuando la captura está pausada
-            handleMapClick(e.latlng);
+        map = L.map('map', { zoomControl: false }).setView([0, 0], 15); /* cite: 330 */
+        layers.osm.addTo(map); /* cite: 331 */
+        polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map); /* cite: 331 */
+        L.control.version().addTo(map); /* cite: 331 */
+
+        map.on('click', (e) => { /* cite: 332 */
+          if (!isCapturing) { /* cite: 332 */
+            handleMapClick(e.latlng); /* cite: 332 */
           }
         });
-        
-        // Cargar etimologías de calles
-        fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json')
-          .then(response => response.json())
-          .then(data => streetsData = data)
-          .catch(error => console.error('Error cargando etimologías:', error));
+
+        fetch('https://raw.githubusercontent.com/Chatlas2023/Capas_Json/main/Calles_Etim.json') /* cite: 333 */
+          .then(response => response.json()) /* cite: 333 */
+          .then(data => { streetsData = data; }) /* cite: 333 */
+          .catch(error => console.error('Error cargando etimologías:', error)); /* cite: 333 */
       } catch (error) {
-        console.error('Error inicializando mapa:', error);
-        updateStatus('Error al cargar el mapa');
+        console.error('Error inicializando mapa:', error); /* cite: 334 */
+        updateStatus('Error al cargar el mapa'); /* cite: 334 */
       }
     }
+
     L.Marker.include({
-  setDataNumber: function(number) {
-    if (this.options.icon) {
-      this.options.icon.options.number = number;
-      if (this._icon) {
-        this._icon.setAttribute('data-number', number);
+      setDataNumber: function(number) { /* cite: 335 */
+        if (this.options.icon) { /* cite: 335 */
+          this.options.icon.options.number = number; /* cite: 335 */
+          if (this._icon) { /* cite: 335 */
+            this._icon.setAttribute('data-number', number); /* cite: 335 */
+          }
+        }
+        return this; /* cite: 335 */
       }
-    }
-    return this;
-  }
-});
+    });
 
     function handleMapClick(latlng) {
-      // Crear un marcador temporal en el punto clickeado
-      if (window.tempMarker) {
-        map.removeLayer(window.tempMarker);
+      if (window.tempMarker) { /* cite: 336 */
+        map.removeLayer(window.tempMarker); /* cite: 336 */
       }
-      window.tempMarker = L.marker(latlng, {
+      window.tempMarker = L.marker(latlng, { /* cite: 337 */
         icon: L.icon({
           iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
           iconSize: [25, 41],
@@ -596,179 +497,161 @@ body.dark-mode #savedRoutesList li button:hover {
         }),
         className: 'temp-marker'
       }).addTo(map);
-      
-      // Obtener información de la ubicación clickeada
-      findNeighborhood(latlng.lat, latlng.lng);
-      getWeather(latlng.lat, latlng.lng, true); // <-- Aquí el cambio importante (forceUpdate = true)
-      getStreetInfo(latlng.lat, latlng.lng);
-      
-      // Mostrar información en el estado
-      updateStatus(`Click en: Lat ${latlng.lat.toFixed(6)}, Lng ${latlng.lng.toFixed(6)}`);
-      
-      // Opcional: Centrar el mapa en la ubicación clickeada
-      map.setView(latlng, map.getZoom());
+
+      findNeighborhood(latlng.lat, latlng.lng); /* cite: 338 */
+      getWeather(latlng.lat, latlng.lng, true); /* cite: 338 */
+      getStreetInfo(latlng.lat, latlng.lng); /* cite: 339 */
+      updateStatus(`Click en: Lat ${latlng.lat.toFixed(6)}, Lng ${latlng.lng.toFixed(6)}`); /* cite: 340 */
+      map.setView(latlng, map.getZoom()); /* cite: 341 */
     }
-    
+
     // Actualizar nombre del barrio
     function updateNeighborhoodName(name, isUserAction = false) {
-      const element = document.getElementById('neighborhoodName');
-      if (!element) return;
-      
+      const element = document.getElementById('neighborhoodName'); /* cite: 342 */
+      if (!element) return; /* cite: 342 */
+
       if (name && name.trim() !== '') {
-        lastKnownNeighborhood = name;
-        element.textContent = `Barrio: ${name}`;
+        lastKnownNeighborhood = name; /* cite: 343 */
+        element.textContent = `Barrio: ${name}`; /* cite: 343 */
         if (isUserAction) {
-          localStorage.setItem('lastNeighborhood', name);
+          localStorage.setItem('lastNeighborhood', name); /* cite: 344 */
         }
       } else {
-        element.textContent = `Barrio: ${lastKnownNeighborhood}`;
+        element.textContent = `Barrio: ${lastKnownNeighborhood}`; /* cite: 344 */
       }
-      
-      // Mover el elemento para que no cubra el marcador temporal
-      if (window.tempMarker) {
-        element.style.bottom = '60px'; // Ajusta según sea necesario
-      } else {
-        element.style.bottom = '15px';
-      }
+
+      element.style.bottom = window.tempMarker ? '60px' : '15px'; /* Consolidated style update cite: 345, 346 */
     }
 
     // Obtener detalles de ubicación
     async function fetchLocationDetails(lat, lng) {
-      const now = Date.now();
-      if (now - lastNominatimCall < 1000) {
-        setTimeout(() => fetchLocationDetails(lat, lng), 1000 - (now - lastNominatimCall));
+      const now = Date.now(); /* cite: 347 */
+      if (now - lastNominatimCall < 1000) { /* cite: 347 */
+        setTimeout(() => fetchLocationDetails(lat, lng), 1000 - (now - lastNominatimCall)); /* cite: 347 */
         return;
       }
 
       try {
-        const response = await fetch(
+        const response = await fetch( /* cite: 348 */
           `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es`
         );
-        const data = await response.json();
-        
-        const neighborhood = data.address?.neighbourhood || 
-                         data.address?.suburb || 
-                         data.address?.city_district || 
+        const data = await response.json(); /* cite: 348 */
+
+        const neighborhood = data.address?.neighbourhood ||
+                         data.address?.suburb ||
+                         data.address?.city_district ||
                          data.address?.county ||
                          data.address?.city ||
                          data.address?.town ||
-                         data.address?.village ||
+                         data.address?.village || /* cite: 349 */
                          "Área no especificada";
-        
-        updateNeighborhoodName(neighborhood);
-        lastNominatimCall = Date.now();
+
+        updateNeighborhoodName(neighborhood); /* cite: 349 */
+        lastNominatimCall = Date.now(); /* cite: 349 */
       } catch (error) {
-        console.error("Error con Nominatim:", error);
-        updateNeighborhoodName("Ubicación desconocida");
+        console.error("Error con Nominatim:", error); /* cite: 350 */
+        updateNeighborhoodName("Ubicación desconocida"); /* cite: 350 */
       }
     }
 
     function findNeighborhood(lat, lng) {
-      fetchLocationDetails(lat, lng);
+      fetchLocationDetails(lat, lng); /* cite: 351 */
     }
 
     // Cambiar capas del mapa
     function changeMapLayer(selectedLayer) {
-      map.eachLayer(layer => {
+      map.eachLayer(layer => { /* cite: 351 */
         if (layer === layers.osm || layer === layers.satellite) {
-          map.removeLayer(layer);
+          map.removeLayer(layer); /* cite: 351 */
         }
       });
-
-      if (selectedLayer === "weather") {
+      if (selectedLayer === "weather") { /* cite: 352 */
         window.open('mapaWindy.html', '_blank');
         layers.osm.addTo(map);
         document.getElementById('mapLayers').value = 'osm';
       } else {
-        layers[selectedLayer].addTo(map);
+        layers[selectedLayer].addTo(map); /* cite: 353 */
       }
     }
 
     // Wake Lock
     async function acquireWakeLock() {
       try {
-        wakeLockSentinel = await navigator.wakeLock.request('screen');
-        console.log('Wake Lock activo');
-        wakeLockSentinel.addEventListener('release', () => {
+        wakeLockSentinel = await navigator.wakeLock.request('screen'); /* cite: 353 */
+        console.log('Wake Lock activo'); /* cite: 353 */
+        wakeLockSentinel.addEventListener('release', () => { /* cite: 354 */
           console.log('Wake Lock fue liberado por el sistema!');
           wakeLockSentinel = null;
         });
       } catch (err) {
-        console.error(`Error al solicitar Wake Lock: ${err.name}, ${err.message}`);
+        console.error(`Error al solicitar Wake Lock: ${err.name}, ${err.message}`); /* cite: 355 */
       }
     }
 
     async function releaseWakeLock() {
-      if (wakeLockSentinel) {
-        await wakeLockSentinel.release();
-        wakeLockSentinel = null;
-        console.log('Wake Lock liberado');
+      if (wakeLockSentinel) { /* cite: 356 */
+        await wakeLockSentinel.release(); /* cite: 356 */
+        wakeLockSentinel = null; /* cite: 356 */
+        console.log('Wake Lock liberado'); /* cite: 356 */
       }
     }
 
     // Geolocalización
     function getLocation() {
-      if (navigator.geolocation) {
-        acquireWakeLock();
-        watchId = navigator.geolocation.watchPosition(
+      if (navigator.geolocation) { /* cite: 357 */
+        acquireWakeLock(); /* cite: 358 */
+        watchId = navigator.geolocation.watchPosition( /* cite: 358 */
           (position) => {
             const now = Date.now();
             const speedKmh = position.coords.speed ? position.coords.speed * 3.6 : 0;
-            
-            const minInterval = speedKmh < 5 ? 15000 : 
-                              speedKmh < 20 ? 7000 : 
-                              3000;
+            const minInterval = speedKmh < 5 ? 15000 : speedKmh < 20 ? 7000 : 3000; /* cite: 358 */
 
             if (!lastPositionTime || now - lastPositionTime >= minInterval) {
-              processPosition(position);
-              lastPositionTime = now;
+              processPosition(position); /* cite: 358 */
+              lastPositionTime = now; /* cite: 358 */
             }
           },
           (error) => {
-            console.error("Error al obtener la ubicación:", error);
-            updateStatus("Error al obtener la ubicación.");
+            console.error("Error al obtener la ubicación:", error); /* cite: 358 */
+            updateStatus("Error al obtener la ubicación."); /* cite: 358 */
           },
-          { 
-            enableHighAccuracy: true,
-            maximumAge: 60000,
-            timeout: 20000
+          {
+            enableHighAccuracy: true, /* cite: 359 */
+            maximumAge: 60000, /* cite: 359 */
+            timeout: 20000 /* cite: 359 */
           }
         );
       } else {
-        updateStatus("Tu navegador no soporta geolocalización.");
+        updateStatus("Tu navegador no soporta geolocalización."); /* cite: 359 */
       }
     }
 
     function processPosition(position) {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      const speed = position.coords.speed;
-      const accuracy = position.coords.accuracy;
-      const altitude = position.coords.altitude || 0;
-      
-      // Actualizar las coordenadas actuales
-      currentLat = lat;
-      currentLon = lng;
+      const { latitude: lat, longitude: lng, speed, accuracy, altitude } = position.coords; /* Destructuring for cleaner access cite: 360 */
+      const currentAltitude = altitude || 0; /* cite: 360 */
 
-      addCoordinate(lat, lng, speed);
-      updateMap(lat, lng);
-      updateStatus(`Lat: ${lat.toFixed(6)} | Long: ${lng.toFixed(6)}`);
-      updateSpeed(speed);
-      document.getElementById('altitudeValue').textContent = Math.round(altitude);
-      findNeighborhood(lat, lng);
-      getWeather(lat, lng);
-      getStreetInfo(lat, lng);
+      currentLat = lat; /* cite: 361 */
+      currentLon = lng; /* cite: 361 */
+
+      addCoordinate(lat, lng, speed); /* cite: 361 */
+      updateMap(lat, lng); /* cite: 362 */
+      updateStatus(`Lat: ${lat.toFixed(6)} | Long: ${lng.toFixed(6)}`); /* cite: 362 */
+      updateSpeed(speed); /* cite: 362 */
+      document.getElementById('altitudeValue').textContent = Math.round(currentAltitude); /* cite: 362 */
+      findNeighborhood(lat, lng); /* cite: 362 */
+      getWeather(lat, lng); /* cite: 362 */
+      getStreetInfo(lat, lng); /* cite: 363 */
 
       if (!userMarker) {
-        userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
+        userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map); /* cite: 363 */
       } else {
-        userMarker.setLatLng([lat, lng]);
+        userMarker.setLatLng([lat, lng]); /* cite: 364 */
       }
 
       if (precisionCircle) {
-        precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
+        precisionCircle.setLatLng([lat, lng]).setRadius(accuracy); /* cite: 364 */
       } else {
-        precisionCircle = L.circle([lat, lng], {
+        precisionCircle = L.circle([lat, lng], { /* cite: 364 */
           color: 'cyan',
           weight: 2,
           fillColor: 'cyan',
@@ -779,601 +662,499 @@ body.dark-mode #savedRoutesList li button:hover {
     }
 
     function addCoordinate(lat, lng, speed) {
-      if (coordinates.length >= MAX_COORDINATES) {
-        coordinates.shift();
+      if (coordinates.length >= MAX_COORDINATES) { /* cite: 365 */
+        coordinates.shift(); /* cite: 366 */
       }
 
       if (coordinates.length === 0) {
-        coordinates.push({ lat, lng });
+        coordinates.push({ lat, lng }); /* cite: 366 */
       } else {
-        const last = coordinates[coordinates.length - 1];
-        const distance = calculateDistance(last.lat, last.lng, lat, lng);
-        
-        const minDistance = speed > 10 ? 20 : 10;
-        
-        if (distance > minDistance || isDirectionChange(coordinates[coordinates.length-2], last, {lat, lng})) {
-          coordinates.push({ lat, lng });
-          totalDistance += distance / 1000;
-          saveCoordinates();
-          document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
+        const last = coordinates[coordinates.length - 1]; /* cite: 366 */
+        const distance = calculateDistance(last.lat, last.lng, lat, lng); /* cite: 367 */
+
+        const minDistance = speed > 10 ? 20 : 10; /* cite: 367 */
+        if (distance > minDistance || isDirectionChange(coordinates[coordinates.length - 2], last, { lat, lng })) { /* cite: 368 */
+          coordinates.push({ lat, lng }); /* cite: 368 */
+          totalDistance += distance / 1000; /* cite: 368 */
+          saveCoordinates(); /* cite: 368 */
+          document.getElementById('distanceValue').textContent = totalDistance.toFixed(1); /* cite: 369 */
         }
       }
     }
 
     function calculateDistance(lat1, lng1, lat2, lng2) {
-      const R = 6371e3;
-      const dLat = (lat2 - lat1) * (Math.PI / 180);
-      const dLng = (lng2 - lng1) * (Math.PI / 180);
+      const R = 6371e3; /* cite: 369 */
+      const dLat = (lat2 - lat1) * (Math.PI / 180); /* cite: 370 */
+      const dLng = (lng2 - lng1) * (Math.PI / 180); /* cite: 370 */
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
+        Math.sin(dLng / 2) * Math.sin(dLng / 2); /* cite: 371 */
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); /* cite: 372 */
+      return R * c; /* cite: 372 */
     }
 
     function isDirectionChange(prev, current, next, threshold = 30) {
-      if (!prev || !next) return false;
-      
-      const angle1 = Math.atan2(current.lng - prev.lng, current.lat - prev.lat);
-      const angle2 = Math.atan2(next.lng - current.lng, next.lat - current.lat);
-      const angleDiff = Math.abs(angle1 - angle2) * (180 / Math.PI);
-      
-      return angleDiff > threshold;
+      if (!prev || !next) return false; /* cite: 373 */
+      const angle1 = Math.atan2(current.lng - prev.lng, current.lat - prev.lat); /* cite: 374 */
+      const angle2 = Math.atan2(next.lng - current.lng, next.lat - current.lat); /* cite: 374 */
+      const angleDiff = Math.abs(angle1 - angle2) * (180 / Math.PI); /* cite: 375 */
+      return angleDiff > threshold; /* cite: 375 */
     }
 
     function updateMap(lat, lng) {
-      if (!map) return;
-      
-      const newLatLng = [lat, lng];
-      polyline.addLatLng(newLatLng);
-      
-      if (coordinates.length < 5 || 
-          coordinates.length % 10 === 0 || 
-          calculateDistance(map.getCenter().lat, map.getCenter().lng, lat, lng) > 50) {
-        map.setView(newLatLng, 16);
+      if (!map) return; /* cite: 376 */
+      const newLatLng = [lat, lng]; /* cite: 376 */
+      polyline.addLatLng(newLatLng); /* cite: 376 */
+
+      if (coordinates.length < 5 ||
+          coordinates.length % 10 === 0 ||
+          calculateDistance(map.getCenter().lat, map.getCenter().lng, lat, lng) > 50) { /* cite: 377 */
+        map.setView(newLatLng, 16); /* cite: 377 */
       }
     }
 
     function updateStatus(message) {
-      document.getElementById('status').textContent = message;
+      document.getElementById('status').textContent = message; /* cite: 378 */
     }
 
     function updateSpeed(speed) {
-      const speedKmh = speed ? speed * 3.6 : 0;
-      
+      const speedKmh = speed ? speed * 3.6 : 0; /* cite: 379 */
+
       if (speedKmh > 0) {
-        speedValues.push(speedKmh);
-        if (speedValues.length > 100) speedValues.shift();
-        
+        speedValues.push(speedKmh); /* cite: 379 */
+        if (speedValues.length > 100) speedValues.shift(); /* cite: 380 */
+
         if (!routeStartTime && coordinates.length === 1) {
-          routeStartTime = new Date();
+          routeStartTime = new Date(); /* cite: 380 */
         }
-        
+
         let mode;
-        if (speedKmh < 5) mode = "🟢 Eco (15s)";
-        else if (speedKmh < 20) mode = "🟡 Normal (7s)";
-        else mode = "🔴 Precisión (3s)";
-        
-        document.getElementById('samplingMode').textContent = `${mode}`;
-      }
-      
-      if (coordinates.length > 1 && routeStartTime) {
-        const currentTime = new Date();
-        const elapsedHours = (currentTime - routeStartTime) / 3600000;
-        avgSpeed = elapsedHours > 0 ? totalDistance / elapsedHours : 0;
-      } else {
-        avgSpeed = speedValues.length > 0 
-          ? speedValues.reduce((a, b) => a + b, 0) / speedValues.length 
-          : 0;
+        if (speedKmh < 5) mode = "🟢 Eco (15s)"; /* cite: 381 */
+        else if (speedKmh < 20) mode = "🟡 Normal (7s)"; /* cite: 381 */
+        else mode = "🔴 Precisión (3s)"; /* cite: 382 */
+
+        document.getElementById('samplingMode').textContent = `${mode}`; /* cite: 382 */
       }
 
-      document.getElementById('currentSpeed').textContent = Math.round(speedKmh);
-      document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
+      if (coordinates.length > 1 && routeStartTime) {
+        const currentTime = new Date(); /* cite: 382 */
+        const elapsedHours = (currentTime - routeStartTime) / 3600000; /* cite: 383 */
+        avgSpeed = elapsedHours > 0 ? totalDistance / elapsedHours : 0; /* cite: 383 */
+      } else {
+        avgSpeed = speedValues.length > 0
+          ? speedValues.reduce((a, b) => a + b, 0) / speedValues.length
+          : 0; /* cite: 384 */
+      }
+
+      document.getElementById('currentSpeed').textContent = Math.round(speedKmh); /* cite: 385 */
+      document.getElementById('averageSpeed').textContent = Math.round(avgSpeed); /* cite: 385 */
     }
 
     function toggleCapture() {
-      const stopButton = document.getElementById('stopButton');
-      if (isCapturing) {
+      const stopButton = document.getElementById('stopButton'); /* cite: 385 */
+      if (isCapturing) { /* cite: 386 */
         if (watchId) {
-          navigator.geolocation.clearWatch(watchId);
-          watchId = null;
+          navigator.geolocation.clearWatch(watchId); /* cite: 386 */
+          watchId = null; /* cite: 386 */
         }
-        stopButton.textContent = "Continuar captura";
-        stopButton.classList.add('continue');
-        updateStatus("Captura pausada - Haz clic en el mapa para obtener información");
-        releaseWakeLock();
+        stopButton.textContent = "Continuar captura"; /* cite: 386 */
+        stopButton.classList.add('continue'); /* cite: 386 */
+        updateStatus("Captura pausada - Haz clic en el mapa para obtener información"); /* cite: 387 */
+        releaseWakeLock(); /* cite: 387 */
       } else {
-        // Eliminar marcador temporal si existe
-        if (window.tempMarker) {
-          map.removeLayer(window.tempMarker);
-          window.tempMarker = null;
-          document.getElementById('neighborhoodName').style.bottom = '15px';
+        if (window.tempMarker) { /* cite: 388 */
+          map.removeLayer(window.tempMarker); /* cite: 388 */
+          window.tempMarker = null; /* cite: 388 */
+          document.getElementById('neighborhoodName').style.bottom = '15px'; /* cite: 389 */
         }
-        getLocation();
-        stopButton.textContent = "Pausar";
-        stopButton.classList.remove('continue');
-        updateStatus("Captura reanudada");
+        getLocation(); /* cite: 389 */
+        stopButton.textContent = "Pausar"; /* cite: 389 */
+        stopButton.classList.remove('continue'); /* cite: 389 */
+        updateStatus("Captura reanudada"); /* cite: 389 */
       }
-      isCapturing = !isCapturing;
+      isCapturing = !isCapturing; /* cite: 389 */
     }
 
     function toggleDarkMode() {
-      const body = document.body;
-      const darkMode = document.getElementById('darkMode');
-      const speedPanel = document.getElementById('speedPanel');
-      
-      body.classList.toggle('dark-mode');
-      const isDarkMode = body.classList.contains('dark-mode');
-      
-      speedPanel.style.display = 'none';
-      void speedPanel.offsetWidth;
-      speedPanel.style.display = '';
-      
-      localStorage.setItem('darkMode', isDarkMode);
-      darkMode.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
+      const body = document.body; /* cite: 390 */
+      const speedPanel = document.getElementById('speedPanel'); /* cite: 390 */
+      const darkModeButton = document.getElementById('darkModeButton'); /* Renamed for clarity */
+
+      body.classList.toggle('dark-mode'); /* cite: 390 */
+      const isDarkMode = body.classList.contains('dark-mode'); /* cite: 390 */
+
+      // Force reflow to reapply styles (often not strictly necessary but harmless)
+      speedPanel.style.display = 'none'; /* cite: 390 */
+      void speedPanel.offsetWidth; /* cite: 391 */
+      speedPanel.style.display = ''; /* cite: 391 */
+
+      localStorage.setItem('darkMode', isDarkMode); /* cite: 391 */
+      darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro'; /* cite: 392 */
     }
 
     function applyDarkModePreference() {
-      const isDarkMode = localStorage.getItem('darkMode') === 'true';
-      const body = document.body;
-      const darkMode = document.getElementById('darkMode');
+      const isDarkMode = localStorage.getItem('darkMode') === 'true'; /* cite: 392 */
+      const body = document.body; /* cite: 393 */
+      const darkModeButton = document.getElementById('darkModeButton'); /* cite: 393 */
+
       if (isDarkMode) {
-        body.classList.add('dark-mode');
-        darkMode.textContent = 'Modo claro';
+        body.classList.add('dark-mode'); /* cite: 393 */
+        darkModeButton.textContent = 'Modo claro'; /* cite: 393 */
       } else {
-        body.classList.remove('dark-mode');
-        darkModeButton.textContent = 'Modo oscuro';
+        body.classList.remove('dark-mode'); /* cite: 394 */
+        darkModeButton.textContent = 'Modo oscuro'; /* cite: 394 */
       }
     }
 
     function saveCoordinates() {
-      localStorage.setItem("coordinates", JSON.stringify(coordinates));
-      localStorage.setItem("totalDistance", totalDistance.toString());
+      localStorage.setItem("coordinates", JSON.stringify(coordinates)); /* cite: 394 */
+      localStorage.setItem("totalDistance", totalDistance.toString()); /* cite: 394 */
     }
 
     function loadCoordinates() {
-      const savedCoordinates = localStorage.getItem("coordinates");
-      const savedDistance = localStorage.getItem("totalDistance");
+      const savedCoordinates = localStorage.getItem("coordinates"); /* cite: 395 */
+      const savedDistance = localStorage.getItem("totalDistance"); /* cite: 395 */
+
       if (savedCoordinates) {
-        coordinates = JSON.parse(savedCoordinates);
+        coordinates = JSON.parse(savedCoordinates); /* cite: 395 */
       }
       if (savedDistance) {
-        totalDistance = parseFloat(savedDistance);
+        totalDistance = parseFloat(savedDistance); /* cite: 396 */
       }
     }
 
     function loadMapWithSavedCoordinates() {
-      coordinates.forEach(coord => {
-        polyline.addLatLng([coord.lat, coord.lng]);
+      coordinates.forEach(coord => { /* cite: 396 */
+        polyline.addLatLng([coord.lat, coord.lng]); /* cite: 397 */
       });
+
       if (coordinates.length > 0) {
-        const lastCoord = coordinates[coordinates.length - 1];
-        map.setView([lastCoord.lat, lastCoord.lng], 13);
-        findNeighborhood(lastCoord.lat, lastCoord.lng);
+        const lastCoord = coordinates[coordinates.length - 1]; /* cite: 397 */
+        map.setView([lastCoord.lat, lastCoord.lng], 13); /* cite: 397 */
+        findNeighborhood(lastCoord.lat, lastCoord.lng); /* cite: 397 */
       }
     }
 
     function clearHistory() {
-      coordinates = [];
-      totalDistance = 0;
-      speedValues = [];
-      savedSpeeds = [];
-      avgSpeed = 0;
-      routeStartTime = null;
-      polyline.setLatLngs([]);
-      saveCoordinates();
-      document.getElementById('distanceValue').textContent = '0';
-      document.getElementById('currentSpeed').textContent = '0';
-      document.getElementById('averageSpeed').textContent = '0';
-      document.getElementById('altitudeValue').textContent = '0';
-      document.getElementById('weatherInfo').textContent = '-';
-      document.getElementById('street-name').textContent = '';
-      document.getElementById('street-etymology').textContent = '';
-      updateStatus("Historial limpiado.");
-      lastWeatherUpdate = 0;
+      coordinates = []; /* cite: 398 */
+      totalDistance = 0; /* cite: 398 */
+      speedValues = []; /* cite: 398 */
+      savedSpeeds = []; /* cite: 398 */
+      avgSpeed = 0; /* cite: 398 */
+      routeStartTime = null; /* cite: 399 */
+      polyline.setLatLngs([]); /* cite: 399 */
+      saveCoordinates(); /* cite: 399 */
+      document.getElementById('distanceValue').textContent = '0'; /* cite: 399 */
+      document.getElementById('currentSpeed').textContent = '0'; /* cite: 399 */
+      document.getElementById('averageSpeed').textContent = '0'; /* cite: 399 */
+      document.getElementById('altitudeValue').textContent = '0'; /* cite: 399 */
+      document.getElementById('weatherInfo').textContent = '-'; /* cite: 400 */
+      document.getElementById('street-name').textContent = ''; /* cite: 400 */
+      document.getElementById('street-etymology').textContent = ''; /* cite: 400 */
+      updateStatus("Historial limpiado."); /* cite: 400 */
+      lastWeatherUpdate = 0; /* cite: 401 */
     }
 
     function startNewRoute() {
-      const confirmacion = confirm("¿Estás seguro de que deseas eliminar la ruta actual?");
-      if (confirmacion) {
-        shouldAdjustZoom = true;
-        clearHistory();
+      const confirmacion = confirm("¿Estás seguro de que deseas eliminar la ruta actual?"); /* cite: 402 */
+      if (confirmacion) { /* cite: 402 */
+        shouldAdjustZoom = true; /* cite: 402 */
+        clearHistory(); /* cite: 402 */
       } else {
-        updateStatus("Inicio de nueva ruta cancelado.");
+        updateStatus("Inicio de nueva ruta cancelado."); /* cite: 403 */
       }
     }
 
-    let lastWeatherUpdate = 0;
-    const WEATHER_UPDATE_INTERVAL = 10 * 60 * 1000;
+    let lastWeatherUpdate = 0; /* cite: 403 */
+    const WEATHER_UPDATE_INTERVAL = 10 * 60 * 1000; /* cite: 404 */
 
     async function getWeather(lat, lng, forceUpdate = false) {
-      const now = Date.now();
-      if (!forceUpdate && now - lastWeatherUpdate < WEATHER_UPDATE_INTERVAL) return;
-      
+      const now = Date.now(); /* cite: 404 */
+      if (!forceUpdate && now - lastWeatherUpdate < WEATHER_UPDATE_INTERVAL) return; /* cite: 405 */
+
       try {
-        const response = await fetch(
+        const response = await fetch( /* cite: 405 */
           `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&units=metric&lang=es&appid=${weatherApiKey}`
         );
-        const data = await response.json();
-        
-        if (data.main) {
-          const temp = data.main.temp.toFixed(1);
-          document.getElementById('weatherInfo').textContent = `${temp}`;
-          lastWeatherUpdate = now;
+        const data = await response.json(); /* cite: 406 */
+        if (data.main) { /* cite: 406 */
+          const temp = data.main.temp.toFixed(1); /* cite: 406 */
+          document.getElementById('weatherInfo').textContent = `${temp}`; /* cite: 406 */
+          lastWeatherUpdate = now; /* cite: 407 */
         }
       } catch (error) {
-        console.error('Error obteniendo clima:', error);
-        document.getElementById('weatherInfo').textContent = "-";
+        console.error('Error obteniendo clima:', error); /* cite: 407 */
+        document.getElementById('weatherInfo').textContent = "-"; /* cite: 407 */
       }
     }
 
     async function getStreetInfo(lat, lng) {
-      const cacheKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
-      
-      if (streetCache[cacheKey]) {
-        updateStreetUI(streetCache[cacheKey]);
+      const cacheKey = `${lat.toFixed(6)},${lng.toFixed(6)}`; /* cite: 408 */
+      if (streetCache[cacheKey]) { /* cite: 408 */
+        updateStreetUI(streetCache[cacheKey]); /* cite: 408 */
         return;
       }
 
       try {
-        const response = await fetch(
+        const response = await fetch( /* cite: 409 */
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=es`
         );
-        const data = await response.json();
-        
-        if (data.address && data.address.road) {
-          const streetName = data.address.road;
-          const streetData = streetsData.find(item => item.Name === streetName);
-          
+        const data = await response.json(); /* cite: 410 */
+
+        if (data.address && data.address.road) { /* cite: 410 */
+          const streetName = data.address.road; /* cite: 410 */
+          const streetData = streetsData.find(item => item.Name === streetName); /* cite: 411 */
           const result = {
             name: "Calle: " + streetName,
             etymology: streetData?.Etimologia || " "
           };
-          
-          streetCache[cacheKey] = result;
-          updateStreetUI(result);
+          streetCache[cacheKey] = result; /* cite: 411 */
+          updateStreetUI(result); /* cite: 412 */
         }
       } catch (error) {
-        console.error('Error obteniendo información de calle:', error);
-        updateStreetUI({
-          name: "Error",
-          etymology: "Error al cargar información de la calle."
-        });
+        console.error('Error obteniendo información de calle:', error); /* cite: 412 */
+        updateStreetUI({ name: "Error", etymology: "Error al cargar información de la calle." }); /* cite: 413 */
       }
     }
 
     function updateStreetUI(data) {
-      document.getElementById('street-name').textContent = data.name;
-      document.getElementById('street-etymology').textContent = data.etymology;
+      document.getElementById('street-name').textContent = data.name; /* cite: 413 */
+      document.getElementById('street-etymology').textContent = data.etymology; /* cite: 414 */
     }
 
     function generateGoogleMapsLink() {
-      if (coordinates.length === 0) return null;
-      
-      const origin = `${coordinates[0].lat},${coordinates[0].lng}`;
-      const destination = `${coordinates[coordinates.length - 1].lat},${coordinates[coordinates.length - 1].lng}`;
-      
-      return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+      if (coordinates.length === 0) return null; /* cite: 414 */
+      const origin = `${coordinates[0].lat},${coordinates[0].lng}`; /* cite: 415 */
+      const destination = `${coordinates[coordinates.length - 1].lat},${coordinates[coordinates.length - 1].lng}`; /* cite: 415 */
+      return `https://www.google.com/maps/dir/?api=1&origin=$?q=${origin}&destination=${destination}`; /* Corrected URL */
     }
 
     async function shareViaWhatsApp() {
       try {
-        const link = generateGoogleMapsLink();
+        const link = generateGoogleMapsLink(); /* cite: 416 */
         if (!link) {
-          alert("No hay coordenadas para compartir.");
+          alert("No hay coordenadas para compartir."); /* cite: 417 */
           return;
         }
-        
-        const message = `🚗 Mi Recorrido GPS 🗺️\n\n🔹 Distancia: ${totalDistance.toFixed(2)} km\n🔸 Veloc. promedio: ${Math.round(avgSpeed)} km/h\n\nVer ruta: ${link}`;
-        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
+        const message = `🚗 Mi Recorrido GPS 🗺️\n\n🔹 Distancia: ${totalDistance.toFixed(2)} km\n🔸 Veloc. promedio: ${Math.round(avgSpeed)} km/h\n\nVer ruta: ${link}`; /* cite: 417 */
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`; /* cite: 418 */
+        window.open(whatsappUrl, '_blank'); /* cite: 418 */
       } catch (error) {
-        console.error("Error al compartir:", error);
-        alert("Ocurrió un error al intentar compartir la ruta.");
+        console.error("Error al compartir:", error); /* cite: 418 */
+        alert("Ocurrió un error al intentar compartir la ruta."); /* cite: 419 */
       }
     }
 
-function saveRoute() {
-  const routeName = prompt("Por favor, ingresa un nombre para la ruta:");
-  
-  if (!routeName || routeName.trim() === "") {
-    alert("Debes ingresar un nombre válido para la ruta.");
-    return;
-  }
+    function saveRoute() {
+      const routeName = prompt("Por favor, ingresa un nombre para la ruta:"); /* cite: 419 */
+      if (!routeName || routeName.trim() === "") {
+        alert("Debes ingresar un nombre válido para la ruta."); /* cite: 420 */
+        return;
+      }
 
-  let calculatedAvgSpeed = 0;
-  if (routeStartTime && coordinates.length > 1) {
-    const currentTime = new Date();
-    const elapsedHours = (currentTime - routeStartTime) / 3600000;
-    calculatedAvgSpeed = elapsedHours > 0 ? totalDistance / elapsedHours : 0;
-  }
-  
-  const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
-  const route = {
-    name: routeName,
-    coordinates: coordinates,
-    totalDistance: totalDistance,
-    date: new Date().toISOString(),
-    avgSpeed: calculatedAvgSpeed || avgSpeed,
-    startTime: routeStartTime ? routeStartTime.toISOString() : new Date().toISOString()
-  };
-  
-  savedRoutes.push(route);
-  localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
-  alert(`Ruta "${routeName}" guardada correctamente.`);
-  loadSavedRoutes();
-}
+      let calculatedAvgSpeed = 0; /* cite: 421 */
+      if (routeStartTime && coordinates.length > 1) {
+        const currentTime = new Date(); /* cite: 421 */
+        const elapsedHours = (currentTime - routeStartTime) / 3600000; /* cite: 422 */
+        calculatedAvgSpeed = elapsedHours > 0 ? totalDistance / elapsedHours : 0; /* cite: 422 */
+      }
+
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || []; /* cite: 423 */
+      const route = {
+        name: routeName,
+        coordinates: coordinates,
+        totalDistance: totalDistance,
+        date: new Date().toISOString(),
+        avgSpeed: calculatedAvgSpeed || avgSpeed, /* cite: 424 */
+        startTime: routeStartTime ? routeStartTime.toISOString() : new Date().toISOString() /* cite: 424 */
+      };
+      savedRoutes.push(route); /* cite: 424 */
+      localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes)); /* cite: 424 */
+      alert(`Ruta "${routeName}" guardada correctamente.`); /* cite: 424 */
+      loadSavedRoutes(); /* cite: 425 */
+    }
 
     function loadSavedRoutes() {
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
-      const savedRoutesList = document.getElementById('savedRoutesList');
-      savedRoutesList.innerHTML = '';
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || []; /* cite: 425 */
+      const savedRoutesList = document.getElementById('savedRoutesList'); /* cite: 425 */
+      savedRoutesList.innerHTML = ''; /* cite: 426 */
 
-      savedRoutes.forEach((route, index) => {
-        const listItem = document.createElement('li');
+      savedRoutes.forEach((route, index) => { /* cite: 426 */
+        const listItem = document.createElement('li'); /* cite: 426 */
         listItem.innerHTML = `
           <span>${route.name} - ${route.totalDistance.toFixed(2)} km - ${Math.round(route.avgSpeed || 0)} km/h - ${new Date(route.date).toLocaleString()}</span>
           <button onclick="loadRoute(${index})">Cargar</button>
           <button onclick="deleteRoute(${index})">Eliminar</button>
-        `;
-        savedRoutesList.appendChild(listItem);
+        `; /* cite: 426 */
+        savedRoutesList.appendChild(listItem); /* cite: 427 */
       });
     }
 
     function loadRoute(index) {
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
-      const route = savedRoutes[index];
-      if (route) {
-        coordinates = route.coordinates;
-        totalDistance = route.totalDistance;
-        speedValues = [];
-        avgSpeed = route.avgSpeed || 0;
-        routeStartTime = new Date(route.startTime);
-        
-        polyline.setLatLngs([]);
-        coordinates.forEach(coord => polyline.addLatLng([coord.lat, coord.lng]));
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || []; /* cite: 427 */
+      const route = savedRoutes[index]; /* cite: 427 */
+      if (route) { /* cite: 428 */
+        coordinates = route.coordinates; /* cite: 428 */
+        totalDistance = route.totalDistance; /* cite: 428 */
+        speedValues = []; /* cite: 428 */
+        avgSpeed = route.avgSpeed || 0; /* cite: 428 */
+        routeStartTime = new Date(route.startTime); /* cite: 429 */
+        polyline.setLatLngs([]); /* cite: 429 */
+        coordinates.forEach(coord => polyline.addLatLng([coord.lat, coord.lng])); /* cite: 429 */
+
         if (coordinates.length > 0) {
-          const lastCoord = coordinates[coordinates.length - 1];
-          map.setView([lastCoord.lat, lastCoord.lng], 13);
-          findNeighborhood(lastCoord.lat, lastCoord.lng);
+          const lastCoord = coordinates[coordinates.length - 1]; /* cite: 429 */
+          map.setView([lastCoord.lat, lastCoord.lng], 13); /* cite: 430 */
+          findNeighborhood(lastCoord.lat, lastCoord.lng); /* cite: 430 */
         }
-        document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
-        updateStatus(`Ruta "${route.name}" cargada correctamente.`);
-        document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
-        document.getElementById('currentSpeed').textContent = '0';
+        document.getElementById('distanceValue').textContent = totalDistance.toFixed(1); /* cite: 430 */
+        updateStatus(`Ruta "${route.name}" cargada correctamente.`); /* cite: 430 */
+        document.getElementById('averageSpeed').textContent = Math.round(avgSpeed); /* cite: 430 */
+        document.getElementById('currentSpeed').textContent = '0'; /* cite: 430 */
       }
     }
 
     function deleteRoute(index) {
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
-      const route = savedRoutes[index];
-      if (route && confirm(`¿Estás seguro de que deseas eliminar la ruta "${route.name}"?`)) {
-        savedRoutes.splice(index, 1);
-        localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
-        loadSavedRoutes();
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || []; /* cite: 431 */
+      const route = savedRoutes[index]; /* cite: 431 */
+      if (route && confirm(`¿Estás seguro de que deseas eliminar la ruta "${route.name}"?`)) { /* cite: 431 */
+        savedRoutes.splice(index, 1); /* cite: 432 */
+        localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes)); /* cite: 432 */
+        loadSavedRoutes(); /* cite: 432 */
       }
     }
-    
+
     // Funciones para guardar ubicaciones puntuales
-function cargarPuntosGuardados() {
-  const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
-  savedLocations.forEach((loc, index) => {
-    const puntoNumero = index + 1;
-    const customIcon = L.divIcon({
-      className: 'custom-icon',
-      html: `
-        <div style="position: relative;">
-          <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-          <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-            ${puntoNumero}
-          </div>
-        </div>
-      `,
-      iconSize: [50, 50],
-      iconAnchor: [25, 50],
-      popupAnchor: [-60, -40]
-    });
+    let savedLocationCounter = 0;
 
-    const newMarker = L.marker([loc.lat, loc.lon], {
-      title: loc.nombre,
-      icon: customIcon
-    }).addTo(map);
-
-    const popupContent = `
-      <div style="white-space: nowrap;">
-        <label for="nombrePunto">Nombre:</label>
-        <input type="text" id="nombrePunto" value="${loc.nombre}" style="width: 120px;"><br><br>
-        <div>Latitud: ${loc.lat.toFixed(6)}</div>
-        <div>Longitud: ${loc.lon.toFixed(6)}</div><br>
-        <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-        <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-        <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
-      </div>
-    `;
-
-    newMarker.bindPopup(popupContent);
-    savedMarkers.push(newMarker);
-  });
-}
-
-    function actualizarLocalStoragePuntos() {
-      const savedLocations = savedMarkers.map((marker, index) => {
-        const latLng = marker.getLatLng();
-        const nombre = marker.getPopup()._content.match(/value="([^"]+)"/)[1];
-        return { lat: latLng.lat, lon: latLng.lng, nombre: nombre };
+    // Load saved locations from localStorage
+    function cargarPuntosGuardados() {
+      const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+      savedMarkers = []; // Clear existing markers
+      savedLocations.forEach(locationData => {
+        addSavedLocationMarker(locationData, false); // Add without saving again
       });
-      localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+      savedLocationCounter = savedLocations.length; // Initialize counter
     }
 
-    function actualizarNumerosPuntos() {
-      savedMarkers.forEach((m, i) => {
-        const puntoNumero = i + 1;
-const customIcon = L.icon({
-  iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
-  iconSize: [40, 40],           // Tamaño de la imagen (ajusta según necesites)
-  iconAnchor: [20, 40],          // Punto de anclaje del icono (centro inferior)
-  popupAnchor: [-60, -40],         // Ajuste del popup (arriba del icono)
-  className: 'numbered-marker'   // Clase CSS opcional para estilos adicionales
-});
-        m.setIcon(customIcon);
+    // Function to add a saved location marker to the map
+    function addSavedLocationMarker(locationData, saveToLocalStorage = true) {
+      const markerNumber = ++savedLocationCounter; // Increment counter for each new marker
 
-        const popupContent = `
-          <div style="white-space: nowrap;">
-            <label for="nombrePunto">Nombre:</label>
-            <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
-            <div>Latitud: ${m.getLatLng().lat.toFixed(6)}</div>
-            <div>Longitud: ${m.getLatLng().lng.toFixed(6)}</div><br>
-            <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-            <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-            <button onclick="compartirCoordenadas(${m.getLatLng().lat}, ${m.getLatLng().lng})" style="margin-left: 5px;">Compartir Punto</button>
-          </div>
-        `;
-
-        m.setPopupContent(popupContent);
+      const customIcon = L.divIcon({
+        className: 'numbered-marker',
+        html: `<span>${markerNumber}</span>`,
+        iconSize: [30, 42], // Adjust icon size as needed
+        iconAnchor: [15, 42],
+        popupAnchor: [0, -35]
       });
-    }
 
-function guardarUbicacion() {
-  if (currentLat && currentLon) {
-    const puntoNumero = savedMarkers.length + 1;
-    const customIcon = L.divIcon({
-      className: 'custom-icon',
-      html: `
-        <div style="position: relative;">
-          <img src="https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png" style="width: 50px; height: 50px;">
-          <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: bold; color: black; background: white; padding: 2px 5px; border-radius: 3px; border: 1px solid #ccc;">
-            ${puntoNumero}
-          </div>
-        </div>
-      `,
-      iconSize: [50, 50],
-      iconAnchor: [25, 50],
-      popupAnchor: [-60, -40]
-    });
+      const marker = L.marker([locationData.lat, locationData.lon], { icon: customIcon })
+        .addTo(map)
+        .bindPopup(`
+          <b>Ubicación Guardada #${locationData.number}</b><br>
+          Lat: ${locationData.lat.toFixed(6)}<br>
+          Lon: ${locationData.lon.toFixed(6)}<br>
+          <button onclick="zoomToSavedLocation(${locationData.lat}, ${locationData.lon})">Zoom</button>
+          <button onclick="deleteSavedLocation(${locationData.number})">Eliminar</button>
+        `);
 
-    const newMarker = L.marker([currentLat, currentLon], {
-      title: "Punto",
-      icon: customIcon
-    }).addTo(map).setDataNumber(puntoNumero);
+      savedMarkers.push({ number: locationData.number, marker: marker, data: locationData });
 
-    savedMarkers.push(newMarker);
-
-    const popupContent = `
-      <div style="white-space: nowrap;">
-        <label for="nombrePunto">Nombre:</label>
-        <input type="text" id="nombrePunto" value="Punto ${puntoNumero}" style="width: 120px;"><br><br>
-        <div>Latitud: ${currentLat.toFixed(6)}</div>
-        <div>Longitud: ${currentLon.toFixed(6)}</div><br>
-        <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Guardar Nombre</button>
-        <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-        <button onclick="compartirCoordenadas(${currentLat}, ${currentLon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
-      </div>
-    `;
-
-    newMarker.bindPopup(popupContent).openPopup();
-    actualizarLocalStoragePuntos();
-  } else {
-    alert("No se ha obtenido la ubicación actual.");
-  }
-}
-
-window.cambiarNombre = function(button) {
-  const input = button.parentElement.querySelector('#nombrePunto');
-  const newName = input.value;
-  const marker = savedMarkers.find(marker => {
-    const popupContent = marker.getPopup()._content;
-    return popupContent.includes(button.parentElement.innerHTML.trim());
-  });
-  if (marker) {
-    const latLng = marker.getLatLng();
-    const popupContent = `
-      <div style="white-space: nowrap;">
-        <label for="nombrePunto">Nombre:</label>
-        <input type="text" id="nombrePunto" value="${newName}" style="width: 120px;"><br><br>
-        <div>Latitud: ${latLng.lat.toFixed(6)}</div>
-        <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
-        <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
-        <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-        <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto</button>
-      </div>
-    `;
-    marker.setPopupContent(popupContent);
-    actualizarLocalStoragePuntos();
-  }
-};
-
-    window.eliminarPunto = function(button) {
-      const marker = savedMarkers.find(marker => {
-        const popupContent = marker.getPopup()._content;
-        return popupContent.includes(button.parentElement.innerHTML.trim());
-      });
-      if (marker) {
-        map.removeLayer(marker);
-        savedMarkers = savedMarkers.filter(m => m !== marker);
-        actualizarLocalStoragePuntos();
-        actualizarNumerosPuntos();
+      if (saveToLocalStorage) {
+        const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+        savedLocations.push(locationData);
+        localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
       }
-    };
+    }
 
-window.compartirCoordenadas = function(lat, lon, nombrePunto = "") {
-  // Usamos setTimeout para evitar que el navegador bloquee la interfaz
-  setTimeout(() => {
-    const googleMapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
-    const nombre = nombrePunto || `Ubicación (${lat.toFixed(6)}, ${lon.toFixed(6)})`;
-    
-    const mensaje = `📍 *${nombre}* 📍\n\n🔹 *Coordenadas:* ${lat.toFixed(6)}, ${lon.toFixed(6)}\n\n🌍 Ver en Google Maps: ${googleMapsLink}`;
-    
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`;
-    window.open(whatsappUrl, '_blank');
-  }, 100); // Pequeño retardo para permitir que el popup se cierre
-};
-    // Inicialización
+    // Function to handle saving a location
+    function guardarUbicacion() {
+      if (currentLat === null || currentLon === null) {
+        alert("No se ha obtenido una ubicación actual para guardar.");
+        return;
+      }
+      const locationName = prompt("Ingresa un nombre para esta ubicación (opcional):");
+      const newLocationData = {
+        lat: currentLat,
+        lon: currentLon,
+        name: locationName || `Ubicación ${savedLocationCounter + 1}`,
+        number: savedLocationCounter + 1 // Assign a unique number
+      };
+      addSavedLocationMarker(newLocationData);
+      alert(`Ubicación "${newLocationData.name}" guardada.`);
+    }
+
+    // Function to zoom to a saved location
+    function zoomToSavedLocation(lat, lon) {
+      map.setView([lat, lon], 17);
+    }
+
+    // Function to delete a saved location
+    function deleteSavedLocation(numberToDelete) {
+      if (confirm(`¿Estás seguro de que deseas eliminar la ubicación guardada #${numberToDelete}?`)) {
+        // Remove from map
+        const markerIndex = savedMarkers.findIndex(m => m.number === numberToDelete);
+        if (markerIndex > -1) {
+          map.removeLayer(savedMarkers[markerIndex].marker);
+          savedMarkers.splice(markerIndex, 1);
+        }
+
+        // Remove from localStorage
+        let savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+        savedLocations = savedLocations.filter(loc => loc.number !== numberToDelete);
+
+        // Re-number subsequent markers to maintain sequential order
+        savedLocations.forEach((loc, index) => {
+          loc.number = index + 1;
+        });
+
+        localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+
+        // Re-render markers to update numbers
+        cargarPuntosGuardados();
+      }
+    }
+
+    // Initialize map and load saved data
     document.addEventListener('DOMContentLoaded', () => {
-      initMap();
-      if (!document.getElementById('windy-script')) {
-        const windyScript = document.createElement('script');
-        windyScript.id = 'windy-script';
-        windyScript.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
-        document.head.appendChild(windyScript);
-      }
-      
-      loadCoordinates();
-      loadMapWithSavedCoordinates();
-      document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
-      getLocation();
-      applyDarkModePreference();
-      loadSavedRoutes();
-      cargarPuntosGuardados();
-      
+      initMap(); /* cite: 257, 258 */
+      loadCoordinates(); /* cite: 258 */
+      loadMapWithSavedCoordinates(); /* cite: 258 */
+      getLocation(); /* cite: 258 */
+      applyDarkModePreference(); /* cite: 259 */
+      loadSavedRoutes(); /* cite: 259 */
+      cargarPuntosGuardados(); /* cite: 259 */
+
       // Cargar último barrio guardado
-      const savedNeighborhood = localStorage.getItem('lastNeighborhood');
-      if (savedNeighborhood) {
-        lastKnownNeighborhood = savedNeighborhood;
-        updateNeighborhoodName(savedNeighborhood);
+      const savedNeighborhood = localStorage.getItem('lastNeighborhood'); /* cite: 260 */
+      if (savedNeighborhood) { /* cite: 260 */
+        lastKnownNeighborhood = savedNeighborhood; /* cite: 260 */
+        updateNeighborhoodName(savedNeighborhood); /* cite: 261 */
       }
 
       // Event listeners
-      document.getElementById('clearButton').addEventListener('click', startNewRoute);
-      document.getElementById('stopButton').addEventListener('click', toggleCapture);
-      document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
-      document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
-      document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
-      document.getElementById("mapLayers").addEventListener("change", function() {
+      document.getElementById('clearButton').addEventListener('click', startNewRoute); /* cite: 261 */
+      document.getElementById('stopButton').addEventListener('click', toggleCapture); /* cite: 262 */
+      document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp); /* cite: 262 */
+      document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode); /* cite: 262 */
+      document.getElementById('saveRouteButton').addEventListener('click', saveRoute); /* cite: 263 */
+      document.getElementById("mapLayers").addEventListener("change", function() { /* cite: 263 */
         changeMapLayer(this.value);
       });
-      document.getElementById("saveLocation").addEventListener("click", guardarUbicacion);
+      document.getElementById("saveLocation").addEventListener("click", guardarUbicacion); /* cite: 264 */
 
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          if (isCapturing) {
-            toggleCapture();
-            wasCapturingBeforeHidden = true;
+      document.addEventListener('visibilitychange', () => { /* cite: 264 */
+        if (document.visibilityState === 'hidden') { /* cite: 265 */
+          if (isCapturing) { /* cite: 265 */
+            toggleCapture(); /* cite: 266 */
+            wasCapturingBeforeHidden = true; /* cite: 266 */
           }
-          releaseWakeLock();
-        } else if (wasCapturingBeforeHidden) {
-          toggleCapture();
-          wasCapturingBeforeHidden = false;
+          releaseWakeLock(); /* cite: 266 */
+        } else if (wasCapturingBeforeHidden) { /* cite: 267 */
+          toggleCapture(); /* cite: 267 */
+          wasCapturingBeforeHidden = false; /* cite: 267 */
         }
       });
     });
