@@ -23,6 +23,7 @@
       border-radius: 8px;
       margin-bottom: 5px;
       position: relative;
+      height: 58vh; 
     }
     #mapLayers {
       padding: 6px 12px;
@@ -393,8 +394,8 @@ body.dark-mode #savedRoutesList li button:hover {
       h1 {
         font-size: 14px;
       }
-      #map {
-        height: calc(45vh - 37.8px);
+        #map {
+    height: calc(50vh - 37.8px); /* Ejemplo: reducido a 50vh */
       }
       .buttons button {
         padding: 4px 12px;
@@ -559,7 +560,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.24 ";
+        div.innerHTML = " Ver: 1.6.25 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
