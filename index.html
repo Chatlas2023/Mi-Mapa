@@ -79,6 +79,7 @@
   white-space: nowrap; /* Evita que los elementos se rompan en varias líneas */
   padding-bottom: 5px; /* Espacio para el scroll */
 }
+/* Contenedor principal de botones */
 .buttons {
   display: flex;
   flex-direction: column;
@@ -87,34 +88,51 @@
   padding: 0 10px;
   margin-bottom: 10px;
 }
-    .button-row {
+
+/* Filas de botones */
+.button-row {
   display: flex;
   width: 100%;
   gap: 10px;
 }
 
+/* Primera fila: Botones superiores + Selector */
 .top-row {
   justify-content: space-between;
   align-items: center;
 }
 
+/* Segunda fila: Botones inferiores EN LÍNEA */
 .bottom-row {
-  justify-content: center;
+  display: flex;          /* Asegura disposición en fila */
+  flex-direction: row;    /* Elementos en horizontal */
+  justify-content: center; /* Centrado (opcional: space-between si prefieres) */
+  gap: 10px;             /* Espacio entre botones */
 }
 
-.left-buttons {
-  display: flex;
-  gap: 10px;
+/* Botones inferiores (mismo ancho) */
+.bottom-row button {
+  flex: 1;               /* Distribuye el espacio equitativamente */
+  max-width: 150px;      /* Máximo ancho para no estirarse demasiado */
+  white-space: nowrap;   /* Evita saltos de línea en el texto */
 }
 
-.right-buttons {
-  margin-left: auto;
+/* Selector de mapas a la derecha */
+#mapLayers {
+  margin-left: auto;     /* Lo empuja a la derecha */
+  min-width: 120px;      /* Ancho mínimo para legibilidad */
 }
-    /* Ajustes para los elementos individuales */
-    #routeName, #mapLayers {
-      width: 100%;
-      max-width: 300px;
-    }
+
+/* Ajustes para móviles */
+@media (max-width: 600px) {
+  .button-row {
+    flex-wrap: wrap;     /* Si no caben, pasan a siguiente línea */
+  }
+  .bottom-row button {
+    flex: 1 0 calc(33% - 10px); /* 3 botones por fila en móviles */
+    max-width: none;
+  }
+}
     
     /* Estilos base para todos los botones */
     button {
@@ -541,23 +559,21 @@ body.dark-mode #mapLayers {
   </div>
   
 <div class="buttons">
-  <!-- Primera fila: botones superiores + selector -->
+  <!-- Primera fila: Borrar, Pausar, Modo Oscuro + Selector -->
   <div class="button-row top-row">
     <div class="left-buttons">
       <button id="clearButton">Borrar ruta</button>
       <button id="stopButton">Pausar</button>
       <button id="darkModeButton">Modo oscuro</button>
     </div>
-    <div class="right-buttons">
-      <select id="mapLayers">
-        <option value="osm">Mapa Estándar</option>
-        <option value="satellite">Imagen Satelital</option>
-        <option value="weather">Mapa del Clima</option>
-      </select>
-    </div>
+    <select id="mapLayers">
+      <option value="osm">Mapa Estándar</option>
+      <option value="satellite">Imagen Satelital</option>
+      <option value="weather">Mapa del Clima</option>
+    </select>
   </div>
-  
-  <!-- Segunda fila: solo los botones inferiores (aparecerá una sola vez) -->
+
+  <!-- Segunda fila: Enviar, Guardar Ruta, Guardar Ubicación (EN LA MISMA LÍNEA) -->
   <div class="button-row bottom-row">
     <button id="shareButton">Enviar ruta WApp</button>
     <button id="saveRouteButton">Guardar ruta</button>
