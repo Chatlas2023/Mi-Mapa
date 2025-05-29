@@ -349,16 +349,18 @@ body.dark-mode #savedRoutesList li button:hover {
       background-color: #f7faca; /* Color amarillo claro */
       font-weight: bold;
     }
-    #street-info-container {
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.9);
-      border-top: 1px solid #ddd;
-      max-height: 100px;
-      overflow-y: auto;
-      z-index: 1000;
-      margin: 1px 10px;
-      border-radius: 8px;
-    }
+#street-info-container {
+  padding: 8px 12px; /* Más compacto (nuevo) */
+  background: rgba(255, 255, 255, 0.9); /* Conservado */
+  border-top: 1px solid #ddd; /* Conservado */
+  max-height: 120px; /* Altura aumentada (nuevo) */
+  overflow-y: auto; /* Conservado */
+  z-index: 1000; /* Conservado */
+  margin: 1px 10px; /* Conservado */
+  border-radius: 8px; /* Conservado */
+  font-size: 14px; /* Añadido para mejor legibilidad */
+  line-height: 1.4; /* Añadido: espaciado entre líneas */
+}
     #street-name {
       font-weight: bold;
       margin-bottom: 5px;
