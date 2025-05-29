@@ -33,6 +33,35 @@
       background-color: #f7faca;
       color: black;
     }
+    /* Estilos para el nuevo control de capas */
+#mapLayerControl {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+}
+
+#mapLayerControl a {
+    display: block;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    text-decoration: none;
+    color: black;
+    font-size: 20px;
+}
+
+body.dark-mode #mapLayerControl {
+    background-color: #333;
+}
+
+body.dark-mode #mapLayerControl a {
+    color: white;
+}
     body.dark-mode #mapLayers {
       background-color: #444;
       color: white;
@@ -422,6 +451,10 @@ body.dark-mode #savedRoutesList li button:hover {
 </head>
 <body>
   <div id="map">
+
+        <div id="mapLayerControl" class="leaflet-bar leaflet-control">
+        <a href="#" title="Cambiar tipo de mapa" id="layerToggleButton">🌍</a>
+    </div>
     <div id="speedPanel">
       <div class="speed-row">
         <span>Veloc.:</span>
@@ -470,14 +503,6 @@ body.dark-mode #savedRoutesList li button:hover {
       <button id="shareButton">Ruta x WApp</button>
       <button id="saveRouteButton">Ruta</button>
       <button id="saveLocation">Ubicación</button>
-    </div>
-    
-    <div class="button-row"> 
-        <select id="mapLayers">
-        <option value="osm">Mapa Estándar</option>
-        <option value="satellite">Imagen Satelital</option>
-        <option value="weather">Mapa del Clima</option>
-      </select>
     </div>
   </div>
   
@@ -534,7 +559,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.22 ";
+        div.innerHTML = " Ver: 1.6.23 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -668,12 +693,20 @@ body.dark-mode #savedRoutesList li button:hover {
     }
 
     // Cambiar capas del mapa
-    function changeMapLayer(selectedLayer) {
-      map.eachLayer(layer => {
+let currentLayerIndex = 0;
+const layerTypes = ['osm', 'satellite', 'weather'];
+const layerIcons = ['🌍', '🛰️', '☁️'];
+
+function toggleMapLayer() {
+    currentLayerIndex = (currentLayerIndex + 1) % layerTypes.length;
+    const selectedLayer = layerTypes[currentLayerIndex];
+    document.getElementById('layerToggleButton').textContent = layerIcons[currentLayerIndex];
+    
+    map.eachLayer(layer => {
         if (layer === layers.osm || layer === layers.satellite) {
-          map.removeLayer(layer);
+            map.removeLayer(layer);
         }
-      });
+    });
 
       if (selectedLayer === "weather") {
         window.open('mapaWindy.html', '_blank');
@@ -1359,8 +1392,6 @@ window.compartirCoordenadas = function(lat, lon, nombrePunto = "") {
       document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
       document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
       document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
-      document.getElementById("mapLayers").addEventListener("change", function() {
-        changeMapLayer(this.value);
       });
       document.getElementById("saveLocation").addEventListener("click", guardarUbicacion);
 
@@ -1375,6 +1406,9 @@ window.compartirCoordenadas = function(lat, lon, nombrePunto = "") {
           toggleCapture();
           wasCapturingBeforeHidden = false;
         }
+        document.getElementById('layerToggleButton').addEventListener('click', function(e) {
+    e.preventDefault();
+    toggleMapLayer();
       });
     });
   </script>
