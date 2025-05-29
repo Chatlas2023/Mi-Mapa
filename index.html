@@ -24,58 +24,77 @@
       margin-bottom: 5px;
       position: relative;
     }
-/* Ensure consistent styling for select and buttons */
-#mapLayers, .button-row button {
+#mapLayers {
   padding: 6px 12px;
   font-size: 12px;
-  height: 31px; /* Match button height */
-  box-sizing: border-box;
   border-radius: 5px;
-  flex: 1; /* Allow elements to grow equally */
-  max-width: 150px; /* Consistent max-width */
-  margin: 0; /* Remove any default margins */
-}
-
-/* Specific styles for mapLayers to match button aesthetics */
-#mapLayers {
-  background-color: #f7faca; /* Match your existing select background */
+  height: 37px; /* Ajusta para que coincida con la altura de los botones */
   border: 1px solid #ccc;
+  background-color: #f7faca;
   color: black;
-  cursor: pointer;
+  min-width: 120px; /* Ancho mínimo para que no se vea demasiado pequeño */
+    }
+    .button-row button {
+  max-width: 120px; /* Reducir un poco el ancho máximo de los botones */
+  flex: 1;
 }
 
-/* Dark mode for mapLayers */
-body.dark-mode #mapLayers {
-  background-color: #444;
-  color: white;
-  border-color: #555;
-}
-
-/* Adjust button-row for better spacing */
+/* Ajustes para móviles */
+@media (max-width: 600px) {
+  .button-row {
+    gap: 5px;
+  }
+  .button-row button, #mapLayers {
+    padding: 4px 8px;
+    font-size: 12px;
+    max-width: none;
+    flex: 1 1 auto;
+  }
+    body.dark-mode #mapLayers {
+      background-color: #444;
+      color: white;
+      border-color: #555;
+    }
+    #samplingMode {
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 5px;
+      text-align: center;
+      padding: 4px;
+      background-color: rgba(255, 255, 255, 0.85);
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    body.dark-mode #samplingMode {
+      background-color: rgba(40, 40, 40, 0.9) !important;
+      color: #fff !important;
+      border-color: #555 !important;
+    }
+    #infoContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    @media (min-width: 601px) and (orientation: landscape) {
+      #infoContainer {
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+      }
+      #status, #distance {
+        font-size: 14px;
+      }
+    }
+    /* Nuevos estilos para la reorganización de botones */
 .button-row {
   display: flex;
   justify-content: center;
-  gap: 10px; /* Consistent spacing between elements */
+  gap: 10px;
   width: 100%;
   margin-bottom: 10px;
+  flex-wrap: wrap; /* Permite que los elementos se ajusten en pantallas pequeñas */
 }
-
-/* Responsive adjustments for smaller screens */
-@media (max-width: 600px) {
-  #mapLayers, .button-row button {
-    padding: 4px 8px;
-    font-size: 14px;
-    height: 37px; /* Match your mobile height */
-  }
-}
-    /* Nuevos estilos para la reorganización de botones */
-    .button-row {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      margin-bottom: 10px;
-    }
     .buttons {
       display: flex;
       flex-direction: column;
@@ -458,24 +477,24 @@ body.dark-mode #savedRoutesList li button:hover {
     <div id="status">Obteniendo ubicación...</div>
   </div>
   
-<div class="buttons">
-  <div class="button-row">
-    <button id="clearButton">Borrar ruta</button>
-    <button id="stopButton">Pausar</button>
-    <button id="darkModeButton">Modo oscuro</button>
+  <div class="buttons">
+    <div class="button-row">
+      <button id="clearButton">Borrar ruta</button>
+      <button id="stopButton">Pausar</button>
+      <button id="darkModeButton">Modo oscuro</button>
+    </div>
+    
+<div class="button-row">
+  <button id="shareButton">Enviar ruta WApp</button>
+  <button id="saveRouteButton">Guardar ruta</button>
+  <button id="saveLocation">Guardar ubicación</button>
+  <select id="mapLayers">
+    <option value="osm">Mapa Estándar</option>
+    <option value="satellite">Imagen Satelital</option>
+    <option value="weather">Mapa del Clima</option>
+  </select>
+    </div>
   </div>
-  
-  <div class="button-row">
-    <select id="mapLayers">
-      <option value="osm">Mapa Estándar</option>
-      <option value="satellite">Imagen Satelital</option>
-      <option value="weather">Mapa del Clima</option>
-    </select>
-    <button id="shareButton">Enviar ruta WApp</button>
-    <button id="saveRouteButton">Guardar ruta</button>
-    <button id="saveLocation">Guardar ubicación</button>
-  </div>
-</div>
   
   <div id="street-info-container">
     <div id="street-name"></div>
