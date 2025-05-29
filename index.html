@@ -24,32 +24,15 @@
       margin-bottom: 5px;
       position: relative;
     }
-#mapLayers {
-  padding: 6px 12px;
-  font-size: 12px;
-  border-radius: 5px;
-  height: 37px; /* Ajusta para que coincida con la altura de los botones */
-  border: 1px solid #ccc;
-  background-color: #f7faca;
-  color: black;
-  min-width: 120px; /* Ancho mínimo para que no se vea demasiado pequeño */
+    #mapLayers {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 5px;
+      height: 25px;
+      border: 1px solid #ccc;
+      background-color: #f7faca;
+      color: black;
     }
-    .button-row button {
-  max-width: 120px; /* Reducir un poco el ancho máximo de los botones */
-  flex: 1;
-}
-
-/* Ajustes para móviles */
-@media (max-width: 600px) {
-  .button-row {
-    gap: 5px;
-  }
-  .button-row button, #mapLayers {
-    padding: 4px 8px;
-    font-size: 12px;
-    max-width: none;
-    flex: 1 1 auto;
-  }
     body.dark-mode #mapLayers {
       background-color: #444;
       color: white;
@@ -87,14 +70,13 @@
       }
     }
     /* Nuevos estilos para la reorganización de botones */
-.button-row {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  margin-bottom: 10px;
-  flex-wrap: wrap; /* Permite que los elementos se ajusten en pantallas pequeñas */
-}
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
     .buttons {
       display: flex;
       flex-direction: column;
@@ -484,15 +466,18 @@ body.dark-mode #savedRoutesList li button:hover {
       <button id="darkModeButton">Modo oscuro</button>
     </div>
     
-<div class="button-row">
-  <button id="shareButton">Enviar ruta WApp</button>
-  <button id="saveRouteButton">Guardar ruta</button>
-  <button id="saveLocation">Guardar ubicación</button>
-  <select id="mapLayers">
-    <option value="osm">Mapa Estándar</option>
-    <option value="satellite">Imagen Satelital</option>
-    <option value="weather">Mapa del Clima</option>
-  </select>
+    <div class="button-row">
+      <button id="shareButton">Enviar ruta WApp</button>
+      <button id="saveRouteButton">Guardar ruta</button>
+      <button id="saveLocation">Guardar ubicación</button>
+    </div>
+    
+    <div class="button-row"> 
+        <select id="mapLayers">
+        <option value="osm">Mapa Estándar</option>
+        <option value="satellite">Imagen Satelital</option>
+        <option value="weather">Mapa del Clima</option>
+      </select>
     </div>
   </div>
   
@@ -549,7 +534,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.21 ";
+        div.innerHTML = " Ver: 1.6.20 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
