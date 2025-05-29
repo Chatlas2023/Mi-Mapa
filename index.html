@@ -75,18 +75,41 @@
   width: 100%;
   gap: 10px;
   margin-bottom: 10px;
-  overflow-x: auto; /* Permite scroll horizontal si no caben */
+  overflow-x: visible; 
   white-space: nowrap; /* Evita que los elementos se rompan en varias líneas */
   padding-bottom: 5px; /* Espacio para el scroll */
 }
-    .buttons {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      padding: 0 10px;
-      margin-bottom: 2px;
-    }
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 0 10px;
+  margin-bottom: 10px;
+}
+    .button-row {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+}
+
+.top-row {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bottom-row {
+  justify-content: center;
+}
+
+.left-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.right-buttons {
+  margin-left: auto;
+}
     /* Ajustes para los elementos individuales */
     #routeName, #mapLayers {
       width: 100%;
@@ -234,7 +257,7 @@
   border-radius: 8px;
   background-color: #e6f7ff; /* Fondo celeste muy claro */
   max-height: 80px;
-  overflow-x: auto;
+  overflow-x: visible;
   white-space: nowrap;
 }
 /* Modo oscuro para el contenedor de rutas guardadas */
@@ -362,24 +385,21 @@ body.dark-mode #savedRoutesList li button:hover {
     }
     
     /* Ajustes para móviles */
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 14px;
-      }
-      #map {
-        height: calc(45vh - 37.8px);
-      }
-      .buttons button {
-        padding: 4px 12px;
-        font-size: 14px;
-        white-space: nowrap;
-      }
-      #mapLayers {
-        font-size: 14px;
-        height: 37px;
-        padding: 4px 8px;
-      }
-    }
+@media (max-width: 600px) {
+  .button-row {
+    flex-wrap: wrap;
+  }
+  
+  .button-row button {
+    flex: 1 0 calc(50% - 10px);
+    max-width: none;
+  }
+  
+  #mapLayers {
+    width: 100%;
+    margin-left: 0;
+  }
+}
     @media (min-width: 601px) {
       #map {
         height: calc(55vh - 37.8px);
@@ -460,10 +480,12 @@ body.dark-mode #savedRoutesList li button:hover {
   .left-buttons, .right-buttons {
     width: 100%;
   }
-  .button-row button {
-  flex-shrink: 0; /* Evita que los botones se encojan */
-  white-space: nowrap; /* Evita que el texto se rompa */
+.button-row button {
+  flex: 1;
+  max-width: 150px;
+  white-space: nowrap;
 }
+
 
 /* Modo oscuro para el selector */
 body.dark-mode #mapLayers {
@@ -519,25 +541,24 @@ body.dark-mode #mapLayers {
   </div>
   
 <div class="buttons">
-  <div class="button-row">
-    <button id="clearButton">Borrar ruta</button>
-    <button id="stopButton">Pausar</button>
-    <button id="darkModeButton">Modo oscuro</button>
-    <select id="mapLayers">
-      <option value="osm">Mapa Estándar</option>
-      <option value="satellite">Imagen Satelital</option>
-      <option value="weather">Mapa del Clima</option>
-    </select>
+  <!-- Primera fila: botones superiores + selector -->
+  <div class="button-row top-row">
+    <div class="left-buttons">
+      <button id="clearButton">Borrar ruta</button>
+      <button id="stopButton">Pausar</button>
+      <button id="darkModeButton">Modo oscuro</button>
+    </div>
+    <div class="right-buttons">
+      <select id="mapLayers">
+        <option value="osm">Mapa Estándar</option>
+        <option value="satellite">Imagen Satelital</option>
+        <option value="weather">Mapa del Clima</option>
+      </select>
+    </div>
   </div>
   
-  <div class="button-row">
-    <button id="shareButton">Enviar ruta WApp</button>
-    <button id="saveRouteButton">Guardar ruta</button>
-    <button id="saveLocation">Guardar ubicación</button>
-  </div>
-</div>
-  
-  <div class="button-row">
+  <!-- Segunda fila: solo los botones inferiores (aparecerá una sola vez) -->
+  <div class="button-row bottom-row">
     <button id="shareButton">Enviar ruta WApp</button>
     <button id="saveRouteButton">Guardar ruta</button>
     <button id="saveLocation">Guardar ubicación</button>
