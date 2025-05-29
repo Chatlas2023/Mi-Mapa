@@ -70,69 +70,26 @@
       }
     }
     /* Nuevos estilos para la reorganización de botones */
-.button-row {
-  display: flex;
-  width: 100%;
-  gap: 10px;
-  margin-bottom: 10px;
-  overflow-x: visible; 
-  white-space: nowrap; /* Evita que los elementos se rompan en varias líneas */
-  padding-bottom: 5px; /* Espacio para el scroll */
-}
-/* Contenedor principal de botones */
-.buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  padding: 0 10px;
-  margin-bottom: 10px;
-}
-
-/* Filas de botones */
-.button-row {
-  display: flex;
-  width: 100%;
-  gap: 10px;
-}
-
-/* Primera fila: Botones superiores + Selector */
-.top-row {
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* Segunda fila: Botones inferiores EN LÍNEA */
-.bottom-row {
-  display: flex;          /* Asegura disposición en fila */
-  flex-direction: row;    /* Elementos en horizontal */
-  justify-content: center; /* Centrado (opcional: space-between si prefieres) */
-  gap: 10px;             /* Espacio entre botones */
-}
-
-/* Botones inferiores (mismo ancho) */
-.bottom-row button {
-  flex: 1;               /* Distribuye el espacio equitativamente */
-  max-width: 150px;      /* Máximo ancho para no estirarse demasiado */
-  white-space: nowrap;   /* Evita saltos de línea en el texto */
-}
-
-/* Selector de mapas a la derecha */
-#mapLayers {
-  margin-left: auto;     /* Lo empuja a la derecha */
-  min-width: 120px;      /* Ancho mínimo para legibilidad */
-}
-
-/* Ajustes para móviles */
-@media (max-width: 600px) {
-  .button-row {
-    flex-wrap: wrap;     /* Si no caben, pasan a siguiente línea */
-  }
-  .bottom-row button {
-    flex: 1 0 calc(33% - 10px); /* 3 botones por fila en móviles */
-    max-width: none;
-  }
-}
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px;
+      margin-bottom: 2px;
+    }
+    /* Ajustes para los elementos individuales */
+    #routeName, #mapLayers {
+      width: 100%;
+      max-width: 300px;
+    }
     
     /* Estilos base para todos los botones */
     button {
@@ -275,7 +232,7 @@
   border-radius: 8px;
   background-color: #e6f7ff; /* Fondo celeste muy claro */
   max-height: 80px;
-  overflow-x: visible;
+  overflow-x: auto;
   white-space: nowrap;
 }
 /* Modo oscuro para el contenedor de rutas guardadas */
@@ -403,21 +360,24 @@ body.dark-mode #savedRoutesList li button:hover {
     }
     
     /* Ajustes para móviles */
-@media (max-width: 600px) {
-  .button-row {
-    flex-wrap: wrap;
-  }
-  
-  .button-row button {
-    flex: 1 0 calc(50% - 10px);
-    max-width: none;
-  }
-  
-  #mapLayers {
-    width: 100%;
-    margin-left: 0;
-  }
-}
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 14px;
+      }
+      #map {
+        height: calc(45vh - 37.8px);
+      }
+      .buttons button {
+        padding: 4px 12px;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+      #mapLayers {
+        font-size: 14px;
+        height: 37px;
+        padding: 4px 8px;
+      }
+    }
     @media (min-width: 601px) {
       #map {
         height: calc(55vh - 37.8px);
@@ -457,65 +417,6 @@ body.dark-mode #savedRoutesList li button:hover {
   border-radius: 3px;
   border: 1px solid #ccc;
   z-index: 1000;
-}
-    /* Nuevos estilos para la reorganización de botones */
-.button-row {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 10px;
-}
-
-.left-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.right-buttons {
-  display: flex;
-  align-items: center;
-}
-
-#mapLayers {
-  padding: 6px 12px;
-  font-size: 12px;
-  border-radius: 5px;
-  height: 25px;
-  border: 1px solid #ccc;
-  background-color: #f7faca;
-  color: black;
-  margin-left: auto; /* Esto empuja el selector a la derecha */
-  min-width: 120px; /* Ancho mínimo para que sea legible */
-}
-
-/* Ajustes para móviles */
-@media (max-width: 600px) {
-  .button-row {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .left-buttons, .right-buttons {
-    width: 100%;
-  }
-.button-row button {
-  flex: 1;
-  max-width: 150px;
-  white-space: nowrap;
-}
-
-
-/* Modo oscuro para el selector */
-body.dark-mode #mapLayers {
-  background-color: #444;
-  color: white;
-  border-color: #555;
-}
-  
-  #mapLayers {
-    width: 100%;
-    margin-left: 0;
-  }
 }
   </style>
 </head>
@@ -558,28 +459,27 @@ body.dark-mode #mapLayers {
     <div id="status">Obteniendo ubicación...</div>
   </div>
   
-<div class="buttons">
-  <!-- Primera fila: Borrar, Pausar, Modo Oscuro + Selector -->
-  <div class="button-row top-row">
-    <div class="left-buttons">
+  <div class="buttons">
+    <div class="button-row">
       <button id="clearButton">Borrar ruta</button>
       <button id="stopButton">Pausar</button>
       <button id="darkModeButton">Modo oscuro</button>
     </div>
-    <select id="mapLayers">
-      <option value="osm">Mapa Estándar</option>
-      <option value="satellite">Imagen Satelital</option>
-      <option value="weather">Mapa del Clima</option>
-    </select>
+    
+    <div class="button-row">
+      <button id="shareButton">Enviar ruta WApp</button>
+      <button id="saveRouteButton">Guardar ruta</button>
+      <button id="saveLocation">Guardar ubicación</button>
+    </div>
+    
+    <div class="button-row"> 
+        <select id="mapLayers">
+        <option value="osm">Mapa Estándar</option>
+        <option value="satellite">Imagen Satelital</option>
+        <option value="weather">Mapa del Clima</option>
+      </select>
+    </div>
   </div>
-
-  <!-- Segunda fila: Enviar, Guardar Ruta, Guardar Ubicación (EN LA MISMA LÍNEA) -->
-  <div class="button-row bottom-row">
-    <button id="shareButton">Enviar ruta WApp</button>
-    <button id="saveRouteButton">Guardar ruta</button>
-    <button id="saveLocation">Guardar ubicación</button>
-  </div>
-</div>
   
   <div id="street-info-container">
     <div id="street-name"></div>
@@ -634,7 +534,7 @@ body.dark-mode #mapLayers {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.21 ";
+        div.innerHTML = " Ver: 1.6.20 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
