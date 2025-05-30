@@ -1223,7 +1223,7 @@ function cargarPuntosGuardados() {
         <div>Longitud: ${loc.lon.toFixed(6)}</div><br>
         <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
         <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-        <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto por WApp</button>
+        <button onclick="compartirCoordenadas(${loc.lat}, ${loc.lon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir por WhatsApp</button>
       </div>
     `;
 
@@ -1261,7 +1261,7 @@ const customIcon = L.icon({
             <div>Longitud: ${m.getLatLng().lng.toFixed(6)}</div><br>
             <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
             <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-            <button onclick="compartirCoordenadas(${m.getLatLng().lat}, ${m.getLatLng().lng})" style="margin-left: 5px;">Compartir Punto por WApp</button>
+            <button onclick="compartirCoordenadas(${m.getLatLng().lat}, ${m.getLatLng().lng})" style="margin-left: 5px;">Compartir por WhatsApp</button>
           </div>
         `;
 
@@ -1302,7 +1302,7 @@ function guardarUbicacion() {
         <div>Longitud: ${currentLon.toFixed(6)}</div><br>
         <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Guardar Nombre</button>
         <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-        <button onclick="compartirCoordenadas(${currentLat}, ${currentLon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto por WApp</button>
+        <button onclick="compartirCoordenadas(${currentLat}, ${currentLon}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir por WhatsApp</button>
       </div>
     `;
 
@@ -1330,7 +1330,7 @@ window.cambiarNombre = function(button) {
         <div>Longitud: ${latLng.lng.toFixed(6)}</div><br>
         <button onclick="cambiarNombre(this)" style="margin-left: 5px;">Cambiar Nombre</button>
         <button onclick="eliminarPunto(this)" style="margin-left: 5px;">Quitar</button><br><br>
-        <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir Punto por WApp</button>
+        <button onclick="compartirCoordenadas(${latLng.lat}, ${latLng.lng}, document.getElementById('nombrePunto').value)" style="margin-left: 5px;">Compartir por WhatsApp</button>
       </div>
     `;
     marker.setPopupContent(popupContent);
