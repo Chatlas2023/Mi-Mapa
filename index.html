@@ -1207,7 +1207,7 @@ function cargarPuntosGuardados() {
       `,
       iconSize: [50, 50],
       iconAnchor: [25, 50],
-      popupAnchor: [0, -40]
+      popupAnchor: [-30, -40]
     });
 
     const newMarker = L.marker([loc.lat, loc.lon], {
@@ -1248,7 +1248,7 @@ const customIcon = L.icon({
   iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
   iconSize: [40, 40],           // Tamaño de la imagen (ajusta según necesites)
   iconAnchor: [20, 40],          // Punto de anclaje del icono (centro inferior)
-  popupAnchor: [0, -40],         // Ajuste del popup (arriba del icono)
+  popupAnchor: [-30, -40],         // Ajuste del popup (arriba del icono)
   className: 'numbered-marker'   // Clase CSS opcional para estilos adicionales
 });
         m.setIcon(customIcon);
@@ -1284,7 +1284,7 @@ function guardarUbicacion() {
       `,
       iconSize: [50, 50],
       iconAnchor: [25, 50],
-      popupAnchor: [0, -40]
+      popupAnchor: [-30, -40]
     });
 
     const newMarker = L.marker([currentLat, currentLon], {
