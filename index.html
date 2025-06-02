@@ -477,6 +477,13 @@ body.dark-mode #savedRoutesList li button:hover {
         <span class="speed-value" id="altitudeValue">0</span>
         <span>m</span>
       </div>
+
+  <div class="speed-row">
+    <span>Hora local:</span>
+    <span class="speed-value" id="localTime">--:--</span>
+    <span id="timezoneInfo"></span>
+  </div>
+      
       <div class="speed-row">
         <span>Clima:</span>
         <span class="speed-value" id="weatherInfo">-</span>
@@ -692,7 +699,23 @@ body.dark-mode #savedRoutesList li button:hover {
     function findNeighborhood(lat, lng) {
       fetchLocationDetails(lat, lng);
     }
-
+async function getTimezone(lat, lng) {
+  try {
+    const response = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=U46FXB1MO2UY&format=json&by=position&lat=${lat}&lng=${lng}`);
+    const data = await response.json();
+    
+    if (data.status === "OK") {
+      const localTime = new Date(data.formatted);
+      document.getElementById('localTime').textContent = localTime.toLocaleTimeString();
+      document.getElementById('timezoneInfo').textContent = data.abbreviation;
+      return data;
+    }
+  } catch (error) {
+    console.error("Error obteniendo zona horaria:", error);
+    document.getElementById('localTime').textContent = "--:--";
+    document.getElementById('timezoneInfo').textContent = "";
+  }
+}
     // Cambiar capas del mapa
 let currentLayerIndex = 0;
 const layerTypes = ['osm', 'satellite', 'weather'];
@@ -811,6 +834,7 @@ if (selectedLayer === "weather") {
           radius: accuracy
         }).addTo(map);
       }
+       getTimezone(lat, lng);
     }
 
     function addCoordinate(lat, lng, speed) {
