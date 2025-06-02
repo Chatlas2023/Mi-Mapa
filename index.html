@@ -571,7 +571,7 @@ const TIMEZONE_API_KEY = "U46FXB1MO2UY"; // Tu API Key de TimeZoneDB
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.27 ";
+        div.innerHTML = " Ver: 1.6.28 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -874,11 +874,10 @@ if (selectedLayer === "weather") {
        getTimezone(lat, lng);
       } else {
     // Actualizar solo la hora (sin llamar a la API) si estamos en la misma zona
-    if (cachedTimezone) {
-      const now = new Date();
-      const localTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + 
-                       (cachedTimezone.gmtOffset * 1000));
-      document.getElementById('localTime').textContent = localTime.toLocaleTimeString();
+    if (cachedTimezone) { // [cite: 400]
+        // Use the formatted time from the cached timezone data
+        const localTime = new Date(cachedTimezone.formatted); // This is already the correct local time for the timezone
+        document.getElementById('localTime').textContent = localTime.toLocaleTimeString(); // [cite: 381]
     }
   }
 }
