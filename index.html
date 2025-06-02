@@ -481,7 +481,7 @@ body.dark-mode #savedRoutesList li button:hover {
   <div class="speed-row">
     <span>Hora local:</span>
     <span class="speed-value" id="localTime">--:--</span>
-    
+    <span id="timezoneInfo"></span>
   </div>
       
       <div class="speed-row">
@@ -543,10 +543,6 @@ body.dark-mode #savedRoutesList li button:hover {
     let lastNominatimCall = 0;
     let currentLat = null, currentLon = null;
     let savedMarkers = []; // Para almacenar los marcadores de ubicaciones guardadas
-    // Variable global para almacenar la última zona horaria obtenida
-let lastTimeZoneData = null;
-let lastTimezoneCall = 0;
-const TIMEZONE_UPDATE_INTERVAL = 10 * 60 * 1000; // 10 minutos
 
     // Capas del mapa
     let layers = {
@@ -571,7 +567,7 @@ const TIMEZONE_UPDATE_INTERVAL = 10 * 60 * 1000; // 10 minutos
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.6.27 ";
+        div.innerHTML = " Ver: 1.7.00 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -704,58 +700,69 @@ const TIMEZONE_UPDATE_INTERVAL = 10 * 60 * 1000; // 10 minutos
       fetchLocationDetails(lat, lng);
     }
 async function getTimezone(lat, lng) {
-  const now = Date.now();
-  if (now - lastTimezoneCall < TIMEZONE_UPDATE_INTERVAL) {
-    // Si no ha pasado suficiente tiempo, usar datos de zona horaria previos
-    if (lastTimeZoneData) {
-      updateLocalTime(lastTimeZoneData);
-    }
-    return;
-  }
-
   try {
-    const response = await fetch(
-      `https://api.timezonedb.com/v2.1/get-time-zone?key=U46FXB1MO2UY&format=json&by=position&lat=${lat}&lng=${lng}`
-    );
+    const response = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=U46FXB1MO2UY&format=json&by=position&lat=${lat}&lng=${lng}`);
     const data = await response.json();
-
+    
     if (data.status === "OK") {
-      lastTimeZoneData = data;
-      lastTimezoneCall = now;
-      updateLocalTime(data);
-    } else {
-      console.error("Error en la respuesta de la API de TimezoneDB:", data);
-      document.getElementById('localTime').textContent = "--:--";
+      const localTime = new Date(data.formatted);
+      document.getElementById('localTime').textContent = localTime.toLocaleTimeString();
+      document.getElementById('timezoneInfo').textContent = data.abbreviation;
+      return data;
     }
   } catch (error) {
     console.error("Error obteniendo zona horaria:", error);
     document.getElementById('localTime').textContent = "--:--";
+    document.getElementById('timezoneInfo').textContent = "";
   }
 }
+    // Cambiar capas del mapa
+let currentLayerIndex = 0;
+const layerTypes = ['osm', 'satellite', 'weather'];
+const layerIcons = ['🌍', '🛰️', '☁️'];
 
-function updateLocalTime(timezoneData) {
-  try {
-    const localTime = new Date(timezoneData.formatted);
-    document.getElementById('localTime').textContent = localTime.toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit', // Incluir segundos para una actualización más dinámica
-      hour12: false
+function toggleMapLayer() {
+    currentLayerIndex = (currentLayerIndex + 1) % layerTypes.length;
+    const selectedLayer = layerTypes[currentLayerIndex];
+    document.getElementById('layerToggleButton').textContent = layerIcons[currentLayerIndex];
+    
+    map.eachLayer(layer => {
+        if (layer === layers.osm || layer === layers.satellite) {
+            map.removeLayer(layer);
+        }
     });
-  } catch (error) {
-    console.error("Error actualizando hora local:", error);
-    document.getElementById('localTime').textContent = "--:--";
-  }
-}
 
-// Actualizar la hora local cada segundo si hay datos de zona horaria
-function startLocalTimeUpdate() {
-  setInterval(() => {
-    if (lastTimeZoneData) {
-      updateLocalTime(lastTimeZoneData);
-    }
-  }, 1000);
+if (selectedLayer === "weather") {
+    window.open('mapaWindy.html', '_blank');
+    layers.osm.addTo(map);
+    currentLayerIndex = 0; // Resetear al mapa estándar
+    document.getElementById('layerToggleButton').textContent = layerIcons[0];
+} else {
+    layers[selectedLayer].addTo(map);
 }
+    }
+
+    // Wake Lock
+    async function acquireWakeLock() {
+      try {
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock activo');
+        wakeLockSentinel.addEventListener('release', () => {
+          console.log('Wake Lock fue liberado por el sistema!');
+          wakeLockSentinel = null;
+        });
+      } catch (err) {
+        console.error(`Error al solicitar Wake Lock: ${err.name}, ${err.message}`);
+      }
+    }
+
+    async function releaseWakeLock() {
+      if (wakeLockSentinel) {
+        await wakeLockSentinel.release();
+        wakeLockSentinel = null;
+        console.log('Wake Lock liberado');
+      }
+    }
 
     // Geolocalización
     function getLocation() {
@@ -1385,59 +1392,56 @@ window.compartirCoordenadas = function(lat, lon, nombrePunto = "") {
   }, 100); // Pequeño retardo para permitir que el popup se cierre
 };
     // Inicialización
-document.addEventListener('DOMContentLoaded', () => {
-  initMap();
-  if (!document.getElementById('windy-script')) {
-    const windyScript = document.createElement('script');
-    windyScript.id = 'windy-script';
-    windyScript.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
-    document.head.appendChild(windyScript);
-  }
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      if (!document.getElementById('windy-script')) {
+        const windyScript = document.createElement('script');
+        windyScript.id = 'windy-script';
+        windyScript.src = 'https://api.windy.com/assets/map-forecast/libBoot.js';
+        document.head.appendChild(windyScript);
+      }
+      
+      loadCoordinates();
+      loadMapWithSavedCoordinates();
+      document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
+      getLocation();
+      applyDarkModePreference();
+      loadSavedRoutes();
+      cargarPuntosGuardados();
+      
+      // Cargar último barrio guardado
+      const savedNeighborhood = localStorage.getItem('lastNeighborhood');
+      if (savedNeighborhood) {
+        lastKnownNeighborhood = savedNeighborhood;
+        updateNeighborhoodName(savedNeighborhood);
+      }
 
-  loadCoordinates();
-  loadMapWithSavedCoordinates();
-  document.getElementById('distanceValue').textContent = totalDistance.toFixed(1);
-  getLocation();
-  applyDarkModePreference();
-  loadSavedRoutes();
-  cargarPuntosGuardados();
-
-  // Cargar último barrio guardado
-  const savedNeighborhood = localStorage.getItem('lastNeighborhood');
-  if (savedNeighborhood) {
-    lastKnownNeighborhood = savedNeighborhood;
-    updateNeighborhoodName(savedNeighborhood);
-  }
-
-  // Iniciar actualización de hora local
-  startLocalTimeUpdate();
-
-  // Event listeners
-  document.getElementById('clearButton').addEventListener('click', startNewRoute);
-  document.getElementById('stopButton').addEventListener('click', toggleCapture);
-  document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
-  document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
-  document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
-  document.getElementById('saveLocation').addEventListener('click', guardarUbicacion);
-  document.getElementById('layerToggleButton').addEventListener('click', function(e) {
+      // Event listeners
+document.getElementById('clearButton').addEventListener('click', startNewRoute);
+document.getElementById('stopButton').addEventListener('click', toggleCapture);
+document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
+document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
+document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
+document.getElementById('saveLocation').addEventListener('click', guardarUbicacion);
+document.getElementById('layerToggleButton').addEventListener('click', function(e) {
     e.preventDefault();
     toggleMapLayer();
-  });
-  document.getElementById("saveLocation").addEventListener("click", guardarUbicacion);
+      });
+      document.getElementById("saveLocation").addEventListener("click", guardarUbicacion);
 
-  document.addEventListener('visibilitychange', () => {
+document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
-      if (isCapturing) {
-        toggleCapture();
-        wasCapturingBeforeHidden = true;
-      }
-      releaseWakeLock();
+        if (isCapturing) {
+            toggleCapture();
+            wasCapturingBeforeHidden = true;
+        }
+        releaseWakeLock();
     } else if (wasCapturingBeforeHidden) {
-      toggleCapture();
-      wasCapturingBeforeHidden = false;
+        toggleCapture();
+        wasCapturingBeforeHidden = false;
     }
-  });
-});
+      });
+    });
   </script>
 </body>
 </html>
