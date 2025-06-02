@@ -725,14 +725,18 @@ function updateClock() {
     function findNeighborhood(lat, lng) {
       fetchLocationDetails(lat, lng);
     }
+    const LOCAL_TIMEZONE_OFFSET = -3; // Buenos Aires es UTC-3
 async function getTimezone(lat, lng) {
   const now = Date.now();
   
-  // Solo actualizar si ha pasado suficiente tiempo o nos hemos movido significativamente
-  if (cachedTimezone && 
-      lastTimezonePosition && 
-      calculateDistance(lat, lng, lastTimezonePosition.lat, lastTimezonePosition.lng) < 50000 && 
-      now - lastTimezoneUpdate < TIMEZONE_UPDATE_INTERVAL) {
+  // Si estamos en Buenos Aires, usar el offset local directamente
+  if (Math.abs(lat - (-34.6037)) < 10 && Math.abs(lng - (-58.3816)) < 10) {
+    cachedTimezone = {
+      gmtOffset: LOCAL_TIMEZONE_OFFSET * 3600, // Convertir a segundos
+      abbreviation: "ART",
+      zoneName: "America/Argentina/Buenos_Aires"
+    };
+    updateLocalTimeDisplay();
     return;
   }
 
@@ -744,22 +748,37 @@ async function getTimezone(lat, lng) {
     
     if (data.status === "OK") {
       cachedTimezone = {
-        formatted: data.formatted,
-        abbreviation: data.abbreviation,
-        zoneName: data.zoneName,
         gmtOffset: data.gmtOffset,
-        timestamp: data.timestamp
+        abbreviation: data.abbreviation,
+        zoneName: data.zoneName
       };
-      lastTimezonePosition = { lat, lng };
-      lastTimezoneUpdate = now;
-      
-      updateTimezoneUI(cachedTimezone);
+      updateLocalTimeDisplay();
     } else {
       fallbackToDeviceTime();
     }
   } catch (error) {
     console.error("Error obteniendo zona horaria:", error);
     fallbackToDeviceTime();
+  }
+}
+    function updateLocalTimeDisplay() {
+  if (!cachedTimezone) return;
+  
+  const now = new Date();
+  // Calculamos la hora local correctamente (GMT offset está en segundos)
+  const localTime = new Date(now.getTime() + (cachedTimezone.gmtOffset * 1000));
+  
+  // Formatear la hora como HH:MM:SS
+  const hours = localTime.getHours().toString().padStart(2, '0');
+  const minutes = localTime.getMinutes().toString().padStart(2, '0');
+  const seconds = localTime.getSeconds().toString().padStart(2, '0');
+  
+  document.getElementById('localTime').textContent = `${hours}:${minutes}:${seconds}`;
+  document.getElementById('timezoneInfo').textContent = cachedTimezone.abbreviation || "Local";
+  
+  // Actualizar cada segundo si estamos en modo captura
+  if (isCapturing) {
+    setTimeout(updateLocalTimeDisplay, 1000);
   }
 }
 
@@ -775,9 +794,78 @@ function updateTimezoneUI(timezoneData) {
   }
 }
 
+// Reemplaza estas funciones en tu código:
+
+// Configuración inicial
+const LOCAL_TIMEZONE_OFFSET = -3; // Buenos Aires es UTC-3
+
+// Función mejorada para obtener la zona horaria
+async function getTimezone(lat, lng) {
+  const now = Date.now();
+  
+  // Si estamos en Buenos Aires, usar el offset local directamente
+  if (Math.abs(lat - (-34.6037)) < 10 && Math.abs(lng - (-58.3816)) < 10) {
+    cachedTimezone = {
+      gmtOffset: LOCAL_TIMEZONE_OFFSET * 3600, // Convertir a segundos
+      abbreviation: "ART",
+      zoneName: "America/Argentina/Buenos_Aires"
+    };
+    updateLocalTimeDisplay();
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.timezonedb.com/v2.1/get-time-zone?key=${TIMEZONE_API_KEY}&format=json&by=position&lat=${lat}&lng=${lng}`
+    );
+    const data = await response.json();
+    
+    if (data.status === "OK") {
+      cachedTimezone = {
+        gmtOffset: data.gmtOffset,
+        abbreviation: data.abbreviation,
+        zoneName: data.zoneName
+      };
+      updateLocalTimeDisplay();
+    } else {
+      fallbackToDeviceTime();
+    }
+  } catch (error) {
+    console.error("Error obteniendo zona horaria:", error);
+    fallbackToDeviceTime();
+  }
+}
+
+// Función para mostrar la hora correctamente
+function updateLocalTimeDisplay() {
+  if (!cachedTimezone) return;
+  
+  const now = new Date();
+  // Calculamos la hora local correctamente (GMT offset está en segundos)
+  const localTime = new Date(now.getTime() + (cachedTimezone.gmtOffset * 1000));
+  
+  // Formatear la hora como HH:MM:SS
+  const hours = localTime.getHours().toString().padStart(2, '0');
+  const minutes = localTime.getMinutes().toString().padStart(2, '0');
+  const seconds = localTime.getSeconds().toString().padStart(2, '0');
+  
+  document.getElementById('localTime').textContent = `${hours}:${minutes}:${seconds}`;
+  document.getElementById('timezoneInfo').textContent = cachedTimezone.abbreviation || "Local";
+  
+  // Actualizar cada segundo si estamos en modo captura
+  if (isCapturing) {
+    setTimeout(updateLocalTimeDisplay, 1000);
+  }
+}
+
+// Función de fallback
 function fallbackToDeviceTime() {
   const now = new Date();
-  document.getElementById('localTime').textContent = now.toLocaleTimeString();
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const seconds = now.getSeconds().toString().padStart(2, '0');
+  
+  document.getElementById('localTime').textContent = `${hours}:${minutes}:${seconds}`;
   document.getElementById('timezoneInfo').textContent = "Dispositivo";
 }
     // Cambiar capas del mapa
