@@ -929,6 +929,10 @@ if (selectedLayer === "weather") {
         stopButton.textContent = "Pausar";
         stopButton.classList.remove('continue');
         updateStatus("Captura reanudada");
+            // Forzar actualización del clima cuando se reanuda la captura
+    if (currentLat && currentLon) {
+      getWeather(currentLat, currentLon, true); // <-- Captura clima luego de reanudar la captura
+    }
       }
       isCapturing = !isCapturing;
     }
