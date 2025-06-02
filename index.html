@@ -571,7 +571,7 @@ const TIMEZONE_API_KEY = "U46FXB1MO2UY"; // Tu API Key de TimeZoneDB
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.7.01 ";
+        div.innerHTML = " Ver: 1.7.02 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -917,37 +917,66 @@ if (selectedLayer === "weather") {
     }
 
     // Geolocalización
-    function getLocation() {
-      if (navigator.geolocation) {
-        acquireWakeLock();
-        watchId = navigator.geolocation.watchPosition(
-          (position) => {
-            const now = Date.now();
-            const speedKmh = position.coords.speed ? position.coords.speed * 3.6 : 0;
-            
-            const minInterval = speedKmh < 5 ? 15000 : 
-                              speedKmh < 20 ? 7000 : 
-                              3000;
+function getLocation() {
+  if (navigator.geolocation) {
+    updateStatus("Obteniendo ubicación...");
+    
+    // Configuración optimizada para geolocalización
+    const options = {
+      enableHighAccuracy: true,
+      maximumAge: 10000,  // 10 segundos de caché máximo
+      timeout: 15000      // 15 segundos de espera máxima
+    };
 
-            if (!lastPositionTime || now - lastPositionTime >= minInterval) {
-              processPosition(position);
-              lastPositionTime = now;
-            }
-          },
-          (error) => {
-            console.error("Error al obtener la ubicación:", error);
-            updateStatus("Error al obtener la ubicación.");
-          },
-          { 
-            enableHighAccuracy: true,
-            maximumAge: 60000,
-            timeout: 20000
-          }
-        );
-      } else {
-        updateStatus("Tu navegador no soporta geolocalización.");
-      }
+    // Liberar cualquier watcher previo
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
     }
+
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const now = Date.now();
+        const speedKmh = position.coords.speed ? position.coords.speed * 3.6 : 0;
+        
+        // Intervalos de actualización dinámicos
+        const minInterval = speedKmh < 5 ? 15000 : 
+                          speedKmh < 20 ? 7000 : 
+                          3000;
+
+        if (!lastPositionTime || now - lastPositionTime >= minInterval) {
+          processPosition(position);
+          lastPositionTime = now;
+        }
+      },
+      (error) => {
+        console.error("Error en geolocalización:", error);
+        let errorMsg = "Error: ";
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMsg += "Permiso denegado. Por favor habilita la geolocalización.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMsg += "Ubicación no disponible.";
+            break;
+          case error.TIMEOUT:
+            errorMsg += "Tiempo de espera agotado. Intentando nuevamente...";
+            // Reintentar después de 5 segundos
+            setTimeout(getLocation, 5000);
+            break;
+          default:
+            errorMsg += "Error desconocido.";
+        }
+        updateStatus(errorMsg);
+      },
+      options
+    );
+    
+    // Intenta adquirir Wake Lock
+    acquireWakeLock();
+  } else {
+    updateStatus("Tu navegador no soporta geolocalización.");
+  }
+}
 
 function processPosition(position) {
   const lat = position.coords.latitude;
