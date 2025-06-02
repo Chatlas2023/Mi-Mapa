@@ -22,6 +22,7 @@ El mapa8 incluye versionado visible en el mapa y corrige el error al querer hace
 1.6.5 Versión estable sin uso de Barrios_AMBA, usa el barrio de OSM
 1.6.6 Vuelve a poder guardar puntos
 1.6.7 Agrega el dato de la altitud
-1.6.27 Actualiza la temperatura al retomer la captura de coordrnadas
+1.6.27 Actualiza la temperatura al retomar la captura de coordenadas
+1.7.01 Agrega la hora local del punto GPS o del lugar del mapa que se toque
 
 
