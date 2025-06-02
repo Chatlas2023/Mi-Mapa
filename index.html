@@ -956,7 +956,6 @@ function processPosition(position) {
   const accuracy = position.coords.accuracy;
   const altitude = position.coords.altitude || 0;
   
-  // Actualizar las coordenadas actuales
   currentLat = lat;
   currentLon = lng;
 
@@ -973,7 +972,7 @@ function processPosition(position) {
     userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
   } else {
     userMarker.setLatLng([lat, lng]);
-  }
+  } // ← Esta llave solo cierra el if-else
 
   if (precisionCircle) {
     precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
@@ -987,10 +986,8 @@ function processPosition(position) {
     }).addTo(map);
   }
 
-  // Actualización de hora mejorada
   updateLocalTime(lat, lng);
-}
-
+} // ← Esta es la llave que DEBE cerrar la función completa
 // Nueva función para manejar la hora local
 function updateLocalTime(lat, lng) {
   const now = Date.now();
