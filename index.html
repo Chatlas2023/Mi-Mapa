@@ -478,11 +478,10 @@ body.dark-mode #savedRoutesList li button:hover {
         <span>m</span>
       </div>
 
-  <div class="speed-row">
+<div class="speed-row">
   <span>Hora:</span>
-  <span class="speed-value" id="localTime">--:--:--</span>
-  <span id="timezoneInfo"></span>
-  </div>
+  <span class="speed-value" id="localTime">--:--</span>
+</div>
       
       <div class="speed-row">
         <span>Clima:</span>
@@ -749,8 +748,13 @@ async function getTimezone(lat, lng, isManualClick = false) {
 
 function updateTimezoneUI(timezoneData) {
   const localTime = new Date(new Date().getTime() + (timezoneData.gmtOffset * 1000));
-  document.getElementById('localTime').textContent = localTime.toLocaleTimeString('es-AR', { timeZone: timezoneData.zoneName });
-  document.getElementById('timezoneInfo').textContent = timezoneData.abbreviation;
+  document.getElementById('localTime').textContent = localTime.toLocaleTimeString('es-AR', {
+    timeZone: timezoneData.zoneName,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false // Usar formato de 24 horas
+  });
+  document.getElementById('timezoneInfo').textContent = ''; // Vaciar el campo de zona horaria
 }
 
 function fallbackToDeviceTime() {
@@ -889,8 +893,13 @@ function updateClock(isManualClick = false) {
 
   const now = new Date();
   const localTime = new Date(now.getTime() + (cachedTimezone.gmtOffset * 1000));
-  document.getElementById('localTime').textContent = localTime.toLocaleTimeString('es-AR', { timeZone: cachedTimezone.zoneName });
-  document.getElementById('timezoneInfo').textContent = cachedTimezone.abbreviation;
+  document.getElementById('localTime').textContent = localTime.toLocaleTimeString('es-AR', {
+    timeZone: cachedTimezone.zoneName,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false // Usar formato de 24 horas
+  });
+  document.getElementById('timezoneInfo').textContent = ''; // Vaciar el campo de zona horaria
 
   // Continuar actualizando solo si la captura está activa y no es un clic manual
   if (isCapturing && !isManualClick) {
