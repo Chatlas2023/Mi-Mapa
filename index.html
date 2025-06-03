@@ -568,7 +568,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.7.01 ";
+        div.innerHTML = " Ver: 1.7.02 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -635,7 +635,10 @@ function handleMapClick(latlng) {
   findNeighborhood(latlng.lat, latlng.lng);
   getWeather(latlng.lat, latlng.lng, true);
   getStreetInfo(latlng.lat, latlng.lng);
-  getTimezone(latlng.lat, latlng.lng); // <-- Añade esta línea
+  getTimezone(latlng.lat, latlng.lng);
+  
+  // Mostrar "--" en la altitud cuando la captura está pausada
+  document.getElementById('altitudeValue').textContent = '--';
   
   // Mostrar información en el estado
   updateStatus(`Click en: Lat ${latlng.lat.toFixed(6)}, Lng ${latlng.lng.toFixed(6)}`);
