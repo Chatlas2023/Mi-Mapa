@@ -527,7 +527,7 @@ body.dark-mode #savedRoutesList li button:hover {
   
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // Variables globales
+// Variables globales
     const streetCache = {};
     let wasCapturingBeforeHidden = false;
     let map, polyline, userMarker, precisionCircle;
@@ -568,7 +568,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.7.05 ";
+        div.innerHTML = " Ver: 1.7.06 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -670,6 +670,39 @@ function handleMapClick(latlng) {
       }
     }
 
+  // Función para detectar caracteres no latinos
+    function containsNonLatinCharacters(text) {
+      return /[^\u0000-\u024F\u1E00-\u1EFF]/.test(text);
+    }
+
+    // Función para transliterar texto a alfabeto latino usando una API más confiable
+    async function transliterateToLatin(text) {
+      // Si el texto ya está en alfabeto latino, no hacer nada
+      if (!containsNonLatinCharacters(text)) {
+        return text;
+      }
+      
+      try {
+        // Usar la API de MyMemory para transliteración
+        const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|en`);
+        
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.responseData && data.responseData.translatedText) {
+          return data.responseData.translatedText;
+        } else {
+          return text; // Devolver texto original si falla
+        }
+      } catch (error) {
+        console.error("Error en transliteración:", error);
+        return text; // Devolver texto original si falla
+      }
+    }
+
     // Obtener detalles de ubicación
     async function fetchLocationDetails(lat, lng) {
       const now = Date.now();
@@ -679,9 +712,9 @@ function handleMapClick(latlng) {
       }
 
       try {
-        // Primero intentar con accept-language=es-latn para nombres en alfabeto latino
+        // Primero intentar con el método estándar
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es-latn`
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`
         );
         
         if (!response.ok) {
@@ -699,53 +732,16 @@ function handleMapClick(latlng) {
                          data.address?.village ||
                          "Área no especificada";
 
-        // Si no se encontró un barrio o está vacío, intentar con el método original
-        if (neighborhood === "Área no especificada" || !neighborhood.trim()) {
-          const responseOriginal = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es`
-          );
-          
-          if (responseOriginal.ok) {
-            const dataOriginal = await responseOriginal.json();
-            neighborhood = dataOriginal.address?.neighbourhood || 
-                          dataOriginal.address?.suburb || 
-                          dataOriginal.address?.city_district || 
-                          dataOriginal.address?.county ||
-                          dataOriginal.address?.city ||
-                          dataOriginal.address?.town ||
-                          dataOriginal.address?.village ||
-                          "Área no especificada";
-          }
+        // Si el nombre contiene caracteres no latinos, intentar transliterar
+        if (containsNonLatinCharacters(neighborhood)) {
+          neighborhood = await transliterateToLatin(neighborhood);
         }
         
         updateNeighborhoodName(neighborhood);
         lastNominatimCall = Date.now();
       } catch (error) {
         console.error("Error con Nominatim:", error);
-        // Intentar con el método original como fallback
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es`
-          );
-          
-          if (response.ok) {
-            const data = await response.json();
-            const neighborhood = data.address?.neighbourhood || 
-                               data.address?.suburb || 
-                               data.address?.city_district || 
-                               data.address?.county ||
-                               data.address?.city ||
-                               data.address?.town ||
-                               data.address?.village ||
-                               "Ubicación desconocida";
-            updateNeighborhoodName(neighborhood);
-          } else {
-            updateNeighborhoodName("Ubicación desconocida");
-          }
-        } catch (fallbackError) {
-          console.error("Error también con el fallback:", fallbackError);
-          updateNeighborhoodName("Ubicación desconocida");
-        }
+        updateNeighborhoodName("Ubicación desconocida");
       }
     }
 
@@ -1153,9 +1149,9 @@ if (selectedLayer === "weather") {
       }
 
       try {
-        // Primero intentar con accept-language=es-latn
+        // Usar el método estándar primero
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=es-latn`
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
         );
         
         if (!response.ok) {
@@ -1165,7 +1161,13 @@ if (selectedLayer === "weather") {
         const data = await response.json();
         
         if (data.address && data.address.road) {
-          const streetName = data.address.road;
+          let streetName = data.address.road;
+          
+          // Si el nombre de la calle tiene caracteres no latinos, transliterar
+          if (containsNonLatinCharacters(streetName)) {
+            streetName = await transliterateToLatin(streetName);
+          }
+          
           const streetData = streetsData.find(item => item.Name === streetName);
           
           const result = {
@@ -1176,73 +1178,17 @@ if (selectedLayer === "weather") {
           streetCache[cacheKey] = result;
           updateStreetUI(result);
         } else {
-          // Si no se encuentra información con es-latn, intentar con el método original
-          const responseOriginal = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=es`
-          );
-          
-          if (responseOriginal.ok) {
-            const dataOriginal = await responseOriginal.json();
-            if (dataOriginal.address && dataOriginal.address.road) {
-              const streetName = dataOriginal.address.road;
-              const streetData = streetsData.find(item => item.Name === streetName);
-              
-              const result = {
-                name: "Calle: " + streetName,
-                etymology: streetData?.Etimologia || "Información no disponible"
-              };
-              
-              streetCache[cacheKey] = result;
-              updateStreetUI(result);
-            } else {
-              updateStreetUI({
-                name: "Calle no identificada",
-                etymology: "No se pudo obtener información de esta calle"
-              });
-            }
-          } else {
-            throw new Error("Error en la solicitud alternativa");
-          }
+          updateStreetUI({
+            name: "Calle no identificada",
+            etymology: "No se pudo obtener información de esta calle"
+          });
         }
       } catch (error) {
         console.error('Error obteniendo información de calle:', error);
-        // Último intento con el método simple
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-          );
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data.address && data.address.road) {
-              const streetName = data.address.road;
-              
-              const result = {
-                name: "Calle: " + streetName,
-                etymology: "Información no disponible"
-              };
-              
-              streetCache[cacheKey] = result;
-              updateStreetUI(result);
-            } else {
-              updateStreetUI({
-                name: "Calle no identificada",
-                etymology: "No se pudo obtener información de esta calle"
-              });
-            }
-          } else {
-            updateStreetUI({
-              name: "Error",
-              etymology: "Error al cargar información de la calle"
-            });
-          }
-        } catch (finalError) {
-          console.error('Error en el intento final:', finalError);
-          updateStreetUI({
-            name: "Error de conexión",
-            etymology: "No se pudo conectar con el servidor"
-          });
-        }
+        updateStreetUI({
+          name: "Error de conexión",
+          etymology: "No se pudo conectar con el servidor"
+        });
       }
     }
 
