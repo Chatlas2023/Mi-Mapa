@@ -24,6 +24,6 @@ El mapa8 incluye versionado visible en el mapa y corrige el error al querer hace
 1.6.7 Agrega el dato de la altitud
 1.6.27 Actualiza la temperatura al retomar la captura de coordenadas
 1.7.01 Agrega la hora local del punto GPS o del lugar del mapa que se toque
-1.7.03 Traduce a alfabeto latino los nombres de barrio y calle de los alfabetos locales
+1.7.05 Traduce a alfabeto latino los nombres de barrio y calle de los alfabetos locales
 
 
