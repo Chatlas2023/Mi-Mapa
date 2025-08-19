@@ -527,7 +527,7 @@ body.dark-mode #savedRoutesList li button:hover {
   
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-// Variables globales
+    // Variables globales
     const streetCache = {};
     let wasCapturingBeforeHidden = false;
     let map, polyline, userMarker, precisionCircle;
@@ -568,7 +568,7 @@ body.dark-mode #savedRoutesList li button:hover {
       options: { position: 'bottomleft' },
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
-        div.innerHTML = " Ver: 1.7.06 ";
+        div.innerHTML = " Ver: 1.7.07 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -670,7 +670,7 @@ function handleMapClick(latlng) {
       }
     }
 
-  // Función para detectar caracteres no latinos
+    // Función para detectar caracteres no latinos
     function containsNonLatinCharacters(text) {
       return /[^\u0000-\u024F\u1E00-\u1EFF]/.test(text);
     }
@@ -683,8 +683,9 @@ function handleMapClick(latlng) {
       }
       
       try {
-        // Usar la API de MyMemory para transliteración
-        const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|en`);
+        // Primero intentar con la API de transliteración de Google (no oficial)
+        // Nota: Esta es una API no oficial y puede tener limitaciones
+        const response = await fetch(`https://inputtools.google.com/request?text=${encodeURIComponent(text)}&itc=ru-t-i0-und&num=1`);
         
         if (!response.ok) {
           throw new Error(`Error HTTP: ${response.status}`);
@@ -692,10 +693,11 @@ function handleMapClick(latlng) {
         
         const data = await response.json();
         
-        if (data.responseData && data.responseData.translatedText) {
-          return data.responseData.translatedText;
+        if (data && data[0] === "SUCCESS" && data[1] && data[1][0] && data[1][0][1] && data[1][0][1][0]) {
+          return data[1][0][1][0];
         } else {
-          return text; // Devolver texto original si falla
+          // Si falla, devolver el texto original
+          return text;
         }
       } catch (error) {
         console.error("Error en transliteración:", error);
