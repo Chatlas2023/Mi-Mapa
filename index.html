@@ -680,7 +680,7 @@ function handleMapClick(latlng) {
 
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es`
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es-latn`
         );
         const data = await response.json();
         
@@ -692,12 +692,47 @@ function handleMapClick(latlng) {
                          data.address?.town ||
                          data.address?.village ||
                          "Área no especificada";
+
+                // Si el nombre sigue estando en otro alfabeto, intentar transliterar
+        if (containsNonLatinCharacters(neighborhood)) {
+          neighborhood = await transliterateText(neighborhood);
+        }
         
         updateNeighborhoodName(neighborhood);
         lastNominatimCall = Date.now();
       } catch (error) {
         console.error("Error con Nominatim:", error);
         updateNeighborhoodName("Ubicación desconocida");
+      }
+    }
+
+
+      // Función para detectar caracteres no latinos
+    function containsNonLatinCharacters(text) {
+      return /[^\u0000-\u007F]/.test(text);
+    }
+
+    // Función para transliterar texto a alfabeto latino
+    async function transliterateText(text) {
+      try {
+        // Usar API de transliteración (Google Translate no permite acceso directo, 
+        // pero podemos usar una alternativa como libretranslate)
+        const response = await fetch('https://libretranslate.com/translate', {
+          method: 'POST',
+          body: JSON.stringify({
+            q: text,
+            source: 'auto',
+            target: 'es',
+            format: 'text'
+          }),
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        return data.translatedText || text;
+      } catch (error) {
+        console.error("Error en transliteración:", error);
+        return text; // Devolver texto original si falla
       }
     }
 
@@ -1106,12 +1141,19 @@ if (selectedLayer === "weather") {
 
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=es`
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=es-latn`
         );
         const data = await response.json();
         
         if (data.address && data.address.road) {
           const streetName = data.address.road;
+
+         // Si el nombre de la calle tiene caracteres no latinos, transliterar
+          if (containsNonLatinCharacters(streetName)) {
+            streetName = await transliterateText(streetName);
+          }
+
+          
           const streetData = streetsData.find(item => item.Name === streetName);
           
           const result = {
